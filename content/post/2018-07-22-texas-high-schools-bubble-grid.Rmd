@@ -1,0 +1,543 @@
+---
+title: Visualizing Texas High School SAT Math Scores with Bubble Grids
+slug: bubble-grid-texas-high-school
+date: "2018-07-22"
+categories: []
+tags:
+ - r
+ - ggplot2
+ - sf
+ - bubble grid
+ - texas
+ - sat
+ - math
+banner: "img/analysis-texas-high-school-academics/viz_schools_grid.png"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(
+  # eval = FALSE
+  echo = TRUE,
+  # cache = TRUE,
+  cache = FALSE,
+  include = FALSE,
+  fig.align = "center",
+  results = "hide",
+  fig.width = 6,
+  fig.height = 6,
+  # out.width = 6,
+  # out.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+options(scipen = 1, digits = 2)
+```
+
+```{r path_save}
+path_save <-
+  file.path("static", "data", "tea_bubble_grid.RData")
+```
+
+
+```{r load}
+# NOTE TO SELF: Uncomment this and comment out shapefile imports for blog post.
+load(file = path_save)
+```
+
+Two awesome things inspired this post:
+
++ [`{ggplot2}`'s version 3.0 release](https://www.tidyverse.org/articles/2018/07/ggplot2-3-0-0/)
+on [CRAN](https://cran.r-project.org/), including full support for the 
+`{sf}` package and new functions `geom_sf()` and `coord_sf()`, which
+make plotting data from shapefiles very straightforward.
+
++ [Jonas Scholey's blog post](http://jschoeley.github.io/2018/06/30/bubble-grid-map.html)
+discussing the use of "bubble grid" maps as an alternative to
+[choropleth](https://en.wikipedia.org/wiki/Choropleth_map) maps, which
+seem to be used more prevalent.
+
+As Jonas implies, using color as a visual encoding is not always the best option,
+a notion with which I strongly agree. [Cartograms](https://en.wikipedia.org/wiki/Cartogram)
+try to address the ambiguity of color encoding with distortion of land area/distance,
+but I think the result can be difficult to interpret. Bubble grid maps
+seem to me to be an interesting alternative that can potentially display
+information in a more direct manner.
+
+With that being said, I decided to adapt Jonas' code to visualize
+the Texas high school SAT/ACT data that I've looked at in other posts.
+To simplify the visual encoding of information,
+I'll filter the data down to a single 
+statistic---the math test scores for the SAT for the year 2015.
+(For other applications, the statistic might be population density, average median household income, etc.)
+For the geo-spatial data,
+I downloaded the shapefiles
+for [schools](https://schoolsdata2-tea-texas.opendata.arcgis.com/datasets/059432fd0dcb4a208974c235e837c94f_0) and
+[counties](https://schoolsdata2-tea-texas.opendata.arcgis.com/datasets/c71146b6426248a5a484d8b3c192b9fe_0)
+provided by the [Texas Education Agency](https://tea.texas.gov/) (TEA).
+Additionally,
+I downloaded shapefiles for 
+[Texas cities](https://opendata.arcgis.com/datasets/993d420b9f0742b9afa06622d27a37e0_0.geojson) and for
+[Texas highways](http://hub.arcgis.com/datasets/e661b4004aee4c939569a563b6bb881a_0),
+provided by the [Texas Department of Transportation](https://www.txdot.gov/)
+(TxDOT). By plotting the major cities and roadways in the state, the locations
+of "sparsely" populated areas should be evident, which can explain
+why there doesn't appear to any data in some regions. Finally, I'll
+also use the Texas state and county border data provided in the `ggplot2::map_data()`
+(which is essentially just serves as a wrapper for extracting
+data provided in the `{maps}` package).
+
+```{r config}
+# NOTE TO SELF: Set export logicals to FALSE for blog post.
+config <-
+  list(
+    export_data = FALSE,
+    dir_data = file.path("static", "data"),
+    export_viz = FALSE,
+    dir_viz = "figs"
+  )
+```
+
+```{r packages, include = TRUE}
+library("tidyverse")
+library("teplot")
+library("sf")
+```
+
+```{r schools_dl, eval = FALSE}
+url_schools <- "https://opendata.arcgis.com/datasets/059432fd0dcb4a208974c235e837c94f_0.geojson"
+path_dest_schools <- file.path("data-raw", "schools")
+downloader::download(url = url_schools, destfile = path_dest_schools)
+```
+
+```{r schools_raw_sf, eval = FALSE}
+schools_raw_sf <-
+  path_dest %>%
+  sf::st_read() %>%
+  mutate_if(is.factor, funs(as.character)) %>% 
+  janitor::clean_names()
+```
+
+```{r schools_sf, eval = FALSE}
+schools_sf <-
+  schools_raw_sf %>%
+  mutate_at(vars(district, campus, county, region, gradegrp), funs(as.integer)) %>%
+  rename(
+    district_num = district,
+    school_num = campus,
+    county_num = county,
+    region_num = region,
+    grade_grp_num = gradegrp
+  ) %>%
+  rename(
+    school = campname,
+    district = distname,
+    county = cntyname
+  ) %>%
+  mutate_at(vars(school, district, county, city), funs(toupper)) %>%
+  mutate_at(vars(county), funs(str_remove_all(., "\\s+COUNTY"))) %>%
+  mutate_at(vars(school), funs(str_remove_all(., "([H]\\s*[S]$)|(\\s+\\&)") %>% str_trim())) %>%
+  select(
+    school_num,
+    school,
+    district,
+    city,
+    county,
+    region_num,
+    grade_grp = graderange,
+    grade_grp_num,
+    instr_type,
+    magnet,
+    geometry
+  )
+```
+
+```{r path_schools_sf, eval = FALSE}
+path_schools_sf <- 
+  file.path(config$dir_data, "schools_sf.shp")
+```
+
+```{r schools_sf_export, eval = FALSE}
+schools_sf %>% 
+  st_write(path_schools_sf, delete_dsn = TRUE)
+```
+
+```{r schools_sf_import, eval = FALSE}
+schools_sf <-
+  st_read(path_schools_sf)
+```
+
+```{r counties_dl, eval = FALSE}
+url_counties <- "https://opendata.arcgis.com/datasets/c71146b6426248a5a484d8b3c192b9fe_0.geojson"
+path_dest_counties <- file.path("data-raw", "counties")
+downloader::download(url = url_counties, destfile = path_dest_counties)
+```
+
+```{r counties_raw_sf, eval = FALSE}
+counties_raw_sf <-
+  path_dest_counties %>%
+  sf::st_read() %>%
+  mutate_if(is.factor, funs(as.character)) %>% 
+  janitor::clean_names()
+```
+
+```{r counties_sf, eval = FALSE}
+counties_sf <-
+  counties_raw_sf %>%
+  mutate(county = fename %>% toupper()) %>%
+  select(county, geometry)
+counties_sf
+```
+
+```{r path_counties_sf, eval = FALSE}
+path_counties_sf <- 
+  file.path(config$dir_data, "counties_sf.shp")
+```
+
+```{r counties_sf_export, eval = FALSE}
+counties_sf %>% 
+  st_write(path_counties_sf, delete_dsn = TRUE)
+```
+
+```{r counties_sf_import, eval = FALSE}
+counties_sf <-
+  st_read(path_counties_sf)
+```
+
+```{r cities_dl, eval = FALSE}
+url_cities <- "https://opendata.arcgis.com/datasets/993d420b9f0742b9afa06622d27a37e0_0.geojson"
+path_dest_cities <- file.path("data-raw", "cities")
+downloader::download(url = url_cities, destfile = path_dest_cities)
+```
+
+```{r cities_sf_raw, eval = FALSE}
+cities_raw_sf <-
+  path_dest_cities %>%
+  sf::st_read() %>% 
+  mutate_if(is.factor, funs(as.character)) %>% 
+  janitor::clean_names()
+```
+
+```{r cities_sf, eval = FALSE}
+city_nms <-
+  c("Austin", "Corpus Christi", "Dallas", "El Paso", "Houston", "Laredo", "Lubbock", "Odessa", "San Antonio")
+cities_sf_filt <-
+  cities_raw_sf %>%
+  as.data.frame() %>%
+  dplyr::select(-geometry) %>%
+  filter(city_nm %in% city_nms) %>% 
+  arrange(desc(pop2010))
+
+# Reference: https://ryanpeek.github.io/2017-11-05-mapping-with-sf-Part-2/
+cities_sf <-
+  cities_raw_sf %>% 
+  inner_join(cities_sf_filt) %>% 
+  mutate(x = map_dbl(geometry, ~st_centroid(.x)[[1]]),
+         y = map_dbl(geometry, ~st_centroid(.x)[[2]]))
+cities_sf
+```
+
+```{r path_cities_sf, eval = FALSE}
+path_cities_sf <- 
+  file.path(config$dir_data, "cities_sf.shp")
+```
+
+```{r cities_sf_export, eval = FALSE}
+cities_sf %>% 
+  st_write(path_cities_sf, delete_dsn = TRUE)
+```
+
+```{r cities_sf_import, eval = FALSE}
+cities_sf <-
+  st_read(path_cities_sf)
+```
+
+
+```{r hwys_dl, eval = FALSE}
+url_hwys <- "https://opendata.arcgis.com/datasets/e661b4004aee4c939569a563b6bb881a_0.geojson"
+path_dest_hwys <- file.path("data-raw", "hwys")
+downloader::download(url = url_hwys, destfile = path_dest_hwys)
+```
+
+```{r hwys_sf_raw, eval = FALSE}
+hwys_raw_sf <-
+  path_dest_hwys %>%
+  sf::st_read() %>%
+  mutate_if(is.factor, funs(as.character)) %>% 
+  janitor::clean_names()
+```
+
+```{r hwys_sf, eval = FALSE}
+hwys_sf_n_us <-
+  hwys_raw_sf %>%
+  as.data.frame() %>%
+  dplyr::select(-geometry) %>%
+  filter(rte_prfx == "US") %>%
+  count(memorial_h, sort = TRUE)
+
+hwys_sf <-
+  hwys_raw_sf %>% 
+  inner_join(hwys_sf_n_us)
+hwys_sf
+```
+
+```{r path_hwys_sf, eval = FALSE}
+path_hwys_sf <- 
+  file.path(config$dir_data, "hwys_sf.shp")
+```
+
+```{r hwys_sf_export, eval = FALSE}
+hwys_sf %>% 
+  st_write(path_hwys_sf, delete_dsn = TRUE)
+```
+
+```{r hwys_sf_import, eval = FALSE}
+hwys_sf <-
+  st_read(path_hwys_sf)
+```
+
+```{r schools_tea, eval = FALSE}
+schools_tea <-
+  teproj::import_ext_csv(
+    schools_tea,
+    dir = config$dir_data
+  )
+
+schools_tea_filt <-
+  schools_tea %>%
+  filter(year == 2015) %>%
+  filter(test == "SAT") %>%
+  rename(value = math) %>% 
+  # group_by(test, year, county) %>% 
+  # summarise_at(vars(value), funs(max(., na.rm = TRUE))) %>% 
+  # ungroup() %>% 
+  select(test, year, school, district, county, city, value)
+```
+
+```{r tx_border, eval = FALSE}
+tx_border <- 
+  teplot::get_map_data_state(state = "tx") %>% 
+  as_tibble()
+```
+
+I'll skip over the data collection and munging steps and just show the cleaned data
+that I'm using. (See the GitHub repository for the full code.)
+
+```{r sf_show, results = "markup", include = TRUE}
+schools_tea_filt %>% glimpse()
+schools_sf %>% glimpse()
+counties_sf %>% glimpse()
+cities_sf %>% glimpse()
+hwys_sf %>% glimpse()
+tx_border %>% glimpse()
+```
+
+Here I create the grid of data that I'll use for the visual. (Thanks
+to Jonas for [his example](http://jschoeley.github.io/2018/06/30/bubble-grid-map.html).)
+
+```{r schools_grid, include = TRUE, eval = FALSE}
+counties_grid_sf <-
+  counties_sf %>%
+  st_make_grid(n = c(40, 40))
+
+schools_grid_sf <-
+  counties_sf %>%
+  left_join(schools_tea_filt) %>%
+  select(value) %>%
+  # NOTE: Set `extensive = FALSE` to get the mean. Otherwise, set `extensive = TRUE` for the sum.
+  st_interpolate_aw(to = counties_grid_sf, extensive = FALSE) %>%
+  st_centroid() %>%
+  cbind(st_coordinates(.))
+```
+
+```{r path_schools_grid_sf, eval = FALSE}
+path_schools_grid_sf <- 
+  file.path(config$dir_data, "schools_grid_sf.shp")
+```
+
+```{r schools_grid_sf_export, eval = FALSE}
+schools_grid_sf %>% 
+  st_write(path_schools_grid_sf, delete_dsn = TRUE)
+```
+
+```{r schools_grid_sf_import, eval = FALSE}
+schools_grid_sf <-
+  st_read(path_schools_grid_sf)
+```
+
+```{r schools_grid_sf_show, include = TRUE, results = "markup"}
+schools_grid_sf %>% glimpse()
+```
+
+```{r viz_schools_grid, include = TRUE, results = "asis", fig.width = 8, fig.height = 8}
+viz_schools_grid <-
+  schools_grid_sf %>%
+  ggplot() +
+  geom_polygon(
+    data = tx_border,
+    aes(x = long, y = lat, group = group),
+    size = 1.5,
+    color = "black",
+    fill = NA
+  ) +
+  geom_sf(
+    data = hwys_sf,
+    linetype = "solid",
+    size = 0.1
+  ) +
+  geom_point(
+    aes(x = X, y = Y, size = value, color = value),
+    # show.legend = FALSE,
+    shape = 16
+  ) +
+  geom_sf(
+    data = cities_sf,
+    shape = 16,
+    size = 2,
+    fill = "black"
+  ) +
+  ggrepel::geom_label_repel(
+    data = cities_sf,
+    aes(x = x, y = y, label = city_nm)
+  ) +
+  coord_sf(datum = NA) +
+  scale_color_viridis_c(option = "B", na.value = "#FFFFFF") +
+  teplot::theme_map(legend.position = "bottom") +
+  labs(
+    title = str_wrap("Texas High School Math SAT Scores, 2015", 80),
+    caption = "By Tony ElHabr."
+  )
+viz_schools_grid
+```
+
+```{r viz_schools_grid_export, eval = FALSE}
+teproj::export_ext_png(
+  viz_schools_grid,
+  export = config$export_viz,
+  dir = config$dir_viz,
+  units = "in",
+  height = 8,
+  width = 8
+)
+```
+
+Cool! I like this visualization because it seems to offer a finer amount
+of detail compared to a choropleth.
+(In other words, it seems to emphasize specific areas in counties
+and not the entire county itself.) Nonetheless, there are some disadvantages
+of this technique.
+
++ There is subjectivity involved in the choice of precision for interpolation.
+The grid in my example seems a bit "too" granular around the San Antonio and Austin
+area, where it seems like there are no values at all! (Perhaps this
+is just an "operator error" on my behalf.)
+
++ `sf::st_interpolate_aw()` seems to only be capable of aggregating
+by sum (with `extensive = TRUE`) or mean (with `extensive = FALSE`). There
+are certainly some cases where other aggregation functions would be desirable.
+For my example, I actually would have preferred a maximum. An average
+is sensitive to area with a relatively small number of schools (that, consequently, may
+be "over"-emphasized by the value encoding); and a sum may too strongly
+emphasize areas with a large number of schools without providing any insight
+into their scores.
+
+For comparison's purposes, let's look at what a choropleth map would look like.
+I'll need an additional data.frame for this exercise---`schools_tea_filt_join`---which
+is just the `schools_tea_filt` data joined with counties data that
+can be retrieved from a call to `ggplot2::map_data()`.
+
+```{r tx_counties, eval = FALSE}
+tx_counties <- 
+  teplot::get_map_data_county(state = "tx") %>% 
+  as_tibble()
+```
+
+```{r tx_counties_debug, eval = FALSE}
+# NOTE: After trying anti_joins in both directions, noticed that "dewitt" should
+# have a space in the `schools_tea` data.
+tx_counties %>% 
+  anti_join(
+    schools_tea_filt %>% 
+      mutate_at(vars(county), funs(tolower)) %>% 
+      mutate_at(vars(county), funs(if_else(. == "dewitt", "de witt", .))),
+    by = c("subregion" = "county")
+  ) %>% 
+  count(subregion, sort = TRUE)
+
+```
+
+```{r schools_tea_filt_join, eval = FALSE}
+schools_tea_filt_join <-
+  tx_counties %>% 
+  left_join(
+    schools_tea_filt %>% 
+      group_by(test, year, county) %>% 
+      summarise_at(vars(value), funs(mean(., na.rm = TRUE))) %>% 
+      ungroup() %>% 
+      mutate_at(vars(county), funs(tolower)) %>% 
+      mutate_at(vars(county), funs(if_else(. == "dewitt", "de witt", .))),
+    by = c("subregion" = "county")
+  )
+```
+
+```{r schools_tea_filt_join_show, results = "markup"}
+schools_tea_filt_join %>% glimpse()
+```
+
+```{r viz_schools_chlr, include = TRUE, results = "asis", fig.width = 8, fig.height = 8}
+viz_schools_chlr <-
+  ggplot() +
+  geom_polygon(
+    data = tx_border,
+    aes(x = long, y = lat, group = group),
+    size = 1.5,
+    color = "black",
+    fill = NA
+  ) +
+  geom_polygon(
+    data = schools_tea_filt_join,
+    aes(x = long, y = lat, group = group, fill = value),
+  ) +
+  geom_sf(
+    data = hwys_sf,
+    linetype = "solid",
+    size = 0.1
+  ) +
+  geom_sf(
+    data = cities_sf,
+    shape = 16,
+    size = 2,
+    fill = "black"
+  ) +
+  ggrepel::geom_label_repel(
+    data = cities_sf,
+    aes(x = x, y = y, label = city_nm)
+  ) +
+  coord_sf(datum = NA) +
+  scale_fill_viridis_c(option = "B", na.value = "#FFFFFF") +
+  teplot::theme_map(legend.position = "bottom") +
+  labs(
+    title = str_wrap("Texas High School Math SAT Scores, 2015", 80),
+    caption = "By Tony ElHabr."
+  )
+viz_schools_chlr
+```
+
+```{r viz_schools_chlrexport, eval = FALSE}
+teproj::export_ext_png(
+  viz_schools_chlr,
+  export = config$export_viz,
+  dir = config$dir_viz,
+  units = "in",
+  height = 8,
+  width = 8
+)
+```
+
+This choropleth actually isn't so bad, but I think I still prefer the bubble grid.
+
+```{r save, include = FALSE}
+# NOTE TO SELF: Do not save with blog post or if calling rmarkdown::render().
+# save.image(file = path_save)
+```
+

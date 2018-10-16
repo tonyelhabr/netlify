@@ -1,0 +1,207 @@
+---
+title: Visualizing Texas High School SAT Math Scores with Bubble Grids
+slug: bubble-grid-texas-high-school
+date: "2018-07-22"
+categories: []
+tags:
+ - r
+ - ggplot2
+ - sf
+ - bubble grid
+ - texas
+ - sat
+ - math
+banner: "img/analysis-texas-high-school-academics/viz_schools_grid.png"
+---
+
+
+
+<p>Two awesome things inspired this post:</p>
+<ul>
+<li><p><a href="https://www.tidyverse.org/articles/2018/07/ggplot2-3-0-0/"><code>{ggplot2}</code>’s version 3.0 release</a> on <a href="https://cran.r-project.org/">CRAN</a>, including full support for the <code>{sf}</code> package and new functions <code>geom_sf()</code> and <code>coord_sf()</code>, which make plotting data from shapefiles very straightforward.</p></li>
+<li><p><a href="http://jschoeley.github.io/2018/06/30/bubble-grid-map.html">Jonas Scholey’s blog post</a> discussing the use of “bubble grid” maps as an alternative to <a href="https://en.wikipedia.org/wiki/Choropleth_map">choropleth</a> maps, which seem to be used more prevalent.</p></li>
+</ul>
+<p>As Jonas implies, using color as a visual encoding is not always the best option, a notion with which I strongly agree. <a href="https://en.wikipedia.org/wiki/Cartogram">Cartograms</a> try to address the ambiguity of color encoding with distortion of land area/distance, but I think the result can be difficult to interpret. Bubble grid maps seem to me to be an interesting alternative that can potentially display information in a more direct manner.</p>
+<p>With that being said, I decided to adapt Jonas’ code to visualize the Texas high school SAT/ACT data that I’ve looked at in other posts. To simplify the visual encoding of information, I’ll filter the data down to a single statistic—the math test scores for the SAT for the year 2015. (For other applications, the statistic might be population density, average median household income, etc.) For the geo-spatial data, I downloaded the shapefiles for <a href="https://schoolsdata2-tea-texas.opendata.arcgis.com/datasets/059432fd0dcb4a208974c235e837c94f_0">schools</a> and <a href="https://schoolsdata2-tea-texas.opendata.arcgis.com/datasets/c71146b6426248a5a484d8b3c192b9fe_0">counties</a> provided by the <a href="https://tea.texas.gov/">Texas Education Agency</a> (TEA). Additionally, I downloaded shapefiles for <a href="https://opendata.arcgis.com/datasets/993d420b9f0742b9afa06622d27a37e0_0.geojson">Texas cities</a> and for <a href="http://hub.arcgis.com/datasets/e661b4004aee4c939569a563b6bb881a_0">Texas highways</a>, provided by the <a href="https://www.txdot.gov/">Texas Department of Transportation</a> (TxDOT). By plotting the major cities and roadways in the state, the locations of “sparsely” populated areas should be evident, which can explain why there doesn’t appear to any data in some regions. Finally, I’ll also use the Texas state and county border data provided in the <code>ggplot2::map_data()</code> (which is essentially just serves as a wrapper for extracting data provided in the <code>{maps}</code> package).</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;teplot&quot;)
+library(&quot;sf&quot;)</code></pre>
+<p>I’ll skip over the data collection and munging steps and just show the cleaned data that I’m using. (See the GitHub repository for the full code.)</p>
+<pre class="r"><code>schools_tea_filt %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 1,567
+## Variables: 7
+## $ test     &lt;chr&gt; &quot;SAT&quot;, &quot;SAT&quot;, &quot;SAT&quot;, &quot;SAT&quot;, &quot;SAT&quot;, &quot;SAT&quot;, &quot;SAT&quot;, &quot;SAT...
+## $ year     &lt;int&gt; 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015,...
+## $ school   &lt;chr&gt; &quot;A C JONES&quot;, &quot;A M CONS&quot;, &quot;A MACEO SMITH NEW TECH&quot;, &quot;A...
+## $ district &lt;chr&gt; &quot;BEEVILLE ISD&quot;, &quot;COLLEGE STATION ISD&quot;, &quot;DALLAS ISD&quot;, ...
+## $ county   &lt;chr&gt; &quot;BEE&quot;, &quot;BRAZOS&quot;, &quot;DALLAS&quot;, &quot;DALLAS&quot;, &quot;HILL&quot;, &quot;HALE&quot;, ...
+## $ city     &lt;chr&gt; &quot;CORPUS CHRISTI&quot;, &quot;HUNTSVILLE&quot;, &quot;RICHARDSON&quot;, &quot;RICHAR...
+## $ value    &lt;dbl&gt; 458, 567, 411, 428, 539, 533, 482, 538, 507, 428, 428...</code></pre>
+<pre class="r"><code>schools_sf %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 8,701
+## Variables: 11
+## $ schl_nm  &lt;int&gt; 20901109, 58905001, 15909001, 15915119, 101907149, 10...
+## $ school   &lt;fct&gt; HOOD-CASE EL, KLONDIKE ISD, SOMERSET, HOWSMAN EL, WAR...
+## $ distrct  &lt;fct&gt; ALVIN ISD, KLONDIKE ISD, SOMERSET ISD, NORTHSIDE ISD,...
+## $ city     &lt;fct&gt; ALVIN, LAMESA, SOMERSET, SAN ANTONIO, CYPRESS, HOUSTO...
+## $ county   &lt;fct&gt; BRAZORIA, DAWSON, BEXAR, BEXAR, HARRIS, HARRIS, HUTCH...
+## $ regn_nm  &lt;int&gt; 4, 17, 20, 20, 4, 4, 16, 11, 11, 4, 11, 1, 10, 11, 19...
+## $ grd_grp  &lt;fct&gt; EE PK KG 01 02 03 04 05, EE PK KG 01 02 03 04 05 06 0...
+## $ grd_gr_  &lt;int&gt; 1, 5, 4, 1, 1, 2, 4, 4, 4, 1, 1, 1, 4, 4, 1, 2, 1, 2,...
+## $ instr_t  &lt;fct&gt; REGULAR INSTRUCTIONAL, REGULAR INSTRUCTIONAL, REGULAR...
+## $ magnet   &lt;fct&gt; No, No, No, No, No, No, No, No, No, No, No, No, No, N...
+## $ geometry &lt;POINT [Â°]&gt; POINT (-95 29), POINT (-102 33), POINT (-99 29...</code></pre>
+<pre class="r"><code>counties_sf %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 254
+## Variables: 2
+## $ county   &lt;fct&gt; DALLAM, BORDEN, FISHER, SHERMAN, STEPHENS, HANSFORD, ...
+## $ geometry &lt;POLYGON [Â°]&gt; POLYGON ((-102 37, -102 37,..., POLYGON ((-1...</code></pre>
+<pre class="r"><code>cities_sf %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 9
+## Variables: 15
+## $ objectid  &lt;int&gt; 3028, 3212, 2291, 2984, 258, 623, 863, 1402, 1658
+## $ gid       &lt;int&gt; 2703, 3058, 2835, 2659, 40, 1165, 1405, 1074, 1988
+## $ city_nm   &lt;fct&gt; San Antonio, Laredo, Corpus Christi, Houston, Lubboc...
+## $ city_nbr  &lt;int&gt; 37450, 24000, 9800, 19750, 25650, 2100, 13400, 10850...
+## $ inc_flag  &lt;fct&gt; Yes, Yes, Yes, Yes, Yes, Yes, Yes, Yes, Yes
+## $ cnty_seat &lt;fct&gt; Yes, Yes, Yes, Yes, Yes, Yes, Yes, Yes, Yes
+## $ city_fips &lt;fct&gt; 4865000, 4841464, 4817000, 4835000, 4845000, 4805000...
+## $ pop1990   &lt;int&gt; 935933, 122899, 257453, 1630553, 186206, 465622, 515...
+## $ pop2000   &lt;int&gt; 1144646, 176576, 277454, 1953631, 199564, 656562, 56...
+## $ pop2010   &lt;int&gt; 1327407, 236091, 305215, 2099451, 229573, 790390, 64...
+## $ cnty_nbr  &lt;fct&gt; 15, 240, 178, 102, 152, 227, 72, 57, 69
+## $ dist_nbr  &lt;fct&gt; 15, 22, 16, 12, 5, 14, 24, 18, 6
+## $ x         &lt;dbl&gt; -98, -100, -97, -95, -102, -98, -106, -97, -102
+## $ y         &lt;dbl&gt; 29, 28, 28, 30, 34, 30, 32, 33, 32
+## $ geometry  &lt;POINT [Â°]&gt; POINT (-98 29), POINT (-100 28), POINT (-97 2...</code></pre>
+<pre class="r"><code>hwys_sf %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 225
+## Variables: 15
+## $ fid        &lt;dbl&gt; 1, 8, 9, 14, 15, 19, 20, 22, 25, 26, 30, 38, 53, 69...
+## $ rte_nm     &lt;fct&gt; SH0155-KG, US0190-KG, SH0155-KG, IH0014-KG, SH0155-...
+## $ rte_prfx   &lt;fct&gt; SH, US, SH, IH, SH, US, SH, FM, IH, US, BS, SH, SH,...
+## $ rte_nbr    &lt;dbl&gt; 155, 190, 155, 14, 155, 190, 155, 510, 14, 77, 71, ...
+## $ rdbd_type  &lt;fct&gt; KG, KG, KG, KG, KG, KG, KG, KG, KG, KG, KG, KG, KG,...
+## $ begin_dfo  &lt;dbl&gt; 78.750, 308.163, 41.640, 283.029, 55.883, 255.923, ...
+## $ end_dfo    &lt;dbl&gt; 123.1, 340.2, 55.0, 302.3, 68.4, 277.5, 40.1, 22.2,...
+## $ asset_nm   &lt;fct&gt; Memorial Highway, Memorial Highway, Memorial Highwa...
+## $ memorial_h &lt;fct&gt; Blue Star Memorial Highways, Port to Plains Highway...
+## $ asset_cmnt &lt;fct&gt; Assigned by Minute Order, H. C. R.# 157, 5/7/85, As...
+## $ des_type   &lt;fct&gt; Other, Other, Other, Other, Other, Other, Other, Lo...
+## $ system     &lt;fct&gt; On, On, On, On, On, On, On, On, On, On, On, On, On,...
+## $ shape_len  &lt;dbl&gt; 0.6718, 0.5125, 0.2142, 0.3193, 0.1902, 0.3563, 0.6...
+## $ n          &lt;int&gt; 20, 2, 20, 2, 20, 2, 20, 1, 2, 1, 2, 20, 1, 6, 4, 4...
+## $ geometry   &lt;LINESTRING [Â°]&gt; LINESTRING (-95 32, -95 32,..., LINESTR...</code></pre>
+<pre class="r"><code>tx_border %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 1,088
+## Variables: 6
+## $ long      &lt;dbl&gt; -94, -94, -94, -94, -94, -94, -94, -94, -94, -94, -9...
+## $ lat       &lt;dbl&gt; 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, ...
+## $ group     &lt;dbl&gt; 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, ...
+## $ order     &lt;int&gt; 12203, 12204, 12205, 12206, 12207, 12208, 12209, 122...
+## $ region    &lt;chr&gt; &quot;texas&quot;, &quot;texas&quot;, &quot;texas&quot;, &quot;texas&quot;, &quot;texas&quot;, &quot;texas&quot;...
+## $ subregion &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, ...</code></pre>
+<p>Here I create the grid of data that I’ll use for the visual. (Thanks to Jonas for <a href="http://jschoeley.github.io/2018/06/30/bubble-grid-map.html">his example</a>.)</p>
+<pre class="r"><code>counties_grid_sf &lt;-
+  counties_sf %&gt;%
+  st_make_grid(n = c(40, 40))
+
+schools_grid_sf &lt;-
+  counties_sf %&gt;%
+  left_join(schools_tea_filt) %&gt;%
+  select(value) %&gt;%
+  # NOTE: Set `extensive = FALSE` to get the mean. Otherwise, set `extensive = TRUE` for the sum.
+  st_interpolate_aw(to = counties_grid_sf, extensive = FALSE) %&gt;%
+  st_centroid() %&gt;%
+  cbind(st_coordinates(.))</code></pre>
+<pre class="r"><code>schools_grid_sf %&gt;% glimpse()</code></pre>
+<pre><code>## Observations: 855
+## Variables: 5
+## $ Group_1  &lt;dbl&gt; 26, 27, 28, 29, 30, 64, 65, 66, 67, 68, 69, 70, 103, ...
+## $ value    &lt;dbl&gt; NA, NA, 465, 465, 465, NA, NA, NA, NA, 463, 465, 465,...
+## $ X        &lt;dbl&gt; -98, -98, -98, -97, -97, -99, -99, -98, -98, -98, -97...
+## $ Y        &lt;dbl&gt; 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27, 2...
+## $ geometry &lt;POINT [Â°]&gt; POINT (-98 26), POINT (-98 26), POINT (-98 26)...</code></pre>
+<pre class="r"><code>viz_schools_grid &lt;-
+  schools_grid_sf %&gt;%
+  ggplot() +
+  geom_polygon(
+    data = tx_border,
+    aes(x = long, y = lat, group = group),
+    size = 1.5,
+    color = &quot;black&quot;,
+    fill = NA
+  ) +
+  geom_sf(
+    data = hwys_sf,
+    linetype = &quot;solid&quot;,
+    size = 0.1
+  ) +
+  geom_point(
+    aes(x = X, y = Y, size = value, color = value),
+    # show.legend = FALSE,
+    shape = 16
+  ) +
+  geom_sf(
+    data = cities_sf,
+    shape = 16,
+    size = 2,
+    fill = &quot;black&quot;
+  ) +
+  ggrepel::geom_label_repel(
+    data = cities_sf,
+    aes(x = x, y = y, label = city_nm)
+  ) +
+  coord_sf(datum = NA) +
+  scale_color_viridis_c(option = &quot;B&quot;, na.value = &quot;#FFFFFF&quot;) +
+  teplot::theme_map(legend.position = &quot;bottom&quot;) +
+  labs(
+    title = str_wrap(&quot;Texas High School Math SAT Scores, 2015&quot;, 80),
+    caption = &quot;By Tony ElHabr.&quot;
+  )
+viz_schools_grid</code></pre>
+<p><img src="/post/2018-07-22-texas-high-schools-bubble-grid_files/figure-html/viz_schools_grid-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>Cool! I like this visualization because it seems to offer a finer amount of detail compared to a choropleth. (In other words, it seems to emphasize specific areas in counties and not the entire county itself.) Nonetheless, there are some disadvantages of this technique.</p>
+<ul>
+<li><p>There is subjectivity involved in the choice of precision for interpolation. The grid in my example seems a bit “too” granular around the San Antonio and Austin area, where it seems like there are no values at all! (Perhaps this is just an “operator error” on my behalf.)</p></li>
+<li><p><code>sf::st_interpolate_aw()</code> seems to only be capable of aggregating by sum (with <code>extensive = TRUE</code>) or mean (with <code>extensive = FALSE</code>). There are certainly some cases where other aggregation functions would be desirable. For my example, I actually would have preferred a maximum. An average is sensitive to area with a relatively small number of schools (that, consequently, may be “over”-emphasized by the value encoding); and a sum may too strongly emphasize areas with a large number of schools without providing any insight into their scores.</p></li>
+</ul>
+<p>For comparison’s purposes, let’s look at what a choropleth map would look like. I’ll need an additional data.frame for this exercise—<code>schools_tea_filt_join</code>—which is just the <code>schools_tea_filt</code> data joined with counties data that can be retrieved from a call to <code>ggplot2::map_data()</code>.</p>
+<pre class="r"><code>viz_schools_chlr &lt;-
+  ggplot() +
+  geom_polygon(
+    data = tx_border,
+    aes(x = long, y = lat, group = group),
+    size = 1.5,
+    color = &quot;black&quot;,
+    fill = NA
+  ) +
+  geom_polygon(
+    data = schools_tea_filt_join,
+    aes(x = long, y = lat, group = group, fill = value),
+  ) +
+  geom_sf(
+    data = hwys_sf,
+    linetype = &quot;solid&quot;,
+    size = 0.1
+  ) +
+  geom_sf(
+    data = cities_sf,
+    shape = 16,
+    size = 2,
+    fill = &quot;black&quot;
+  ) +
+  ggrepel::geom_label_repel(
+    data = cities_sf,
+    aes(x = x, y = y, label = city_nm)
+  ) +
+  coord_sf(datum = NA) +
+  scale_fill_viridis_c(option = &quot;B&quot;, na.value = &quot;#FFFFFF&quot;) +
+  teplot::theme_map(legend.position = &quot;bottom&quot;) +
+  labs(
+    title = str_wrap(&quot;Texas High School Math SAT Scores, 2015&quot;, 80),
+    caption = &quot;By Tony ElHabr.&quot;
+  )
+viz_schools_chlr</code></pre>
+<p><img src="/post/2018-07-22-texas-high-schools-bubble-grid_files/figure-html/viz_schools_chlr-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>This choropleth actually isn’t so bad, but I think I still prefer the bubble grid.</p>

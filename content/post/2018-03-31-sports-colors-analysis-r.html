@@ -1,0 +1,1319 @@
+---
+title: Analyzing Professional Sports Team Colors with R
+slug: sports-colors-analysis-r
+date: "2018-03-31"
+categories: []
+tags:
+ - r
+ - sports
+ - colors
+ - ggplot2
+banner: "img/sports-colors-analysis-r/viz_colors_named_2.png"
+---
+
+
+
+<p>When working with the <a href="http://ggplot2.org/"><code>ggplot2</code> package</a>, I often find myself playing around with colors for longer than I probably should be. I think that this is because I know that the right color scheme can greatly enhance the information that a plot portrays; and, conversely, choosing an uncomplimentary palette can suppress the message of an otherwise good visualization.</p>
+<p>With that said, I wanted to take a look at the presence of colors in the sports realm. I think some fun insight can be had from an exploration of colors used by individual sports teams. Some people have done some interesting technical research on this topic, such as studying <a href="http://www.open.edu/openlearn/health-sports-psychology/health/sport-and-fitness/sport/the-colour-success-can-uniform-colour-impact-on-team-success">the possible effects of color on fan and player perception of teams</a>.</p>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<p><strong>Technical Notes</strong></p>
+<ul>
+<li><p>I show code only where I believe it complements the commentary throughout; otherwise, it is hidden. Nonetheless, the underlying code can be viewed in the raw .Rmd file for this write-up.</p></li>
+<li><p>Although I list all of the packages used in this write-up (for the sake of reproducibility), I comment out those that are used only in an explicit manner (i.e. via the “<code>package::function</code>” syntax). (Only <code>dplyr</code> and <code>ggplot2</code> are imported altogether). Minimizing the namespace in this manner is a personal convention.</p></li>
+</ul>
+<pre class="r"><code>library(&quot;dplyr&quot;)
+# library(&quot;teamcolors&quot;)
+library(&quot;ggplot2&quot;)
+# library(&quot;tidyr&quot;)
+# library(&quot;tibble&quot;)
+# library(&quot;purrr&quot;)
+# library(&quot;stringr&quot;)
+# library(&quot;stringi&quot;)
+# library(&quot;nbastatR&quot;)
+# library(&quot;UpSetR&quot;)
+# library(&quot;factoextra&quot;)
+# library(&quot;NbClust&quot;)
+# library(&quot;corrr&quot;)
+# library(&quot;viridis&quot;)
+# library(&quot;igraph&quot;)
+# library(&quot;ggraph&quot;)
+# library(&quot;circlize&quot;)
+# library(&quot;colorscience&quot;)</code></pre>
+<p>The data that I’ll use comes from the <a href="https://github.com/beanumber/teamcolors">teamcolors R package</a>, which itself is sourced from <a href="http://jim-nielsen.com/teamcolors/">Jim Nielsen’s website for team colors</a>. This data set provides color information for all teams from six professional sports leagues:</p>
+<ul>
+<li>EPL (European futbol),</li>
+<li>MLB (baseball),</li>
+<li>MLS (American soccer),</li>
+<li>NBA (basketball),</li>
+<li>NFL (American football), and</li>
+<li>NHL (hockey).</li>
+</ul>
+<pre class="r"><code>teamcolors::teamcolors %&gt;% create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+name
+</th>
+<th style="text-align:left;">
+league
+</th>
+<th style="text-align:left;">
+primary
+</th>
+<th style="text-align:left;">
+secondary
+</th>
+<th style="text-align:left;">
+tertiary
+</th>
+<th style="text-align:left;">
+quaternary
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+AFC Bournemouth
+</td>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:left;">
+#e62333
+</td>
+<td style="text-align:left;">
+#000000
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Anaheim Ducks
+</td>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:left;">
+#010101
+</td>
+<td style="text-align:left;">
+#a2aaad
+</td>
+<td style="text-align:left;">
+#fc4c02
+</td>
+<td style="text-align:left;">
+#85714d
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona Cardinals
+</td>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:left;">
+#97233f
+</td>
+<td style="text-align:left;">
+#000000
+</td>
+<td style="text-align:left;">
+#ffb612
+</td>
+<td style="text-align:left;">
+#a5acaf
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona Coyotes
+</td>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:left;">
+#010101
+</td>
+<td style="text-align:left;">
+#862633
+</td>
+<td style="text-align:left;">
+#ddcba4
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona Diamondbacks
+</td>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:left;">
+#a71930
+</td>
+<td style="text-align:left;">
+#000000
+</td>
+<td style="text-align:left;">
+#e3d4ad
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arsenal
+</td>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:left;">
+#ef0107
+</td>
+<td style="text-align:left;">
+#023474
+</td>
+<td style="text-align:left;">
+#9c824a
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta Braves
+</td>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:left;">
+#ce1141
+</td>
+<td style="text-align:left;">
+#13274f
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta Falcons
+</td>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:left;">
+#a71930
+</td>
+<td style="text-align:left;">
+#000000
+</td>
+<td style="text-align:left;">
+#a5acaf
+</td>
+<td style="text-align:left;">
+#a30d2d
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta Hawks
+</td>
+<td style="text-align:left;">
+nba
+</td>
+<td style="text-align:left;">
+#e13a3e
+</td>
+<td style="text-align:left;">
+#c4d600
+</td>
+<td style="text-align:left;">
+#061922
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta United FC
+</td>
+<td style="text-align:left;">
+mls
+</td>
+<td style="text-align:left;">
+#a29061
+</td>
+<td style="text-align:left;">
+#80000b
+</td>
+<td style="text-align:left;">
+#000000
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 165
+</td>
+</tr>
+</tfoot>
+</table>
+<p>Putting this data in a “tidy” format is rather straightforward. <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a></p>
+<pre class="r"><code>colors_tidy &lt;-
+  teamcolors::teamcolors %&gt;%
+  tidyr::gather(ord, hex, -name, -league)
+colors_tidy %&gt;% create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+name
+</th>
+<th style="text-align:left;">
+league
+</th>
+<th style="text-align:left;">
+ord
+</th>
+<th style="text-align:left;">
+hex
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+AFC Bournemouth
+</td>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#e62333
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Anaheim Ducks
+</td>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#010101
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona Cardinals
+</td>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#97233f
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona Coyotes
+</td>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#010101
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona Diamondbacks
+</td>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#a71930
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arsenal
+</td>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#ef0107
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta Braves
+</td>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#ce1141
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta Falcons
+</td>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#a71930
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta Hawks
+</td>
+<td style="text-align:left;">
+nba
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#e13a3e
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Atlanta United FC
+</td>
+<td style="text-align:left;">
+mls
+</td>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+#a29061
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 660
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div id="exploration" class="section level2">
+<h2>Exploration</h2>
+<p>To begin, here’s visualization of all the colors in this data set. Not much significance can be extracted from this plot, but it’s still nice to have as a mechanism for getting familiar with the data.</p>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_colors_all-1.png" width="768" style="display: block; margin: auto;" /></p>
+<div id="color-brightness" class="section level3">
+<h3>Color Brightness</h3>
+<p>Note that there are quite a few teams without a full set of four colors (and some without a third or even second color).</p>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_colors_nas_bylg-1.png" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>colors_pct_nas &lt;-
+  colors_tidy %&gt;%
+  count(league, is_na = is.na(hex), sort = TRUE) %&gt;%
+  filter(is_na) %&gt;%
+  select(-is_na) %&gt;%
+  left_join(
+    teamcolors::teamcolors %&gt;%
+      count(league, sort = TRUE) %&gt;%
+      rename(total = n) %&gt;%
+      mutate(total = as.integer(4 * total)),
+    by = &quot;league&quot;
+  ) %&gt;%
+  mutate(n_pct = 100 * n / total) %&gt;% 
+  mutate_if(is.numeric, funs(round(., 2)))
+colors_pct_nas %&gt;% create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+league
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+total
+</th>
+<th style="text-align:right;">
+n_pct
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:right;">
+47
+</td>
+<td style="text-align:right;">
+120
+</td>
+<td style="text-align:right;">
+39.17
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:right;">
+42
+</td>
+<td style="text-align:right;">
+124
+</td>
+<td style="text-align:right;">
+33.87
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:right;">
+34
+</td>
+<td style="text-align:right;">
+80
+</td>
+<td style="text-align:right;">
+42.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mls
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+88
+</td>
+<td style="text-align:right;">
+22.73
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nba
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+120
+</td>
+<td style="text-align:right;">
+15.83
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+128
+</td>
+<td style="text-align:right;">
+1.56
+</td>
+</tr>
+</tbody>
+</table>
+<p>Both the visualization and the tabulation indicate that the MLB is missing the most colors (on a per-team basis). Perhaps this suggests that it is the most “dull” sports league. <a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> The NFL is on the other end of the spectrum (pun intended), with only 1.5% of missing color values. Is it a coincidence that the <a href="http://news.gallup.com/poll/224864/football-americans-favorite-sport-watch.aspx">NFL is the most popular sport in the U.S.</a>? <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a></p>
+<p>My subjective indictment of MLB as dull is certainly unfair and unquantitative. Does “dull” refer to <a href="https://en.wikipedia.org/wiki/Color_appearance_model#Color_appearance_parameters">hue, lightness, brightness, etc.</a>? For the sake of argument, let’s say that I want to interpret dullness as <a href="https://en.wikipedia.org/wiki/Brightness">“brightness”</a>, which, in the color lexicon, is interpreted as the arithmetic mean of the <a href="https://en.wikipedia.org/wiki/RGB_color_model">red-green-blue</a> (RGB) values of a color. To rank the leagues by brightness, I can take the average of the RGB values (derived from the hex values) across all colors for all teams in each league. The resulting values–where a lower value indicates a darker color, and a higher value indicates a brighter color–provide a fair measure upon which each league’s aggregate color choices can be judged. <a href="#fn5" class="footnoteRef" id="fnref5"><sup>5</sup></a></p>
+<pre class="r"><code>add_rgb_cols &lt;- function(data) {
+  data %&gt;%
+    pull(hex) %&gt;%
+    grDevices::col2rgb() %&gt;%
+    t() %&gt;%
+    tibble::as_tibble() %&gt;%
+    bind_cols(data, .) 
+}
+
+rank_leagues_byrgb &lt;- function(data = NULL) {
+  colors_rgb &lt;-
+    data %&gt;%
+    add_rgb_cols() %&gt;%
+    select(-hex) %&gt;%
+    arrange(league, name)
+  
+  colors_rgb_bynm_bylg &lt;-
+    colors_rgb %&gt;%
+    mutate_at(vars(red, green, blue), funs(. / 255)) %&gt;%
+    group_by(name, league) %&gt;%
+    summarize_at(vars(red, green, blue), funs(mean)) %&gt;%
+    ungroup() %&gt;%
+    tidyr::gather(rgb, value, red, green, blue) %&gt;%
+    group_by(name, league) %&gt;%
+    summarize_at(vars(value), funs(mean, sd)) %&gt;%
+    ungroup() %&gt;%
+    arrange(league, mean)
+  
+  colors_rgb_bylg &lt;-
+    colors_rgb_bynm_bylg %&gt;%
+    group_by(league) %&gt;%
+    summarize_at(vars(mean, sd), funs(mean)) %&gt;%
+    ungroup() %&gt;%
+    arrange(mean)
+  colors_rgb_bylg
+}
+
+convert_dec2pct &lt;- function(x) {
+  100 * round(x, 4)
+}</code></pre>
+<pre class="r"><code>colors_tidy_nona &lt;-
+  colors_tidy %&gt;%
+  filter(!is.na(hex))
+
+
+colors_tidy_nona %&gt;% 
+  rank_leagues_byrgb() %&gt;%
+  arrange(mean) %&gt;% 
+  mutate_if(is.numeric, funs(convert_dec2pct)) %&gt;% 
+  create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+league
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:right;">
+30.46
+</td>
+<td style="text-align:right;">
+14.52
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:right;">
+32.90
+</td>
+<td style="text-align:right;">
+12.68
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:right;">
+33.75
+</td>
+<td style="text-align:right;">
+13.16
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:right;">
+36.56
+</td>
+<td style="text-align:right;">
+15.79
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mls
+</td>
+<td style="text-align:right;">
+38.59
+</td>
+<td style="text-align:right;">
+12.05
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nba
+</td>
+<td style="text-align:right;">
+40.99
+</td>
+<td style="text-align:right;">
+10.37
+</td>
+</tr>
+</tbody>
+</table>
+<p>This calculation proves what we might have guessed by inspection–the NHL actually has the darkest colors. In fact, it seems that the NHL’s “darkness” is most prominent in the primary colors of the teams in the league.</p>
+<pre class="r"><code>colors_tidy_nona %&gt;% 
+  filter(ord == &quot;primary&quot;) %&gt;% 
+  rank_leagues_byrgb() %&gt;% 
+  arrange(mean) %&gt;% 
+  mutate_if(is.numeric, funs(convert_dec2pct)) %&gt;% 
+  create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+league
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:right;">
+9.13
+</td>
+<td style="text-align:right;">
+9.20
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:right;">
+23.42
+</td>
+<td style="text-align:right;">
+18.69
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:right;">
+29.90
+</td>
+<td style="text-align:right;">
+29.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mls
+</td>
+<td style="text-align:right;">
+32.16
+</td>
+<td style="text-align:right;">
+22.74
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:right;">
+37.35
+</td>
+<td style="text-align:right;">
+29.10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nba
+</td>
+<td style="text-align:right;">
+37.95
+</td>
+<td style="text-align:right;">
+30.10
+</td>
+</tr>
+</tbody>
+</table>
+<p>On the other hand, the NBA and the two soccer leagues (the MLS and the EPL) stand out as the leagues with the “brightest” colors.</p>
+<p>Finally, just by inspection, it seems like their is an unusual pattern where a disproportionate number of teams in the MLS, NBA, and NFL have shades of gray as their tertiary colors. Using the same function as before, it can be shown indirectly via relatively small standard deviation values that there is not much variation in this color.</p>
+<pre class="r"><code>colors_tidy_nona %&gt;% 
+  filter(ord == &quot;tertiary&quot;) %&gt;% 
+  rank_leagues_byrgb() %&gt;%
+  arrange(sd) %&gt;% 
+  mutate_if(is.numeric, funs(convert_dec2pct)) %&gt;% 
+  create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+league
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+nba
+</td>
+<td style="text-align:right;">
+34.23
+</td>
+<td style="text-align:right;">
+9.39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nfl
+</td>
+<td style="text-align:right;">
+36.98
+</td>
+<td style="text-align:right;">
+12.48
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mls
+</td>
+<td style="text-align:right;">
+48.81
+</td>
+<td style="text-align:right;">
+14.13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+epl
+</td>
+<td style="text-align:right;">
+49.57
+</td>
+<td style="text-align:right;">
+23.89
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nhl
+</td>
+<td style="text-align:right;">
+42.10
+</td>
+<td style="text-align:right;">
+28.15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mlb
+</td>
+<td style="text-align:right;">
+56.64
+</td>
+<td style="text-align:right;">
+29.93
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="common-colors" class="section level3">
+<h3>Common Colors</h3>
+<p>Using a slightly customized version of the <code>plotrix::color.id()</code> function, I can attempt to identify common colors (by name) from the hex values.</p>
+<pre class="r"><code># Reference:
+# + plotrix::color.id
+color_id &lt;- function(hex, set = grDevices::colors()) {
+  c2 &lt;- grDevices::col2rgb(hex)
+  coltab &lt;- grDevices::col2rgb(set)
+  cdist &lt;- apply(coltab, 2, function(z) sum((z - c2)^2))
+  set[which(cdist == min(cdist))]
+}
+
+identify_color_name &lt;- function(col = NULL, set = grDevices::colors()) {
+  col %&gt;%
+    # purrr::map(plotrix::color.id) %&gt;% 
+    purrr::map(~color_id(.x, set)) %&gt;% 
+    purrr::map_chr(~.[1]) %&gt;% 
+    stringr::str_replace_all(&quot;[0-9]&quot;, &quot;&quot;)
+}</code></pre>
+<p>I’ll bin the possible colors into a predefined set. (If a binning strategy is not implemented, one ends up with a more sparse, less meaningful grouping of colors.) This set consists of the “rainbow” colors, as well as black, white, and two shades of grey.</p>
+<pre class="r"><code>colors_rnbw_hex &lt;-
+  c(
+    stringr::str_replace_all(grDevices::rainbow(16), &quot;FF$&quot;, &quot;&quot;),
+    &quot;#FFFFFF&quot;,
+    &quot;#EEEEEE&quot;,
+    &quot;#AAAAAA&quot;,
+    &quot;#000000&quot;
+  )
+colors_rnbw &lt;- identify_color_name(colors_rnbw_hex)</code></pre>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_colors_rnbw-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Now, with the setup out of the way, I can easily compute the names of each color and identify the most common colors overall, as well as the most common primary and secondary colors.</p>
+<pre class="r"><code>add_color_nm_col &lt;- function(data, rename = TRUE) {
+  out &lt;-
+    data %&gt;%
+    pull(hex) %&gt;%
+    identify_color_name(set = colors_rnbw) %&gt;% 
+    tibble::as_tibble() %&gt;% 
+    bind_cols(data, .)
+  
+  if(rename) {
+    out &lt;-
+      out %&gt;% 
+      rename(color_nm = value)
+  }
+  out
+}
+
+colors_named &lt;-
+  colors_tidy_nona %&gt;%
+  add_color_nm_col()</code></pre>
+<pre class="r"><code>colors_named %&gt;%
+  count(color_nm, sort = TRUE) %&gt;% 
+  create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+color_nm
+</th>
+<th style="text-align:right;">
+n
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+173
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+red
+</td>
+<td style="text-align:right;">
+61
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+darkgray
+</td>
+<td style="text-align:right;">
+55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+yellow
+</td>
+<td style="text-align:right;">
+43
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gray
+</td>
+<td style="text-align:right;">
+36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+darkgoldenrod
+</td>
+<td style="text-align:right;">
+35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+orangered
+</td>
+<td style="text-align:right;">
+33
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+blue
+</td>
+<td style="text-align:right;">
+26
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+deepskyblue
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mediumspringgreen
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 15
+</td>
+</tr>
+</tfoot>
+</table>
+<pre class="r"><code>colors_named %&gt;%
+  count(ord, color_nm, sort = TRUE) %&gt;% 
+  filter(ord %in% c(&quot;primary&quot;, &quot;secondary&quot;)) %&gt;% 
+  group_by(ord) %&gt;% 
+  mutate(rank_byord = row_number(desc(n))) %&gt;% 
+  do(head(., 5)) %&gt;% 
+  create_kable()</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+ord
+</th>
+<th style="text-align:left;">
+color_nm
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+rank_byord
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+75
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+red
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+blue
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+orangered
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+primary
+</td>
+<td style="text-align:left;">
+deepskyblue
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+secondary
+</td>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+secondary
+</td>
+<td style="text-align:left;">
+red
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+secondary
+</td>
+<td style="text-align:left;">
+yellow
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+secondary
+</td>
+<td style="text-align:left;">
+darkgray
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+secondary
+</td>
+<td style="text-align:left;">
+gray
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+</tbody>
+</table>
+<p>Of course, a visualization is always appreciated.</p>
+<pre class="r"><code>ords &lt;- ord_nums %&gt;% pull(ord)
+color_nm_na &lt;- &quot;none&quot;
+colors_named_compl &lt;-
+  colors_named %&gt;% 
+  mutate(ord = factor(ord, levels = ords)) %&gt;% 
+  select(-hex, -league) %&gt;% 
+  tidyr::complete(name, ord, fill = list(color_nm = color_nm_na)) %&gt;%
+  tidyr::spread(ord, color_nm)
+
+colors_named_compl_ord2 &lt;- 
+  colors_named_compl %&gt;%
+  filter(primary != secondary) %&gt;% 
+  count(primary, secondary, sort = TRUE) %&gt;%
+  filter(primary != &quot;none&quot;) %&gt;% 
+  filter(secondary != &quot;none&quot;)
+
+colors_named_compl_ord2_ig &lt;- 
+  colors_named_compl_ord2 %&gt;% 
+  igraph::graph_from_data_frame()
+
+igraph::V(colors_named_compl_ord2_ig)$node_label &lt;- names(igraph::V(colors_named_compl_ord2_ig))
+igraph::V(colors_named_compl_ord2_ig)$node_size &lt;- igraph::degree(colors_named_compl_ord2_ig)
+
+lab_title_colors_named &lt;- paste0(&quot;Colors&quot;, lab_base_suffix)
+lab_subtitle_colors_named &lt;- paste0(&quot;Relationships Among Primary and Secondary Colors&quot;)
+
+# Reference:
+# + https://rud.is/books/21-recipes/visualizing-a-graph-of-retweet-relationships.html.
+viz_colors_named &lt;-
+  colors_named_compl_ord2_ig %&gt;%
+  ggraph::ggraph(layout = &quot;linear&quot;, circular = TRUE) +
+  # ggraph::ggraph(layout = &quot;kk&quot;) +
+  # ggraph::ggraph() +
+  # ggraph::geom_edge_arc() +
+  ggraph::geom_edge_arc(
+    aes(
+      edge_width = n / 3,
+      # edge_alpha = n
+      start_cap = ggraph::label_rect(node1.name, padding = margin(5, 5, 5, 5)),
+      end_cap = ggraph::label_rect(node2.name, padding = margin(5, 5, 5, 5))
+      )
+    ) +
+  ggraph::geom_node_text(aes(label = node_label)) +
+  coord_fixed() +
+  # teplot::theme_te()
+  # ggraph::theme_graph(base_family = &quot;Arial&quot;) +
+  theme_void() +
+  theme(plot.title = element_text(face = &quot;bold&quot;, size = 16), plot.subtitle = element_text(size = 12)) +
+  labs(title = lab_title_colors_named, subtitle = lab_subtitle_colors_named)
+# viz_colors_named</code></pre>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_colors_named_2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Additionally, given the “set” nature of the data set, I think that the <a href="https://github.com/hms-dbmi/UpSetR">{UpSetR} package</a> can be used to create an intersection-style graph. <a href="#fn6" class="footnoteRef" id="fnref6"><sup>6</sup></a></p>
+<p>Neglecting the color black, which is unsurprisingly the most common color, red has the highest count. (Consequently, it is deserving of use as the fill for the bars in the following plot). <a href="#fn7" class="footnoteRef" id="fnref7"><sup>7</sup></a> On the other hand, it’s a bit unsuprising to me that blue, nor its its brethren in <code>cyan</code> and <code>deepskyblue</code>, isn’t among the top 2 or 3. One might argue that the three shades of blue inherently cause classification to be “less focused”, but this does not seem to curb the prominence of red, which also has two sister colors in <code>orangered</code> and <code>darkpink</code>.</p>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_colors_sets-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="color-clustering" class="section level3">
+<h3>Color Clustering</h3>
+<p>Aside from set analysis, this data set seems prime for some <a href="https://en.wikipedia.org/wiki/Unsupervised_learning">unsupervised learning</a>, and, more specifically, <a href="https://en.wikipedia.org/wiki/Cluster_analysis">clustering</a>. While analysis of the colors using RGB values as features can be done (and is actually what I tried initially), the results are not as interpretable as I would like them to be due to the “&gt;2-dimensionality” nature of such an approach.</p>
+<p>Thus, as an alternative to RGB components, I determined that <a href="https://en.wikipedia.org/wiki/Hue">“hue”</a> serves as a reasonable all-in-one measure of the “essence” of a color. It is inherently a radial feature–its value can range from 0 to 360 (where red is 0 green is 120, blue is 240). <a href="#fn8" class="footnoteRef" id="fnref8"><sup>8</sup></a></p>
+<p>Then, by limiting the color sets to just the primary and secondary colors (such that there are only 2 features), I create a setting that allows the clustering results to be interpeted (and visualized) in a relatively direct manner.</p>
+<p>With my setup decided upon, I implement a a tidy pipeline for statistical analysis–making heavy use of <a href="http://varianceexplained.org/">David Robinson</a>’s <a href="https://github.com/tidyverse/broom">{broom} package</a>–to explore various values of k for a kmeans model. (The package’s <a href="https://cran.r-project.org/web/packages/broom/vignettes/kmeans.html">kmeans vignette</a> provides a really helpful example.)</p>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_kclusts-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>While this visualization is fairly informative, it doesn’t quite pinpoint exactly which value of k is “most optimal”. There are [various methods for determining the optimal k-value for a kmeans model] (<a href="http://www.sthda.com/english/articles/29-cluster-validation-essentials/96-determining-the-optimal-number-of-clusters-3-must-know-methods/" class="uri">http://www.sthda.com/english/articles/29-cluster-validation-essentials/96-determining-the-optimal-number-of-clusters-3-must-know-methods/</a>), one of which is the <a href="https://bl.ocks.org/rpgove/0060ff3b656618e9136b">“Elbow” method</a>. Basically, the point is to plot the within-cluster sum of squares (WSS) (i.e. variance) for each value of k–which is typically monotonically decreasing with increasing k–and pick the value of k that corresponds to the “bend” in the plot.</p>
+<p><img src="/post/2018-03-31-sports-colors-analysis-r_files/figure-html/viz_wss-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>For those who enjoy calculus, the k value for which the second derivative of the curve is minimized is the optimal value (by the Elbow method).</p>
+<pre class="r"><code>kms_metrics$tot.withinss[1:8] %&gt;% 
+  diff(differences = 2) %&gt;% 
+  which.min() + 
+  2</code></pre>
+<pre><code>## [1] 7</code></pre>
+<p>To complement this conclusion, I can use the <code>fviz_nbclust()</code> function fom the <a href="https://github.com/kassambara/factoextra"><code>factoextra</code> package</a>. It deduces the optimal k value by the consensus of different methods.</p>
+<p>It’s nice to see that this method comes to the same conclusion.</p>
+<p>I’ll continue this analysis in a separate write-up. Unfortunately (or, perhaps, fortunately) there was too much to fit in a single document without it feeling overwhelming.</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The fact that the data comes in an easy-to-work-with format comes as a relief to those of us used to having to clean raw data tediously.<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>Note that I use the name <code>ord</code> to represent “ordinality” of the color–that is, primary, secondary, tertiary, or quaternary.<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>In fact, the current consensus among sports fans is that the <a href="https://www.huffingtonpost.com/laura-hanby-hudgens/the-decline-of-baseball-a_b_9630782.html">MLB has a decaying fan-base in the U.S. because it is failing to attract younger fans</a>. This opinion is typically based on conjectures about the game’s slow pace, but, who knows, maybe colors also has something to do with it! (I’m only kidding. I pride myself in guarding against the <a href="https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation">correlation-equals-causation fallacy</a>.)<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p>Again, in case you think I’m serious, let me be clear–yes, it is most likely a coincidence.<a href="#fnref4">↩</a></p></li>
+<li id="fn5"><p><em>(More) Technical Notes</em></p>
+<ul>
+<li><p>I put this computation in a function because I perform the same actions multiple times. This practice complies with the <a href="https://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a> principle.</p></li>
+<li><p>I was unable to get <code>grDevices::colo2rgb()</code> (and some other custom functions used elsewhere) to work in a vectorized manner, so I created a function (<code>add_rgb_cols()</code>) to do so. I believe the problem is that <code>grDevices::colo2rgb()</code> returns a matrix instead of a single value.</p></li>
+<li><p>Additionally, despite only using one element in the returned list here, I wrote the function to return a list of results because I was inspecting the different sets of results during code development.</p></li>
+<li><p>Finally, I re-scale each RGB value to a value between 0 and 1–RGB is typically expressed on a 0 to 255 scale–in order to make the final values more interpretable.</p></li>
+</ul>
+<a href="#fnref5">↩</a></li>
+<li id="fn6"><p>After learning about the this package recently, I’m glad to finally have a use-case to use it!<a href="#fnref6">↩</a></p></li>
+<li id="fn7"><p>Unfortunately, it seems that customizing the colors for each set is not straightforward, so I do attempt it.<a href="#fnref7">↩</a></p></li>
+<li id="fn8"><p>Red is also 360.<a href="#fnref8">↩</a></p></li>
+</ol>
+</div>

@@ -1,0 +1,92 @@
+---
+title: Visualizing an NBA Team's Schedule Using R
+date: "2017-11-26"
+slug: visualizing-nba-team-schedule
+categories: []
+tags:
+  - r
+  - ggplot
+  - nba
+banner: "img/visualizing-nba-team-schedule/viz_pd_sas_2016-banner.png"
+---
+
+
+
+<p>If you’re not completely new to the data science community (specifically, the <code>#rstats</code> community), then you’ve probably seen a version of the “famous” data science workflow diagram. <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
+<div class="figure">
+<img src="/img/visualizing-nba-team-schedule/data-science.png" />
+
+</div>
+<p>If one is fairly familiar with a certain topic, then one might not spend much time with the initial “visualize” step of the workflow. Such is the case with me and NBA data–as a relatively knowledgeable NBA follower, I don’t necessarily need to spend much of my time exploring raw NBA data prior to modeling.</p>
+<p>Anyways, as a break from experimenting with predictive models, I decided to make a visualization just for the sake of trying something I hadn’t done before. <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> In particular, I was inspired by the calendar heat map visualization that I saw in the <a href="https://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html">Top 50 ggplot visualizations post</a> on the <a href="r-statisctics.co">r-statistics.co</a> website.</p>
+<div class="figure">
+<img src="https://r-statistics.co/screenshots/ggplot_masterlist_42.png" />
+
+</div>
+<p>To implement a plot of this nature, I decided to look at how my hometown team, the San Antonio Spurs, fared last season (2016) in terms of point differential. In case it’s not immediately obvious, lots of green is good. (This is not surprising to those of us who follow the NBA–the Spurs have been consistently good since the end of the 1990s.)</p>
+<div class="figure">
+<img src="/img/visualizing-nba-team-schedule/viz_pd_sas_2016.png" />
+
+</div>
+<pre class="r"><code>library(&quot;dplyr&quot;)
+library(&quot;ggplot2&quot;)
+
+url &lt;- &quot;https://raw.githubusercontent.com/aelhabr/nba/master/data/game_results-prepared.csv&quot;
+results_prepared &lt;- getURL(url)
+
+colnames_base &lt;- c(&quot;date&quot;, &quot;season&quot;, &quot;tm&quot;)
+colnames_calc_dates &lt;- c(&quot;yyyy&quot;, &quot;mm&quot;, &quot;dd&quot;, &quot;wd&quot;, &quot;mm_yyyy&quot;, &quot;mm_w&quot;)
+# Look at a couple of different metrics.
+# Specifically, look at games played to date (g_td) and point differential (pd).
+colnames_viz &lt;- c(&quot;g_td&quot;, &quot;pd&quot;)
+
+results_calendar_tm &lt;-
+  results_prepared %&gt;%
+  filter(tm == &quot;SAS&quot;) %&gt;%
+  mutate(
+    yyyy = year(date),
+    mm = lubridate::month(date),
+    dd = lubridate::day(date),
+    wd = lubridate::wday(date, label = TRUE, abbr = TRUE),
+    mm_yyyy = zoo::as.yearmon(date)
+  ) %&gt;%
+  group_by(mm_yyyy) %&gt;%
+  mutate(mm_w = ceiling(dd / 7)) %&gt;%
+  ungroup() %&gt;%
+  select(one_of(colnames_base, colnames_calc_dates, colnames_viz)) %&gt;%
+  arrange(season, g_td, tm)
+results_calendar_tm
+
+# Tidy up because I was experimenting with different metrics, not just point differential.
+results_calendar_tm_tidy &lt;-
+  results_calendar_tm %&gt;%
+  # mutate_if(is.character, funs(as.factor)) %&gt;%
+  tidyr::gather(metric, value, colnames_viz)
+
+season &lt;- 2016
+wd_labels &lt;- levels(results_calendar_tm$wd)
+wd_labels[2:6] &lt;- &quot;&quot;
+title &lt;- str_c(&quot;San Antonio Spurs Point Differential in &quot;, season, &quot; NBA Season&quot;)
+
+viz_pd_sas_2016 &lt;-
+  results_calendar_tm_tidy %&gt;%
+  filter(season %in% seasons) %&gt;%
+  filter(metric == &quot;pd&quot;) %&gt;%
+  ggplot() +
+  geom_tile(aes(x = wd, y = mm_w, fill = value), colour = &quot;white&quot;) +
+  scale_y_reverse() +
+  scale_x_discrete(labels = wd_labels) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_fill_gradient2(low = &quot;red&quot;, mid = &quot;grey&quot;, high = &quot;green&quot;) +
+  theme(legend.position = &quot;bottom&quot;) +
+  labs(x = &quot;&quot;, y = &quot;&quot;, title = title) +
+  facet_wrap( ~ mm_yyyy, nrow = 2)
+viz_pd_sas_2016</code></pre>
+<p>There are an infinite number of ways to visualize data like this, but I thought this was interesting because of the temporal nature of the data.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The figure shown here comes from the <a href="http://r4ds.had.co.nz/introduction.html">introductory chapter of the <em>R for Data Science</em> book</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>Here, I use the NBA data that I have already scraped and cleaned.<a href="#fnref2">↩</a></p></li>
+</ol>
+</div>

@@ -1,0 +1,298 @@
+---
+title: A Tidy Text Analysis of R Weekly Posts
+date: "2018-03-05"
+slug: tidy-text-analysis-rweekly
+categories: []
+tags:
+  - r
+  - rweekly
+  - tidytext
+  - ggplot2
+  - dplyr
+banner: "img/tidy-text-analysis-rweekly/viz_lines_cnt_bypost_byhead.png"
+---
+
+
+
+<p>I’m always intrigued by data science “meta” analyses or programming/data-science. For example, <a href="http://www.business-science.io/learning-r/2018/03/03/how_to_learn_R_pt1.html">Matt Dancho’s analysis of renown data scientist David Robinson</a>. <a href="http://varianceexplained.org/">David Robinson</a> himself has done some good ones, such as <a href="https://stackoverflow.blog/2017/09/06/incredible-growth-python/">his blog posts for <em>Stack Overflow</em> highlighting the growth of “incredible” growth of <code>python</code></a>, and <a href="https://stackoverflow.blog/2017/10/10/impressive-growth-r/">the “impressive” growth of <code>R</code></a> in modern times.</p>
+<p>With that in mind, I thought it would try to identify if any interesting trends have risen/fallen <em>within</em> the <code>R</code> community in recent years. To do this, I scraped and analyzed the “weekly roundup” posts put together by <a href="https://rweekly.org/"><em>R Weekly</em></a>, which was originated in May 2016. These posts consist of links and corresponding descriptions, grouped together by topic. It should go without saying that this content serves as a reasonable heuristic for the interests of the <code>R</code> community at any one point in time. (Of course, the posts of other aggregate R blogs such as <a href="https://www.r-bloggers.com/">R Bloggers</a> or <a href="http://blog.revolutionanalytics.com/">Revolution Analytics</a> might serve as better resources since they post more frequently and have been around for quite a bit longer than <a href="https://rweekly.org/"><em>R Weekly</em></a>.)</p>
+<div id="scraping-and-cleaning" class="section level2">
+<h2>Scraping and Cleaning</h2>
+<p>As always, it’s good to follow the best practice of importing all needed packages before beginning. Notably, I’m testing out a personal package (<code>tetext</code>) that I’m currently developing to facilitate some of the text analysis actions demonstrated in the <a href="https://www.tidytextmining.com/"><em>Tidy Text Mining with R</em> book</a>. Looking into the future, it’s my hope that I can use this package to quickly analyze any kind of text-based data in a concise and understandable manner. <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
+<pre class="r"><code>library(&quot;dplyr&quot;)
+library(&quot;rlang&quot;)
+library(&quot;stringr&quot;)
+library(&quot;lubridate&quot;)
+library(&quot;gh&quot;)
+library(&quot;purrr&quot;)
+library(&quot;ggplot2&quot;)
+library(&quot;viridisLite&quot;)
+library(&quot;tetext&quot;) # Personal package.</code></pre>
+<p>For the scraping, I drew upon some the principles shown by <a href="http://www.masalmon.eu/">Maelle Salmon</a> in <a href="https://itsalocke.com/blog/markdown-based-web-analytics-rectangle-your-blog/">her write-up</a> detailing how she scraped and cleaned the blog posts of the <a href="https://itsalocke.com/blog">Locke Data blog</a>. <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a></p>
+<pre class="r"><code># Rerference:
+# + https://itsalocke.com/blog/markdown-based-web-analytics-rectangle-your-blog/
+posts &lt;-
+  gh::gh(
+    endpoint = &quot;/repos/:owner/:repo/contents/:path&quot;,
+    owner = &quot;rweekly&quot;,
+    repo = &quot;rweekly.org&quot;,
+    path = &quot;_posts&quot;
+  )
+
+# NOTE: Only do this to replicate the `posts` that were originally pulled.
+# posts &lt;- posts[1:93]
+
+posts_info &lt;-
+  dplyr::data_frame(
+    name = purrr::map_chr(posts, &quot;name&quot;),
+    path = purrr::map_chr(posts, &quot;path&quot;)
+  )</code></pre>
+<p>In all, <a href="https://rweekly.org/"><em>R Weekly</em></a> has made 93 (at the time of writing).</p>
+<p>Next, before parsing the text of the posts, I add some “meta-data” (mostly for dates) that is helpful for subsequent exploration and analysis. <a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a></p>
+<pre class="r"><code>convert_name_to_date &lt;- function(x) {
+  x %&gt;% 
+    stringr::str_extract(&quot;[0-9]{4}-[0-9]+-[0-9]+&quot;) %&gt;% 
+    strftime(&quot;%Y-%m-%d&quot;) %&gt;% 
+    lubridate::ymd()
+}
+
+posts_info &lt;-
+  posts_info %&gt;% 
+  mutate(date = convert_name_to_date(name)) %&gt;% 
+  mutate(num_post = row_number(date)) %&gt;% 
+    mutate(
+    yyyy = lubridate::year(date) %&gt;% as.integer(),
+    mm = lubridate::month(date, label = TRUE),
+    wd = lubridate::wday(date, label = TRUE)
+  ) %&gt;% 
+  select(date, yyyy, mm, wd, num_post, everything())
+
+posts_info &lt;-
+  posts_info %&gt;% 
+  mutate(date_min = min(date), date_max = max(date)) %&gt;% 
+  mutate(date_lag = date - date_min) %&gt;% 
+  mutate(date_lag30 = as.integer(round(date_lag / 30, 0)), 
+         date_lag60 = as.integer(round(date_lag / 60, 0)), 
+         date_ntile = ntile(date, 6)) %&gt;% 
+  select(-date_min, -date_max) %&gt;% 
+  select(date_lag, date_lag30, date_lag60, date_ntile, everything())
+posts_info</code></pre>
+<p>Let’s quickly look at whether or not <a href="https://rweekly.org/">R Weekly</a> has been consistent with its posting frequency since its inception. The number of posts across 30-day windows should be around 4 or 5.</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/explore_time-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>Now, I’ll do the dirty work of cleaning and parsing the text of each post. My function for doing so is not particularly robust, so it would need to be modified if being applied to another data set/GitHub repo.</p>
+<pre class="r"><code>get_rweekly_post_data &lt;-
+  function(filepath) {
+    # NOTE: This would be necessary if downloading directly from the repo.
+    # filepath &lt;-
+    #   gh::gh(
+    #     &quot;/repos/:owner/:repo/contents/:path&quot;,
+    #     owner = &quot;rweekly&quot;,
+    #     repo = &quot;rweekly.org&quot;,
+    #     path = path
+    #   )
+
+    filepath_prefix &lt;- &quot;data-raw&quot;
+    filepath &lt;- file.path(filepath_prefix, filepath)
+    rgx_rmv &lt;- &quot;Â|Å|â€|œ|\u009d&quot;
+    rgx_detect_link &lt;- &quot;^\\+\\s+\\[&quot;
+    rgx_detect_head &lt;- &quot;^\\s*\\#&quot;
+    rgx_link_post &lt;- &quot;(?&lt;=\\+\\s\\[).*(?=\\])&quot;
+    rgx_link_img &lt;- &quot;(?&lt;=\\!\\[).*(?=\\])&quot;
+    rgx_url &lt;- &quot;(?&lt;=\\().*(?=\\))&quot;
+    rgx_head &lt;- &quot;(?&lt;=\\#\\s).*$&quot;
+    
+    lines &lt;- readLines(filepath)
+    lines_proc &lt;-
+      lines %&gt;%
+      # NOTE: This would be necessary if downloading directly from the repo.
+      # base64enc::base64decode() %&gt;%
+      # rawToChar() %&gt;%
+      stringr::str_split(&quot;\n&quot;) %&gt;%
+      purrr::flatten_chr() %&gt;%
+      as_tibble() %&gt;%
+      rename(text = value) %&gt;%
+      transmute(line = row_number(), text) %&gt;%
+      filter(text != &quot;&quot;) %&gt;%
+      mutate(text = stringr::str_replace_all(text, rgx_rmv, &quot;&quot;)) %&gt;%
+      mutate(text = stringr::str_replace_all(text, &quot;&amp;&quot;, &quot;and&quot;)) %&gt;% 
+      mutate(
+        is_link = ifelse(stringr::str_detect(text, rgx_detect_link), TRUE, FALSE),
+        is_head = ifelse(stringr::str_detect(text, rgx_detect_head), TRUE, FALSE)
+      ) %&gt;%
+      mutate(
+        link_post = stringr::str_extract(text, rgx_link_post),
+        link_img = stringr::str_extract(text, rgx_link_img),
+        url = stringr::str_extract(text, rgx_url),
+        head = 
+          stringr::str_extract(text, rgx_head) %&gt;% 
+          stringr::str_to_lower() %&gt;% 
+          stringr::str_replace_all(&quot;s$&quot;, &quot;&quot;) %&gt;% 
+          stringr::str_replace_all(&quot; the&quot;, &quot;&quot;) %&gt;% 
+          stringr::str_trim()
+      ) %&gt;%
+      mutate(
+        is_head = ifelse(line == 1, TRUE, is_head),
+        head = ifelse(line == 1, &quot;yaml and intro&quot;, head)
+      )
+
+    # NOTE: Couldn&#39;t seem to get `zoo::na.locf()` to work properly.
+    lines_head &lt;-
+      lines_proc %&gt;%
+      mutate(line_head = ifelse(is_head, line, 0)) %&gt;%
+      mutate(line_head = cumsum(line_head))
+    
+    out &lt;-
+      lines_head %&gt;%
+      select(-head) %&gt;%
+      inner_join(
+        lines_head %&gt;%
+          filter(is_head == TRUE) %&gt;%
+          select(head, line_head),
+        by = c(&quot;line_head&quot;)
+      ) %&gt;% 
+      select(-line_head)
+    out
+  }
+
+data &lt;-
+  posts_info %&gt;% 
+  tidyr::nest(path, .key = &quot;path&quot;) %&gt;% 
+  mutate(data = purrr::map(path, get_rweekly_post_data)) %&gt;% 
+  select(-path) %&gt;% 
+  tidyr::unnest(data)
+data</code></pre>
+</div>
+<div id="analyzing" class="section level2">
+<h2>Analyzing</h2>
+<div id="lines-and-links" class="section level3">
+<h3>Lines and Links</h3>
+<p>Now, with the data in a workable format, let’s do some exploration of the post content itself.</p>
+<pre class="r"><code>metrics_bypost &lt;-
+  data %&gt;% 
+  group_by(name, date) %&gt;% 
+  summarize(
+    num_lines = max(line),
+    num_links = sum(!is.na(is_link)),
+    num_links_post = sum(!is.na(link_post)),
+    num_links_img = sum(!is.na(link_img))
+  ) %&gt;% 
+  ungroup() %&gt;% 
+  arrange(desc(num_lines))</code></pre>
+<p>Have the number of links per post increased over time?</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/viz_metrics_cnt_bypost-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>It looks like there has been a correlated increase in the overall length of the posts (as determined by non-empty lines) and the number of links in each post.</p>
+<pre class="r"><code>corrr::correlate(metrics_bypost %&gt;% select(num_lines, num_links))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   rowname   num_lines num_links
+##   &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+## 1 num_lines    NA         0.970
+## 2 num_links     0.970    NA</code></pre>
+<pre class="r"><code>broom::tidy(lm(num_lines ~ num_links, data = metrics_bypost))</code></pre>
+<pre><code>##          term  estimate  std.error statistic      p.value
+## 1 (Intercept) 12.317353 4.93345168  2.496701 1.433479e-02
+## 2   num_links  1.796912 0.04754462 37.794219 2.016525e-57</code></pre>
+<p>Let’s break down the increase of the number of links over time. Are there more links simply due to an increased use of images?</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/viz_links_cnt_bypost-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>It is evident that the increase in the number of links is not the result of increased image usage, but, instead, to increased linkage to non-trivial content.</p>
+<pre class="r"><code>corrr::correlate(metrics_bypost %&gt;% select(num_links, num_links_img, num_links_post))</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   rowname        num_links num_links_img num_links_post
+##   &lt;chr&gt;              &lt;dbl&gt;         &lt;dbl&gt;          &lt;dbl&gt;
+## 1 num_links         NA             0.324          0.865
+## 2 num_links_img      0.324        NA              0.264
+## 3 num_links_post     0.865         0.264         NA</code></pre>
+<pre class="r"><code>broom::tidy(lm(num_links ~ num_links_img + num_links_post, data = metrics_bypost))</code></pre>
+<pre><code>##             term  estimate std.error statistic      p.value
+## 1    (Intercept) 29.094312 4.7262724  6.155869 2.040398e-08
+## 2  num_links_img  1.008073 0.5275685  1.910790 5.921483e-02
+## 3 num_links_post  1.168952 0.0749660 15.593093 2.586469e-27</code></pre>
+<p><a href="https://rweekly.org/">R Weekly</a> uses a fairly consistent set of “topics” (corresponding to the <code>head</code> variable in the scraped data) across all of their posts.</p>
+<pre class="r"><code>head_rmv &lt;- &quot;yaml and intro&quot;
+data %&gt;%
+  distinct(head, name) %&gt;%
+  filter(!(head %in% head_rmv)) %&gt;% 
+  count(head, sort = TRUE)</code></pre>
+<pre><code>## # A tibble: 44 x 2
+##    head                   n
+##    &lt;chr&gt;              &lt;int&gt;
+##  1 r in real world       92
+##  2 tutorial              92
+##  3 upcoming event        92
+##  4 highlight             89
+##  5 r project update      89
+##  6 r in organization     80
+##  7 resource              71
+##  8 quotes of week        63
+##  9 insight               55
+## 10 videos and podcast    55
+## # ... with 34 more rows</code></pre>
+<p>Is there a certain topic (or topics) in the RWeekly posts that are causing the increased length of posts?</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/viz_lines_cnt_bypost_byhead-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>The steady increase in the length of the <code>tutorial</code> section stands out. (I suppose the <code>R</code> community really enjoys code-walkthroughs (like this one).) Also, the introduction of the <code>new package</code> header about a year after the first RWeekly post suggests that R developers really care about what their fellow community members are working on.</p>
+</div>
+<div id="words" class="section level3">
+<h3>Words</h3>
+<p>The words used in the short descriptions that accompany each link to external content should provide a more focused perspective on what specifically is of interest in the <code>R</code> community. What are the most frequently used words in these short descriptions?</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/viz_unigrams_cnts-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p>Some unsurprising words appear at the top of this list, such as <code>data</code> and <code>analysis</code>. Some words that one would probably not see among the top of an analogous list for another programming community are <code>rstudio</code>, <code>shiny</code>, <code>ggplot2</code>, and <code>tidy</code>. It’s interesting that <code>shiny</code> actually appears as the top individual package–this could indicate that bloggers like to share their content through interactive apps (presumably because it is a great way to captivate and engage an audience).</p>
+<p>It’s one thing to look at individual words, but it is perhaps more interesting to look at word relationships.</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/viz_unigrams_corrs-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>This visual highlights a lot of the pairwise word correlations that we might expect in the data science realm: <code>data</code> and <code>science</code>, <code>time</code> and <code>series</code>, <code>machine</code> and <code>learning</code>, etc. Nonetheless, there are some that are certainly unique to the <code>R</code> community: <code>purrr</code> with <code>mapping</code>; <code>community</code> with <code>building</code>; <code>shiny</code> with <code>interactive</code> and <code>learning</code>; and <code>rstudio</code> with (<code>microsoft</code>) <code>server</code>.</p>
+<p>The numerical values driving this correlation network not only is useful for quantifying the visual relationships, but, in this case, it actually highlights some relationships that get a bit lost in the graph (simply due to clustering). In particular, the prominence of the words <code>tutorial</code>, <code>conf</code>, <code>user</code>, and <code>interactive</code> stand out.</p>
+<pre class="r"><code>unigram_corrs &lt;-
+  unigrams %&gt;%
+  tetext::compute_corrs_at(
+    word = &quot;word&quot;,
+    feature = &quot;name&quot;,
+    num_top_ngrams = 100,
+    num_top_corrs = 100
+  )
+unigram_corrs %&gt;% head(20)</code></pre>
+<pre><code>## # A tibble: 20 x 4
+##    item1       item2     correlation  rank
+##    &lt;chr&gt;       &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;
+##  1 tutorials   html            0.966     1
+##  2 user2016    tutorials       0.955     2
+##  3 user2016    html            0.950     3
+##  4 machine     learning        0.726     4
+##  5 user        user2016        0.708     5
+##  6 slides      html            0.698     6
+##  7 time        series          0.695     7
+##  8 slides      tutorials       0.695     8
+##  9 rstudio     conf            0.691     9
+## 10 user        tutorials       0.690    10
+## 11 user        html            0.687    11
+## 12 user2016    slides          0.687    12
+## 13 interactive html            0.668    13
+## 14 text        mining          0.659    14
+## 15 interactive user            0.658    15
+## 16 interactive user2016        0.653    16
+## 17 interactive tutorials       0.650    17
+## 18 earl        london          0.594    18
+## 19 network     building        0.582    19
+## 20 interactive slides          0.550    20</code></pre>
+</div>
+<div id="most-unique-words" class="section level3">
+<h3>Most Unique Words</h3>
+<p>Let’s try to identify words that have risen and fallen in popularity. While there are many ways of doing, let’s try segmenting the <a href="https://rweekly.org/">R Weekly</a> posts into intervals of 60 days and computing the <a href="(https://www.tidytextmining.com/tfidf.html)">term-frequency, inverse-document-frequency</a> (TF-IDF) of words across these intervals. (I apologize if the resolution is sub-par.)</p>
+<p><img src="/post/2018-03-05-tidy-text-analysis-rweekly_files/figure-html/unigrams_tfidf-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>A couple of things stand out:</p>
+<ul>
+<li>Posts were heavily influenced by <a href="http://user2016.r-project.org/"><code>user2016</code> conference</a> content in the early days of <a href="https://rweekly.org/"><em>R Weekly</em></a> (light blue and blue)</li>
+<li>There was clearly a <code>20</code> theme in the 60 days between 2017-02-20 and 2017-04-10 (red).</li>
+<li>The <a href="https://softwareengineering.stackexchange.com/questions/57/tabs-versus-spaces-what-is-the-proper-indentation-character-for-everything-in-e">“tabs vs. spaces”</a> debate rose to prominence during the late summer days of 2017 (orange), presumably after <a href="https://stackoverflow.blog/2017/06/15/developers-use-spaces-make-money-use-tabs/">David Robinson’s <em>Stack Overflow</em> post on the topic</a>.</li>
+<li>R’s ongoing global influence is apparent with the appearance of <code>euro</code> with the <a href="http://user2016.r-project.org/"><code>user2016</code> conference</a> (light blue and blue); <code>poland</code> and <code>satrdays</code> (presumably due to the <a href="https://capetown2018.satrdays.org/">Cape Town R conference of the namesake</a> in late 2016 (green), and several Spanish words in January 2018 (yellow).</li>
+</ul>
+<p>I tried some different methods, but did not find much interesting regarding change in word frequency over time (aside from the TF-IDF approach). <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a> When using the method discussed in the <a href="https://www.tidytextmining.com/twitter.html#changes-in-word-use"><em>Tidy Text Mining</em> book for identifying change in word usage</a> across 60-day intervals, I found only two non-trivial “significant” changes among the top 5% of most frequently used words, which are for <code>user</code> and <code>tutorials</code>. [^fn_top5pct] <code>user</code> has dropped off a bit since the <code>useR2016</code> conference, and <code>tutorials</code> has grown in usage, which is evident with the increasing length of the <code>tutorial</code> section in posts.</p>
+<p>That’s all I got for this subject. As I mentioned at the top, there are many of other great “meta” analyses like this one that are worth looking at, so definitely check them out!</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Who knows, if it’s good enough, maybe I’ll even make an attempt to make it available on <a href="https://cran.r-project.org/">CRAN</a>.<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>Actually, I downloaded the data locally so that I would not have to worry about GitHub API request limits. Thus, in addition to other custom processing steps that I added, my final code does not necessarily resemble hers.<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>(I didn’t end up actually using all of the added columns here.)<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p>I think many academics face this same “issue” with their own research, which can tempt them to <a href="https://en.wikipedia.org/wiki/Data_dredging">p-hack</a> simply so that they can claim that they have deduced something significant.<a href="#fnref4">↩</a></p></li>
+</ol>
+</div>

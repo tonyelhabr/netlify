@@ -1,0 +1,44 @@
+---
+title: Thoughts on Using Flexdashboard
+slug: using-flexdashboard
+date: "2018-04-07"
+draft: true
+categories: []
+tags:
+ - r
+ - flexdashboard
+ - nba
+ - tidytext
+banner: "img/using-flexdashboard/banner.png"
+---
+
+
+
+<p>I’ve experimented with the <a href="https://rmarkdown.rstudio.com/flexdashboard/"><code>flexdashboard</code></a> <code>R</code> package for a couple of things after first trying out not so long ago. In particular, I have found the <a href="https://rmarkdown.rstudio.com/flexdashboard/using.html#storyboards"><code>storyboard</code></a> format to be my favorite. I used it to create the storyboard that I wrote about in a previous post, and I even used it for a presentation that I gave at my company’s data science group. (Unforunately, I can’t share that presentation 😢.)</p>
+<p>In all, I have found it to be an extremely effective format. It functions as a good compromise among a number of different output formats, includting</p>
+<ul>
+<li>a “standard” document (HTML, Markdown, Word, or PDF) knitted from a .Rmd file;</li>
+<li>a presentation knitted from a .Rmd file; (i.e. a <code>beamer_presentation</code>, <code>ioslides_presentation</code>, <code>slidy_presentation</code>, or a <code>revealjs::revealjs_presentation</code>);</li>
+<li>a “standard” R presentation (with the .Rpres extension); and</li>
+<li>a <code>shinydashboard</code> (created with the <a href="https://rstudio.github.io/shinydashboard/"><code>shinydashboard</code></a> package.</li>
+</ul>
+<p>In my opinion, it’s main advantage compared to the traditional .Rmd-<code>knitr</code>/<code>rmarkdown</code> workflow is the ease with which <a href="https://shiny.rstudio.com/"><code>shiny</code></a> apps and other interactive formats (e.g. <a href="https://www.htmlwidgets.org/"><code>htmlwidgets</code></a> can be integrated. (These can also be be emebedded into .html files knitted from a .Rmd file, but I think that it’s more natural in the <code>flexdashboard</code> context. Also, the HTML format is the only standard .Rmd output format that has interactive capability.) Compared to the .Rmd presentation formats, I have found that modifying the default styling of the base is much simpler. Regarding the .Rpres format, I must admit that I don’t have much experience with it–I prefer Rmarkdown and the capability that it offers to create different kinds of output from a single “base” file. And, in comparison to <code>shinydashboard</code>s, I like the “light-weight” framework offered by <code>flexdashboard</code>. While <code>shinydashboard</code> is certainly a better option for developing a complex dashboard (perhaps for a business purpose), that is not typically what I need when working on my own projects or a small project for another audience.</p>
+<p>Here’s a couple of my other thoughts/tips for using <code>flexdashboard</code>:</p>
+<ul>
+<li>Adding <code>JavaScript</code> functionality is straightforward.</li>
+</ul>
+<p>For example, I have used the following snippet of code to add functionality for a “toggle” button to show/hide code.</p>
+<pre><code>&lt;script&gt;
+  $(&quot;.toggle&quot;).click(function() {
+    $(this).toggleClass(&quot;open&quot;);
+  });
+&lt;/script&gt;</code></pre>
+<ul>
+<li>Customizing the colors and styles (with <code>.css</code>) is also simple.</li>
+</ul>
+<p>When modifying a theme’s CSS, the typical/recommended approach is to use the browser’s “Inspect” tool (or some browser extension such as <a href="selectorgadget.com/">Selector Gadget</a> to identify which specific styles to adjust.</p>
+<p>For example, if the theme that is chosen for the <code>flexdashboard</code> (in particular, the <code>storyboard</code> format) uses the same styling for code and its output, the following CSS code can be used to distinguish the two.</p>
+<pre><code>pre.sourceCode.r {
+  background-color: #ffffff;
+}</code></pre>
+<p>To add to this technique, because the CSS files in the <code>flexdashboard</code> package, it’s not too difficult to simply pick out the file for the theme that is being used (see the <a href="https://github.com/rstudio/flexdashboard/blob/master/inst/rmarkdown/templates/flex_dashboard/resources/"><code>resources/</code> folder</a> in the <a href="https://github.com/rstudio/flexdashboard">package’s GitHub repo</a>) and quickly identify what to modify.</p>

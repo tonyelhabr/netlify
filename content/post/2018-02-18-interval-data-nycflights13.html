@@ -1,0 +1,152 @@
+---
+title: Dealing with Interval Data and the nycflights13 package using R
+date: "2018-02-17"
+slug: interval-data-nycflights13
+categories: []
+tags:
+  - r
+  - dplyr
+  - nycflights13
+banner: "img/interval-data-nycflights13/viz_nycflights13-banner.png"
+---
+
+
+
+<p>In my job, I often work with data sampled at regular intervals. Samples may range from 5-minute intervals to daily intervals, depending on the specific task. While working with this kind of data is straightforward when its in a database (and I can use SQL), I have been in a couple of situations where the data is spread across .csv files. In these cases, I lean on <code>R</code> to scrape and compile the data. Although some other languages might be superior for such a task, I often need to produce some kind of visualization or report at the end, so choosing to handle all of the data with <code>R</code> is a no-brainer for me–I can easily transition to using <code>ggplot2</code> and <code>rmarkdown</code> to generate some pretty output.</p>
+<div id="minute-level-data" class="section level2">
+<h2>Minute-Level Data</h2>
+<p>When working with data sampled at 5-minute intervals (resulting in 288 intervals in a day), I’ve found that I’ve used a common “idiom” to generate a time-based “dictionary”. For example, here’s how I might create such a date dictionary for the year 2013. <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
+<pre class="r"><code>library(&quot;dplyr&quot;)
+library(&quot;lubridate&quot;)
+
+date_1 &lt;- lubridate::ymd(&quot;2013-01-01&quot;)
+date_2 &lt;- lubridate::ymd(&quot;2013-12-31&quot;)
+
+yyyymmdd_seq &lt;- seq.Date(date_1, date_2, by = &quot;day&quot;)
+yyyymmdd_grid &lt;-
+  data_frame(
+    yyyymmdd = lubridate::ymd(yyyymmdd_seq),
+    yyyy = lubridate::year(yyyymmdd_seq),
+    mm = lubridate::month(yyyymmdd_seq),
+    dd = lubridate::day(yyyymmdd_seq)
+  )
+
+hhmmss &lt;-
+  expand.grid(
+    hh = seq(1L, 24L, 1L), 
+    min = seq(5L, 60L, by = 5L), 
+    sec = 0L) %&gt;% 
+  as_tibble()
+
+dates_dict &lt;-
+  yyyymmdd_grid %&gt;%
+  right_join(hhmmss %&gt;% mutate(yyyy = lubridate::year(date_1), by = &quot;year&quot;)) %&gt;% 
+  arrange(yyyy, mm, dd, hh, min)
+dates_dict</code></pre>
+<pre><code>## # A tibble: 105,120 x 8
+##    yyyymmdd    yyyy    mm    dd    hh   min   sec by   
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt;
+##  1 2013-01-01  2013  1.00     1     1     5     0 year 
+##  2 2013-01-01  2013  1.00     1     1    10     0 year 
+##  3 2013-01-01  2013  1.00     1     1    15     0 year 
+##  4 2013-01-01  2013  1.00     1     1    20     0 year 
+##  5 2013-01-01  2013  1.00     1     1    25     0 year 
+##  6 2013-01-01  2013  1.00     1     1    30     0 year 
+##  7 2013-01-01  2013  1.00     1     1    35     0 year 
+##  8 2013-01-01  2013  1.00     1     1    40     0 year 
+##  9 2013-01-01  2013  1.00     1     1    45     0 year 
+## 10 2013-01-01  2013  1.00     1     1    50     0 year 
+## # ... with 105,110 more rows</code></pre>
+<p>And, just to prove that there are 288 5-minute intervals for each day in the year, I can use <code>dplyr::count()</code> twice in succession. <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a></p>
+<pre class="r"><code>dates_dict %&gt;% count(yyyy, mm, dd) %&gt;% count()</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##      nn
+##   &lt;int&gt;
+## 1   365</code></pre>
+<p>I then extract data (from individual files) using the time-based dictionary as a “helper” for custom functions for creating file paths and processing the data after importing it.</p>
+<p>After the dirty work of is done, I can transition to the fun part–exploring and interpreting the data. This process often turns out to be a cycle of visualization, data transformation, and modeling.</p>
+<div class="figure">
+<img src="/img/visualizing-nba-team-schedule/data-science.png" />
+
+</div>
+<div id="an-example-with-the-nycflights13-package" class="section level3">
+<h3>An Example (With the <code>nycflights13</code> Package)</h3>
+<p>To provide an example, I’ll use the <code>flights</code> data set from the <a href="https://cran.r-project.org/web/packages/nycflights13/index.html"><code>nycflight13</code></a> package. <a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> This package includes information regarding all flights leaving from New York City airports in 2013, as well as information regarding weather, airlines, airports, and planes.</p>
+<p>Let’s say that I that I’m interested in the average flight departure delay time at the JFK airport. I might hypothesize that there is a relationship between departure delay time with different time periods, such as hour in the day and days in the week.</p>
+<p>First, I’ll perform the necessary transformation to the <code>flights</code> data to investigate my hypothesis. Specifically, I need to create columns for hour and weekday. (For hour (<code>hh</code>), I simply use the scheduled departure time (<code>sched_dep_time</code>).)</p>
+<pre class="r"><code>library(&quot;nycflights13&quot;)
+
+flights_jfk &lt;-
+  nycflights13::flights %&gt;% 
+  filter(origin == &quot;JFK&quot;) %&gt;% 
+  mutate(hh = round(sched_dep_time / 100, 0) - 1) %&gt;% 
+  mutate(yyyymmdd = lubridate::ymd(sprintf(&quot;%04.0f-%02.0f-%02.0f&quot;, year, month, day))) %&gt;% 
+  mutate(wd = lubridate::wday(yyyymmdd, label = TRUE))</code></pre>
+<p>Next, I might create a heat map plotting hours against weekdays.</p>
+<p><img src="/post/2018-02-18-interval-data-nycflights13_files/figure-html/viz_nycflight13-1.png" width="768" /></p>
+<p>To investigate the patterns more “scientifically”, I might perform a one-way Analysis of Variance (ANOVA) on different time variables. I would make sure to test time periods other than just weekday (<code>wd</code>) and hour (<code>hh</code>), such as <code>month</code> and <code>day</code>.</p>
+<pre class="r"><code>summary(aov(dep_delay ~ month, data = flights_jfk))</code></pre>
+<pre><code>##                 Df    Sum Sq Mean Sq F value        Pr(&gt;F)    
+## month            1     55213   55213   36.25 0.00000000174 ***
+## Residuals   109414 166664445    1523                          
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 1863 observations deleted due to missingness</code></pre>
+<pre class="r"><code>summary(aov(dep_delay ~ day, data = flights_jfk))</code></pre>
+<pre><code>##                 Df    Sum Sq Mean Sq F value Pr(&gt;F)
+## day              1        40    40.2   0.026  0.871
+## Residuals   109414 166719617  1523.8               
+## 1863 observations deleted due to missingness</code></pre>
+<pre class="r"><code>summary(aov(dep_delay ~ wd, data = flights_jfk))</code></pre>
+<pre><code>##                 Df    Sum Sq Mean Sq F value Pr(&gt;F)    
+## wd               6    246401   41067   26.99 &lt;2e-16 ***
+## Residuals   109409 166473256    1522                   
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 1863 observations deleted due to missingness</code></pre>
+<pre class="r"><code>summary(aov(dep_delay ~ hh, data = flights_jfk))</code></pre>
+<pre><code>##                 Df    Sum Sq Mean Sq F value Pr(&gt;F)    
+## hh               1   5701754 5701754    3874 &lt;2e-16 ***
+## Residuals   109414 161017904    1472                   
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 1863 observations deleted due to missingness</code></pre>
+<p>The “statistically significant” p values for the <code>wd</code> and <code>hh</code> variables provides incentive to investigate them more closely. I might try an ANOVA F-statistic test comparing linear regression models using each variable as a lone predictor with a linear model where both are used as predictors.</p>
+<pre class="r"><code>lm_wd &lt;- lm(dep_delay ~ wd, data = flights_jfk)
+lm_hh &lt;- lm(dep_delay ~ hh, data = flights_jfk)
+lm_both &lt;- lm(dep_delay ~ wd + hh, data = flights_jfk)
+anova(lm_both, lm_wd, test = &quot;F&quot;)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: dep_delay ~ wd + hh
+## Model 2: dep_delay ~ wd
+##   Res.Df       RSS Df Sum of Sq      F    Pr(&gt;F)    
+## 1 109408 160778456                                  
+## 2 109409 166473256 -1  -5694800 3875.2 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(lm_both, lm_hh, test = &quot;F&quot;)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: dep_delay ~ wd + hh
+## Model 2: dep_delay ~ hh
+##   Res.Df       RSS Df Sum of Sq      F    Pr(&gt;F)    
+## 1 109408 160778456                                  
+## 2 109414 161017904 -6   -239447 27.157 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Of course, this process would go on. For instance, I would certainly need to investigate if there is a relationship between departure delay and specific airlines.</p>
+</div>
+</div>
+<div id="final-thoughts" class="section level2">
+<h2>Final Thoughts</h2>
+<p>Working with interval data was initially a challenge for me, but after working with it more and more often, I find that it’s not so bad after all. It gets more interesting when there is missing data or data samples at irregular intervals, but that’s a story for another day.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The technique that I show here would have to be adjusted slightly if working with more than one year at a time, but it wouldn’t be difficult to do so. I tend to only use this design pattern for one year at a time anyways.<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>By the way, how cool is following one <code>dplyr::count()</code> call with another? I only found out about that nice little trick recently.<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>Thanks to <a href="http://hadley.nz/">Hadley Wickham</a> for compiling this data package, as well as for developing the <code>lubridate</code> and <code>ggplot2</code> packages.)<a href="#fnref3">↩</a></p></li>
+</ol>
+</div>

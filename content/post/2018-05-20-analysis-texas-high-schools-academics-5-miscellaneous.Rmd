@@ -1,0 +1,305 @@
+---
+title: An Analysis of Texas High School Academic Competition Results, Part 5 - Miscellaneous
+slug: analysis-texas-high-school-academics-5-miscellaneous
+date: "2018-05-20"
+categories: []
+tags:
+ - r
+ - analysis
+ - texas
+ - academics
+banner: "img/analysis-texas-high-school-academics/miscellaneous-banner.png"
+---
+```{r setup, include = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(
+  # echo = TRUE,
+  echo = FALSE,
+  cache = TRUE,
+  # include = FALSE,
+  fig.align = "center",
+  # results = "asis",
+  fig.width = 7,
+  fig.height = 7,
+  # out.width = 7,
+  # out.height = 7,
+  warning = FALSE,
+  message = FALSE
+)
+
+```
+
+```{r load, include = FALSE}
+library("tidyverse")
+library("rlang")
+library("teplot")
+library("teproj")
+library("tetidy")
+load(file.path("static", "data", "uil-v02-setup.RData"))
+config$path_schools_uil <-
+  "https://raw.githubusercontent.com/tonyelhabr/uil-v02/master/data/schools-uil.csv"
+schools_uil <-
+  config$path_schools_uil %>%
+  # teproj::import_path_cleanly()
+  readr::read_csv()
+config$path_persons_uil <-
+  "https://raw.githubusercontent.com/tonyelhabr/uil-v02/master/data/persons-uil.csv"
+persons_uil <-
+  config$path_persons_uil %>%
+  # teproj::import_path_cleanly()
+  readr::read_csv()
+```
+There's a lot to analyze with the Texas high school academic UIL data set.
+Maybe I find it more interesting than others due to my personal experiences with
+these competitions.
+
+Now, after examining some of the biggest topics associated
+with this data--including competitions, individuals, and schools--in a broad manner,
+there are
+some other things that don't necessarily fall into these categories that 
+I think are worth investigating.
+
+## Siblings
+
+
+Let's look at the performance of siblings. Maybe this topic only came to mind for
+me because I have brothers, on of who is my twin, but I think anyone can find
+something interesting on this matter.
+
+### Sibling Participation
+
+So, let's start with something easy--which siblings competed together the most?
+
+<include>
+As in the analysis of individuals and schools, I'll include myself and my school in the tables and figures
+where applicable.
+</include>
+
+```{r siblings_funcs, include = FALSE, dependson = c("load")}
+add_name_first_pair_col <-
+  function(data = NULL) {
+    data %>% 
+      mutate(name_first_pair = paste0(name_first, " & ", name_first_sibling))
+  }
+
+get_siblings_by_at <-
+  function(data = NULL,
+           min = 2,
+           max = Inf,
+           cols_grp = NULL,
+           prettify = TRUE) {
+
+    data_proc <-
+      data %>%
+      group_by(!!!syms(cols_grp)) %>%
+      mutate(rnk_max = rank(name_last, ties.method = "max")) %>%
+      ungroup()
+
+    data_filt <-
+      data_proc %>%
+      filter(rnk_max >= min, rnk_max <= max)
+
+    ret <-
+      data_filt %>%
+      inner_join(data_filt,
+                by = cols_grp,
+                suffix = c("", "_sibling")) %>%
+      filter(name_first != name_first_sibling)
+    
+    # ret <-
+    #   ret %>% 
+    #   distinct(!!!syms(cols_grp), .keep_all = TRUE)
+    
+    if(prettify) {
+      ret <-
+        ret %>% 
+        add_name_first_pair_col() %>% 
+        select(
+          name_first_pair,
+          name,
+          name_first,
+          name_last,
+          name_first_sibling,
+          everything()) %>%
+        arrange(name_last, name_first, school)
+      
+      cols_drop <-
+        setdiff(c(names(data), "name_first_pair", "name_first_sibling"), names(ret))
+      
+      ret <-
+        ret %>%
+        select(-one_of(cols_drop))
+    }
+      ret
+  }
+
+```
+
+
+```{r siblings, include = FALSE, dependson = c("load")}
+siblings <-
+  persons_uil %>%
+  get_siblings_by_at(
+    cols_grp = c("name_last",
+                 "school",
+                 "city",
+                 "year",
+                 "conf",
+                 "complvl",
+                 "comp",
+                 "complvl_num")
+  )
+```
+
+```{r siblings_n, include = FALSE, dependson = c("load", "siblings")}
+siblings_n <-
+  siblings %>% 
+  group_by(name_last, name_first_pair) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  arrange(n) %>% 
+  distinct(name_last, n, .keep_all = TRUE) %>%
+  tetidy::rank_arrange_at("n")
+
+```
+
+```{r html_siblings_n, echo = FALSE, include = TRUE, dependson = c("load", "siblings")}
+html_siblings_n <-
+  siblings_n %>%
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name_last",
+  )
+html_siblings_n
+```
+Admittedly, I am a bit disappointed to find that my twin brother and I are not at
+the very top of this list. Nonetheless, we are fairly near the top, so I can take
+some satisfaction in that. [^twins]
+
+[^twins]:
+I don't explicitly try to filter for twins only, but it's reasonable to believe
+that many, if not most, are twins.
+
+I should note that the scraped data does not distinguish siblings, so 
+I had to define criteria to do so.
+To be specific, the table above enforces the criteria that two people
+have the same last name, school, and city, and that they compete
+in the exact same competition--that is, a competition occurring in a given year and 
+being of a same competition type and same competition level (as well as
+the same conference and competition area, if applicable). The numbers
+are inflated when not enforcing the criteria that the two people must have competed
+in the same competition type and level (nor conference and competition area), and even more so
+when throwing out the criteria for same year.
+
+
+```{r siblings_lax, include = FALSE, dependson = c("load"), eval = FALSE}
+siblings_lax <-
+  persons_uil %>%
+  get_siblings_by_at(
+    cols_grp = c("name_last", "school", "city")
+  )
+
+siblings_lax_n <-
+  siblings_lax %>%
+  group_by(school, name_last, name_first_pair) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  distinct(school, name_last, n, .keep_all = TRUE) %>%
+  tetidy::rank_arrange_at("n")
+siblings_lax_n
+```
+
+```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dependson = c("load", "siblings_lax_n"), eval = FALSE}
+html_siblings_lax_n <-
+  siblings_lax_n %>%
+  mutate_at(vars(n), funs(scales::comma)) %>% 
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name_last"
+  )
+html_siblings_lax_n
+```
+
+### Sibling Performance
+
+Participation in competitions is one thing, but what about sibling performance?
+Let's use the same metric used elsewhere for ranking performance--percent rank of
+scores summed across all records (`prnk_sum`)--and see which sibling pairs
+show up among the top.
+
+```{r siblings_prnk, include = FALSE, dependson = c("siblings")}
+siblings_prnk <-
+  siblings %>%
+  group_by(name_last, name_first_pair) %>%
+  summarise_at(vars(matches("^prnk|^rnk|^n_")), funs(sum)) %>% 
+  ungroup() %>%
+  distinct(name_last, prnk_sum, .keep_all = TRUE) %>%
+  gather(metric_sibling, value_sibling, matches("_sibling$")) %>% 
+  mutate_at(vars(metric_sibling), funs(str_replace(., "_sibling", ""))) %>% 
+  gather(metric, value, matches("^prnk|^rnk|^n_")) %>% 
+  filter(metric == metric_sibling) %>% 
+  mutate(sum = value + value_sibling) %>% 
+  select(-matches("metric_sibling|value")) %>% 
+  spread(metric, sum) %>% 
+  tetidy::rank_arrange_at("prnk")
+siblings_prnk
+```
+
+```{r html_siblings_prnk, echo = FALSE, include = TRUE, dependson = c("load", "siblings_prnk")}
+html_siblings_prnk <-
+  siblings_prnk %>%
+  mutate_if(is.numeric, funs(round(., 2))) %>% 
+  mutate_at(vars(starts_with("n_")), funs(scales::comma)) %>% 
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name_last"
+  )
+html_siblings_prnk
+```
+
+It looks like the pairs at the top of these rankings based on score are fairly similar to the list
+of pairs competing most frequently. (This is not too surprising
+given that my choice of metric of ranking is based on a summed value that "rewards"
+volume of participation rather than per-competition performance.) Again, my twin brother and I
+appear near the top.
+
+## My High School
+
+Even though I highlighted my high school ("CLEMENS") in my examination of schools and looked
+at individual scores elsewhere, I did not
+look at other individuals that have gone to my school. Perhaps it is a bit egotistical,
+but I am interested in knowing how I compare with others that have attended my school (either
+before, with, or after me).
+
+```{r persons_n_filt, include = FALSE, dependson = c("load")}
+persons_n_filt <-
+  persons_uil %>%
+  add_stats_cols_by_at(cols_grp = c("name", "school", "city")) %>% 
+  filter(str_detect(school, config$rgx_school_filt)) %>%
+  tetidy::rank_arrange_at("prnk_sum") %>% 
+  select(-school, -city, -n_state_sum)
+persons_n_filt
+```
+
+```{r html_persons_n_filt, echo = FALSE, include = TRUE, dependson = c("load", "persons_n_filt")}
+html_persons_n_filt <-
+  persons_n_filt %>% 
+  mutate_if(is.numeric, funs(round(., 2))) %>% 
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name"
+  )
+html_persons_n_filt
+```
+
+Alas, although my twin brother and I did not rank among the very top of the siblings
+by participation and performance, we do appear among the top 
+when evaluating only people from my high school. In my opinion, the sample size isn't so small
+that this achievement is trivial. 
+
+## Wrap-Up
+
+I think all I've done here is more investigation of my personal performance, 
+so I'll spare the reader any more of my egotistical exporation.
+And, with that said, I think this is a good point to bring an end to my
+investigation of Texas high school academic UIL competitions.

@@ -1,0 +1,3462 @@
+---
+title: Correlations Between Texas High School Academic Competition Results and SAT/ACT Scores
+slug: correlations-texas-high-school-academics
+date: "2018-07-21"
+categories: []
+tags:
+ - r
+ - correlations
+ - texas
+ - academics
+banner: "img/analysis-texas-high-school-academics/viz_schools_math_cors_byyear_diffs.png"
+---
+
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I wanted to do a follow-up on <a href="https://tonyelhabr.rbind.io/post/analysis-texas-high-school-academics-intro/">my series of posts</a> about Texas high school <a href="http://www.uiltexas.org/">University Interscholastic League</a> (UIL) academic competitions to more closely evaluate the relationship between the school performance in those competitions with school-wide <a href="https://en.wikipedia.org/wiki/SAT">SAT</a>) and <a href="https://www.act.org/">ACT</a> scores. For those who may not be familiar with these tests, these are the two most popular standardized tests used for college admission in the United States.</p>
+<p>In my introduction to that series, I stated the following: <i> School-wide … scores on state- and national-standardized tests (e.g. the SAT) certainly are the most common measure of academic strength, but I think rankings by academic competitions may be more indicative. </i></p>
+<p>Essentially, I was implying that the academic UIL scores may not correspond well, or at all, with standardized test scores. However, I did not attempt to prove this hypothesis, which is what I set out to do here. While I’m at it, I’ll show the code and provide some commentary to explain my process.</p>
+</div>
+<div id="data-collection" class="section level2">
+<h2>Data Collection</h2>
+<p>While I already have collected and cleaned the UIL data that I’ll need by virtue of my work for <a href="https://tonyelhabr.rbind.io/post/analysis-texas-high-school-academics-intro/">my series of posts analyzing the UIL competitions</a>, I did not retrieve data for standardized test scores. To my delight, the <a href="https://tea.texas.gov">Texas Education Agency’s website</a> publishes Texas high school SAT and ACT scores for the years 2011 through 2015. The task of scraping from this source is a perfect use-case for the super-handy <code>{xml2}</code> and <code>{rvest}</code> packages, as well the well-known awesome <code>{stringr}</code> and <code>{purrr}</code> packages in the <code>{tidyverse}</code>.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;rlang&quot;)
+library(&quot;teplot&quot;) # Personal package.</code></pre>
+<pre class="r"><code>urls_tea &lt;-
+  &quot;https://tea.texas.gov/acctres/sat_act_index.html&quot; %&gt;%
+  xml2::read_html() %&gt;%
+  rvest::html_nodes(xpath = &quot;//tr //td //a&quot;) %&gt;%
+  rvest::html_attr(&quot;href&quot;) %&gt;% 
+  str_subset(&quot;^\\/acctres\\/[:alpha:]{3}_[Cc]ampus_[Dd]ata&quot;)
+urls_tea</code></pre>
+<pre><code>##  [1] &quot;/acctres/sat_campus_data_class_2015/&quot;
+##  [2] &quot;/acctres/act_campus_data_class_2015/&quot;
+##  [3] &quot;/acctres/sat_campus_data_class_2014/&quot;
+##  [4] &quot;/acctres/act_campus_data_class_2014/&quot;
+##  [5] &quot;/acctres/SAT_Campus_Data_class_2013/&quot;
+##  [6] &quot;/acctres/ACT_Campus_Data_class_2013/&quot;
+##  [7] &quot;/acctres/SAT_Campus_Data_class_2012/&quot;
+##  [8] &quot;/acctres/ACT_Campus_Data_class_2012/&quot;
+##  [9] &quot;/acctres/SAT_Campus_Data_class_2011/&quot;
+## [10] &quot;/acctres/ACT_Campus_Data_class_2011/&quot;</code></pre>
+<pre class="r"><code>create_path_tea &lt;-
+  function(url_suffix = NULL, dir = &quot;data-raw&quot;, ext = &quot;csv&quot;) {
+    if(!dir.exists(dir)) {
+       dir.create(dir)
+    }
+    url_suffix %&gt;%
+      str_remove_all(&quot;acctres|\\/&quot;) %&gt;% 
+      paste0(&quot;.&quot;, ext) %&gt;% 
+      file.path(dir, .)
+  }</code></pre>
+<pre class="r"><code># NOTE(s):
+# + `urls_tea_dl` is actually the same as `url_tea` because `purrr::walk()` returns its first argument.
+# + `mode = &quot;wb&quot;` is important! Otherwise, the downloaded files have empty lines every other line
+# (due to the way that CR and LFs are handled.
+urls_tea_dl &lt;-
+  urls_tea %&gt;%
+  walk(
+    ~download.file(
+      url = paste0(&quot;https://tea.texas.gov/&quot;, .x),
+      destfile = create_path_tea(url_suffix = .x),
+      mode = &quot;wb&quot;
+    )
+  )</code></pre>
+</div>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<p>Next, I bind the data from all of the downloaded files together and do some cleaning. I put these actions in function(s) because I plan on re-using them in future posts where I explore this data set in other ways.</p>
+<p>One relatively significant choice that I make here is to only include the data for the school-wide level (via the <code>&quot;All Students&quot;</code> filtering criteria), although data for different demographics within each school is provided. The other data set that I am evaluating—the academic UIL data— does not have demographci-specific information, so I want to treat the two set as “equally” as possible.</p>
+<p>Additionally, in order to better understand the resulting data set, the reader should be made aware of some of the details of the tests. The SAT has <code>math</code>, <code>reading</code>, and <code>writing</code> sections, each having minimum and maximum scores of 200 and 800, meaning that the <code>total</code> can range from 600 to 2400. The ACT has <code>math</code>, <code>reading</code>, <code>english</code>, and <code>science</code> sections, each having a minimum and maximum score of 1 and 36, combined for a single <code>compos</code> score also ranging from 1 to 36. To eliminate duplicate columns representing the same underlying “thing”. I don’t distinguish the <code>math</code> and <code>reading</code> section scores for each test in separate columns, I rename the ACT’s <code>compos</code> score to <code>total</code>, following the convention used for the SAT’s cumulative score. The other sections—<code>writing</code> for the SAT and <code>english</code> and <code>science</code> for the ACT— are not really analogous to sections in the other test, so they are filled with <code>NA</code>s appropriately.</p>
+<p>Finally, for the interEsted reader, there are some details regarding the code implementation that I document in comments (both for explaining actions for myself and for the reader).</p>
+<pre class="r"><code>import_tea_data &lt;-
+  function(path = NULL, rgx_grp = NULL) {
+    ret &lt;-
+      path %&gt;%
+      readr::read_csv() %&gt;%
+      rename_all(funs(tolower))
+    
+    if(!is.null(rgx_grp)) {
+      ret &lt;-
+        ret %&gt;%
+        filter(group %&gt;% str_detect(rgx_grp))
+    }
+    ret &lt;-
+      ret %&gt;%
+      select(
+        matches(
+          &quot;^group$|name$|math|reading|writing|total|english|science|compos&quot;
+        )
+      )
+    ret
+  }
+
+import_tea_data_cleanly &lt;-
+  function(urls = NULL, rgx_grp = NULL, ...) {
+
+    ret &lt;-
+      urls %&gt;%
+      create_path_tea(...) %&gt;%
+      tibble(path = .) %&gt;%
+      mutate(
+        test = stringr::str_extract(path, &quot;([Ss][Aa][Tt])|([Aa][Cc][Tt])&quot;) %&gt;% toupper(),
+        year = stringr::str_extract(path, &quot;[:digit:]+&quot;) %&gt;% as.integer()
+      ) %&gt;%
+      mutate(contents = purrr::map(path, ~import_tea_data(.x, rgx_grp = rgx_grp))) %&gt;%
+      unnest() %&gt;%
+      # NOTE: No longer need this columns(s) any more.
+      select(-path) %&gt;%
+      mutate_at(vars(total), funs(ifelse(test == &quot;ACT&quot;, compos, .))) %&gt;% 
+      # NOTE: No longer need this column(s) any more.
+      select(-compos) %&gt;% 
+      # NOTE: Rearranging score columns in a more logical fashion.
+      select(-total, everything(), total) %&gt;% 
+      # NOTE: Renaming &quot;important&quot; columns.
+      rename(school = campname,
+             district = distname,
+             county = cntyname,
+             city = regnname) %&gt;%
+      mutate_if(is.character, funs(str_replace_all(., &quot;=|\&quot;&quot;, &quot;&quot;))) %&gt;%
+      mutate_at(vars(school, district, county, city), funs(toupper)) %&gt;% 
+      # NOTE: Some county names are truncated and end with COUN or COUNT.
+      # (The max seems to be 18 characters).
+      # Fortunately, ther are no county names with COUN in their names, so the following
+      # regular expression is sufficient.
+      mutate_at(vars(county), funs(str_remove_all(., &quot;\\s+COUN.*$&quot;))) %&gt;%
+      # NOTE: Remove all HS/H S at the end of school names, as well as ampersands.
+      # This seems to improve join percentages with other data sets.
+      mutate_at(vars(school), funs(str_remove_all(., &quot;([H]\\s*[S]$)|(\\s+\\&amp;)&quot;) %&gt;% str_trim())) %&gt;%
+      # NOTE: This is (try to) to resolve duplicates in raw data.
+      # group_by_at(vars(matches(&quot;test|year|school|district|county|city&quot;))) %&gt;% 
+      # summarise_all(funs(max(., na.rm = TRUE))) %&gt;% 
+      # ungroup() %&gt;% 
+      arrange(test, year, school)
+    ret
+  }</code></pre>
+<pre class="r"><code>schools_tea &lt;-
+  urls_tea %&gt;%
+  import_tea_data_cleanly(rgx_grp = &quot;All Students&quot;)
+schools_tea</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+test
+</th>
+<th style="text-align:right;">
+year
+</th>
+<th style="text-align:left;">
+school
+</th>
+<th style="text-align:left;">
+district
+</th>
+<th style="text-align:left;">
+county
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:right;">
+math
+</th>
+<th style="text-align:right;">
+reading
+</th>
+<th style="text-align:left;">
+writing
+</th>
+<th style="text-align:right;">
+english
+</th>
+<th style="text-align:right;">
+science
+</th>
+<th style="text-align:right;">
+total
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A C JONES
+</td>
+<td style="text-align:left;">
+BEEVILLE ISD
+</td>
+<td style="text-align:left;">
+BEE
+</td>
+<td style="text-align:left;">
+CORPUS CHRISTI
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A J MOORE ACAD
+</td>
+<td style="text-align:left;">
+WACO ISD
+</td>
+<td style="text-align:left;">
+MCLENNAN
+</td>
+<td style="text-align:left;">
+WACO
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A M CONS
+</td>
+<td style="text-align:left;">
+COLLEGE STATION ISD
+</td>
+<td style="text-align:left;">
+BRAZOS
+</td>
+<td style="text-align:left;">
+HUNTSVILLE
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A MACEO SMITH HIGH SCHOOL
+</td>
+<td style="text-align:left;">
+DALLAS ISD
+</td>
+<td style="text-align:left;">
+DALLAS
+</td>
+<td style="text-align:left;">
+RICHARDSON
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABBOTT SCHOOL
+</td>
+<td style="text-align:left;">
+ABBOTT ISD
+</td>
+<td style="text-align:left;">
+HILL
+</td>
+<td style="text-align:left;">
+WACO
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+20
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABERNATHY
+</td>
+<td style="text-align:left;">
+ABERNATHY ISD
+</td>
+<td style="text-align:left;">
+HALE
+</td>
+<td style="text-align:left;">
+LUBBOCK
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:left;">
+ABILENE ISD
+</td>
+<td style="text-align:left;">
+TAYLOR
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY
+</td>
+<td style="text-align:left;">
+ACADEMY ISD
+</td>
+<td style="text-align:left;">
+BELL
+</td>
+<td style="text-align:left;">
+WACO
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY HIGH SCHOOL
+</td>
+<td style="text-align:left;">
+HAYS CISD
+</td>
+<td style="text-align:left;">
+HAYS
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY OF CAREERS AND TECHNOLOGIE
+</td>
+<td style="text-align:left;">
+ACADEMY OF CAREERS AND TECHNOLOGIE
+</td>
+<td style="text-align:left;">
+BEXAR
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY OF CREATIVE ED
+</td>
+<td style="text-align:left;">
+NORTH EAST ISD
+</td>
+<td style="text-align:left;">
+BEXAR
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADRIAN SCHOOL
+</td>
+<td style="text-align:left;">
+ADRIAN ISD
+</td>
+<td style="text-align:left;">
+OLDHAM
+</td>
+<td style="text-align:left;">
+AMARILLO
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADVANTAGE ACADEMY
+</td>
+<td style="text-align:left;">
+ADVANTAGE ACADEMY
+</td>
+<td style="text-align:left;">
+DALLAS
+</td>
+<td style="text-align:left;">
+RICHARDSON
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AGUA DULCE
+</td>
+<td style="text-align:left;">
+AGUA DULCE ISD
+</td>
+<td style="text-align:left;">
+NUECES
+</td>
+<td style="text-align:left;">
+CORPUS CHRISTI
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AIM CENTER
+</td>
+<td style="text-align:left;">
+VIDOR ISD
+</td>
+<td style="text-align:left;">
+ORANGE
+</td>
+<td style="text-align:left;">
+BEAUMONT
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AKINS
+</td>
+<td style="text-align:left;">
+AUSTIN ISD
+</td>
+<td style="text-align:left;">
+TRAVIS
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+17
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALAMO HEIGHTS
+</td>
+<td style="text-align:left;">
+ALAMO HEIGHTS ISD
+</td>
+<td style="text-align:left;">
+BEXAR
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALBA-GOLDEN
+</td>
+<td style="text-align:left;">
+ALBA-GOLDEN ISD
+</td>
+<td style="text-align:left;">
+WOOD
+</td>
+<td style="text-align:left;">
+KILGORE
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALBANY JR-SR
+</td>
+<td style="text-align:left;">
+ALBANY ISD
+</td>
+<td style="text-align:left;">
+SHACKELFORD
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+22
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACT
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALDINE
+</td>
+<td style="text-align:left;">
+ALDINE ISD
+</td>
+<td style="text-align:left;">
+HARRIS
+</td>
+<td style="text-align:left;">
+HOUSTON
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 15,073
+</td>
+</tr>
+</tfoot>
+</table>
+<div id="eda-year-to-year-correlations" class="section level3">
+<h3>EDA: Year-to-Year Correlations</h3>
+<p>First, before evaluating the primary concern at hand—the relationship between the academic UIL scores and the SAT/ACT scores (available in the <code>schools_tea</code> data created above)—I want to verify that there is some non-trivial relationship among the scores for a given school on a given test across years. (I would be surprised if this were not shown to be true.)</p>
+<pre class="r"><code>schools_tea_cors_byyear &lt;-
+  schools_tea %&gt;%
+  distinct(test, year, school, .keep_all = TRUE) %&gt;%
+  filter(!is.na(total)) %&gt;%
+  unite(test_school, test, school) %&gt;%
+  widyr::pairwise_cor(
+    feature = test_school,
+    item = year,
+    value = total
+  ) %&gt;% 
+  rename(year1 = item1, year2 = item2, cor = correlation)
+schools_tea_cors_byyear %&gt;% 
+  filter(year1 &lt;= year2)</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+year1
+</th>
+<th style="text-align:right;">
+year2
+</th>
+<th style="text-align:right;">
+cor
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+0.80
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+0.76
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+0.78
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.74
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.78
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="/post/2018-07-21-texas-high-schools-academics-cors_files/figure-html/viz_schools_tea_cors_byyear_show-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>As expected, there are some strong correlations among the years for school-wide scores on these tests.</p>
+<p>Ok, now let’s bring in the “cleaned” school data (<code>schools_uil</code>) that I collected and cleaned in my UIL analysis. I’ll subset the data to include only the same years found in <code>schools_tea</code>—2011 through 2015.</p>
+<pre class="r"><code>schools_uil &lt;-
+  config$path_schools_uil %&gt;% 
+  readr::read_csv() %&gt;% 
+  filter(year &gt;= 2011, year &lt;= 2015)
+schools_uil</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+school
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:right;">
+complvl_num
+</th>
+<th style="text-align:right;">
+score
+</th>
+<th style="text-align:right;">
+year
+</th>
+<th style="text-align:right;">
+conf
+</th>
+<th style="text-align:left;">
+complvl
+</th>
+<th style="text-align:left;">
+comp
+</th>
+<th style="text-align:right;">
+advanced
+</th>
+<th style="text-align:right;">
+n_state
+</th>
+<th style="text-align:right;">
+n_bycomp
+</th>
+<th style="text-align:right;">
+prnk
+</th>
+<th style="text-align:right;">
+n_defeat
+</th>
+<th style="text-align:left;">
+w
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+HASKELL
+</td>
+<td style="text-align:left;">
+HASKELL
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+616
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POOLVILLE
+</td>
+<td style="text-align:left;">
+POOLVILLE
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+609
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LINDSAY
+</td>
+<td style="text-align:left;">
+LINDSAY
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+553
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PLAINS
+</td>
+<td style="text-align:left;">
+PLAINS
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+537
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SAN ISIDRO
+</td>
+<td style="text-align:left;">
+SAN ISIDRO
+</td>
+<td style="text-align:right;">
+32
+</td>
+<td style="text-align:right;">
+534
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CANADIAN
+</td>
+<td style="text-align:left;">
+CANADIAN
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+527
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+GARDEN CITY
+</td>
+<td style="text-align:left;">
+GARDEN CITY
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+518
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+WATER VALLEY
+</td>
+<td style="text-align:left;">
+WATER VALLEY
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+478
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+GRUVER
+</td>
+<td style="text-align:left;">
+GRUVER
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+464
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+YANTIS
+</td>
+<td style="text-align:left;">
+YANTIS
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+451
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SHINER
+</td>
+<td style="text-align:left;">
+SHINER
+</td>
+<td style="text-align:right;">
+27
+</td>
+<td style="text-align:right;">
+450
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+WEST TEXAS
+</td>
+<td style="text-align:left;">
+STINNETT
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+443
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.67
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HONEY GROVE
+</td>
+<td style="text-align:left;">
+HONEY GROVE
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+440
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LATEXO
+</td>
+<td style="text-align:left;">
+LATEXO
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+439
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MUENSTER
+</td>
+<td style="text-align:left;">
+MUENSTER
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+436
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.67
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+VAN HORN
+</td>
+<td style="text-align:left;">
+VAN HORN
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+436
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SLOCUM
+</td>
+<td style="text-align:left;">
+ELKHART
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+415
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+0.89
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ERA
+</td>
+<td style="text-align:left;">
+ERA
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+415
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+GOLDTHWAITE
+</td>
+<td style="text-align:left;">
+GOLDTHWAITE
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+413
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NEWCASTLE
+</td>
+<td style="text-align:left;">
+NEWCASTLE
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+408
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+District
+</td>
+<td style="text-align:left;">
+Calculator Applications
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 27,359
+</td>
+</tr>
+</tfoot>
+</table>
+<p>Now let’s try to evaluate whether or not year-to-year correlations also exist with this data set.</p>
+<p>Importantly, some choice about how to quantify performance needs to be made. As I discussed in <a href="https://tonyelhabr.rbind.io/post/analysis-texas-high-school-academics-intro/">my long-form series of posts exploring the UIL academic data</a>, the evaluation of performance is somewhat subjective. Should we use number of times a school advanced to the next level of competition in a given year? (Note that there are three competition levels—<code>District</code>, <code>Region</code>, and <code>State</code>.) What about the number the number of other schools it “defeated” in head-to-head competitions? In that separate analysis, I made the choice to use the percentile rank (<code>prnk</code>) of the school’s placings across all competition levels for a given competition type (<code>comp</code>). I believe this measure bests represent a school’s quality of performance (where a higher value indicates better performance). As I stated there when explaining my choice to use percent rank for identifying “dominant” individual“, <i>”I choose to use percent rank—which is a always a value between 0 and 1—because it inherently accounts for the wide range of number of competitors across all competitions. (For this context, a percent rank of 1 corresponds to the highest score in a given competition, and, conversely, a value of 0 corresponds to the lowest score.)&quot; </i></p>
+<p>Aside from this decision regarding performance evaluation in academic UIL competitions, note that I treat the competition type (<code>comp</code>) in <code>schools_uil</code> as analogous to the <code>test</code> variable indicating SAT or ACT score in the <code>schools_tea</code> data set. For those who have not read through my UIL analysis, note that scores for five different competition types was collected—<code>Calculator Applications</code>, <code>Computer Science</code>, <code>Mathematics</code>, <code>Number Sense</code>, and <code>Science</code>.</p>
+<pre class="r"><code>schools_uil_cors_byyear &lt;-
+  schools_uil %&gt;% 
+  select(year, school, city, comp, prnk) %&gt;% 
+  group_by(year, school, city, comp) %&gt;% 
+  summarise(prnk_sum = sum(prnk, na.rm = TRUE)) %&gt;%
+  ungroup() %&gt;% 
+  unite(comp_school, comp, school) %&gt;%
+  widyr::pairwise_cor(
+    feature = comp_school,
+    item = year,
+    value = prnk_sum
+  ) %&gt;% 
+  rename(year1 = item1, year2 = item2, cor = correlation)
+
+schools_uil_cors_byyear %&gt;% 
+  filter(year1 &lt;= year2) </code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+year1
+</th>
+<th style="text-align:right;">
+year2
+</th>
+<th style="text-align:right;">
+cor
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+0.74
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+0.63
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+0.53
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+0.75
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.52
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="/post/2018-07-21-texas-high-schools-academics-cors_files/figure-html/viz_schools_uil_cors_byyear_show-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>We can see that correlations among years do exist, as we would expect. The strength of the correlations decrease for years that are farther apart, which is also what we might expect.</p>
+</div>
+<div id="final-correlation-analysis" class="section level3">
+<h3>“Final” Correlation Analysis</h3>
+<p>So, at this point, I have set myself up to do that which I set out to do—evaluate the relationship between the academic UIL competition scores and the national SAT/ACT scores.</p>
+<p>In order to put the two sets of data on “equal grounds”, I only evaluate math scores. In particular, I filter <code>comp</code> in the UIL data to just the mathematically-based competitions—<code>Calculator Applications</code>, <code>Mathematics</code>, and <code>Number Sense</code>—excluding <code>Science</code> and <code>Computer Science</code>. And, for the SAT/ACT data, I select only the <code>math</code> score, which is available fore both tests, excluding the <code>total</code> and <code>reading</code> scores also available for each and the <code>writing</code>, <code>english</code>, and <code>science</code> scores available for one or the other. (Perhaps the ACT’s <code>science</code> score could be compared to the <code>Science</code> UIL scores, but I choose not to do so here.)</p>
+<pre class="r"><code>schools_uil_math &lt;-
+  schools_uil %&gt;%
+  filter(str_detect(comp, &quot;Calculator|Math|Number&quot;)) %&gt;%
+  group_by(year, school, city) %&gt;% 
+  summarise(prnk_sum = sum(prnk, na.rm = TRUE)) %&gt;%
+  ungroup() %&gt;% 
+  # NOTE: &quot;Renormalize&quot; `prnk_sum`.
+  mutate(math_prnk = percent_rank(prnk_sum)) %&gt;% 
+  select(-prnk_sum)
+schools_uil_math</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+year
+</th>
+<th style="text-align:left;">
+school
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:right;">
+math_prnk
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABBOTT
+</td>
+<td style="text-align:left;">
+ABBOTT
+</td>
+<td style="text-align:right;">
+0.82
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABERNATHY
+</td>
+<td style="text-align:left;">
+ABERNATHY
+</td>
+<td style="text-align:right;">
+0.59
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY
+</td>
+<td style="text-align:left;">
+KINGSVILLE
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY
+</td>
+<td style="text-align:left;">
+LITTLE RIVER
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY OF FINE ARTS
+</td>
+<td style="text-align:left;">
+FORT WORTH
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADAMS
+</td>
+<td style="text-align:left;">
+DALLAS
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADAMSON
+</td>
+<td style="text-align:left;">
+DALLAS
+</td>
+<td style="text-align:right;">
+0.42
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADRIAN
+</td>
+<td style="text-align:left;">
+ADRIAN
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADVANTAGE ACADEMY
+</td>
+<td style="text-align:left;">
+WAXAHACHE
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AGUA DULCE
+</td>
+<td style="text-align:left;">
+AGUA DULCE
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALAMO HEIGHTS
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALBA-GOLDEN
+</td>
+<td style="text-align:left;">
+ALBA
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALBANY
+</td>
+<td style="text-align:left;">
+ALBANY
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALEDO
+</td>
+<td style="text-align:left;">
+ALEDO
+</td>
+<td style="text-align:right;">
+0.89
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALEXANDER
+</td>
+<td style="text-align:left;">
+LAREDO
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALICE
+</td>
+<td style="text-align:left;">
+ALICE
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALLEN
+</td>
+<td style="text-align:left;">
+ALLEN
+</td>
+<td style="text-align:right;">
+0.85
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALPINE
+</td>
+<td style="text-align:left;">
+ALPINE
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALTO
+</td>
+<td style="text-align:left;">
+ALTO
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 5,596
+</td>
+</tr>
+</tfoot>
+</table>
+<pre class="r"><code>schools_tea_math &lt;-
+  schools_tea %&gt;%
+  select(test, year, school, city, math) %&gt;%
+  filter(!is.na(math)) %&gt;% 
+  group_by(test) %&gt;% 
+  mutate(math_prnk = percent_rank(math)) %&gt;%
+  ungroup() %&gt;% 
+  group_by(year, school, city) %&gt;% 
+  summarise_at(vars(math_prnk), funs(mean(., na.rm = TRUE))) %&gt;% 
+  ungroup()
+schools_tea_math</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+year
+</th>
+<th style="text-align:left;">
+school
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:right;">
+math_prnk
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A C JONES
+</td>
+<td style="text-align:left;">
+CORPUS CHRISTI
+</td>
+<td style="text-align:right;">
+0.51
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A J MOORE ACAD
+</td>
+<td style="text-align:left;">
+WACO
+</td>
+<td style="text-align:right;">
+0.24
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A M CONS
+</td>
+<td style="text-align:left;">
+HUNTSVILLE
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A MACEO SMITH HIGH SCHOOL
+</td>
+<td style="text-align:left;">
+RICHARDSON
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+A+ ACADEMY
+</td>
+<td style="text-align:left;">
+RICHARDSON
+</td>
+<td style="text-align:right;">
+0.14
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABBOTT SCHOOL
+</td>
+<td style="text-align:left;">
+WACO
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABERNATHY
+</td>
+<td style="text-align:left;">
+LUBBOCK
+</td>
+<td style="text-align:right;">
+0.63
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY
+</td>
+<td style="text-align:left;">
+WACO
+</td>
+<td style="text-align:right;">
+0.91
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY HIGH SCHOOL
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY OF CAREERS AND TECHNOLOGIE
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ACADEMY OF CREATIVE ED
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADRIAN SCHOOL
+</td>
+<td style="text-align:left;">
+AMARILLO
+</td>
+<td style="text-align:right;">
+0.27
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ADVANTAGE ACADEMY
+</td>
+<td style="text-align:left;">
+RICHARDSON
+</td>
+<td style="text-align:right;">
+0.25
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AGUA DULCE
+</td>
+<td style="text-align:left;">
+CORPUS CHRISTI
+</td>
+<td style="text-align:right;">
+0.66
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AKINS
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+0.25
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALAMO HEIGHTS
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALBA-GOLDEN
+</td>
+<td style="text-align:left;">
+KILGORE
+</td>
+<td style="text-align:right;">
+0.52
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALBANY JR-SR
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALDINE
+</td>
+<td style="text-align:left;">
+HOUSTON
+</td>
+<td style="text-align:right;">
+0.23
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 7,730
+</td>
+</tr>
+</tfoot>
+</table>
+<pre class="r"><code>schools_join_math &lt;-
+  schools_tea_math %&gt;%
+  rename_at(vars(matches(&quot;^math&quot;)), funs(paste0(&quot;tea_&quot;, .))) %&gt;% 
+  inner_join(schools_uil_math %&gt;% 
+             rename_at(vars(matches(&quot;^math&quot;)), funs(paste0(&quot;uil_&quot;, .))),
+           by = c(&quot;year&quot;, &quot;school&quot;, &quot;city&quot;)) %&gt;%
+  select(year, school, city, matches(&quot;math&quot;))
+schools_join_math</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+year
+</th>
+<th style="text-align:left;">
+school
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:right;">
+tea_math_prnk
+</th>
+<th style="text-align:right;">
+uil_math_prnk
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:left;">
+ABILENE
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ALAMO HEIGHTS
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AMERICAS
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ANDERSON
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ANDRESS
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+ARLINGTON HEIGHTS
+</td>
+<td style="text-align:left;">
+FORT WORTH
+</td>
+<td style="text-align:right;">
+0.63
+</td>
+<td style="text-align:right;">
+0.49
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+0.89
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:left;">
+HOUSTON
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+0.85
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BEL AIR
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.17
+</td>
+<td style="text-align:right;">
+0.49
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BERKNER
+</td>
+<td style="text-align:left;">
+RICHARDSON
+</td>
+<td style="text-align:right;">
+0.80
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BOSWELL
+</td>
+<td style="text-align:left;">
+FORT WORTH
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BOWIE
+</td>
+<td style="text-align:left;">
+AUSTIN
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BOWIE
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BRANDEIS
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.79
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BREWER
+</td>
+<td style="text-align:left;">
+FORT WORTH
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BURBANK
+</td>
+<td style="text-align:left;">
+SAN ANTONIO
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+0.76
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+BURGES
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+CALALLEN
+</td>
+<td style="text-align:left;">
+CORPUS CHRISTI
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:left;">
+CANUTILLO
+</td>
+<td style="text-align:left;">
+EL PASO
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; border:0;" colspan="100%">
+<sup>1</sup> # of total rows: 699
+</td>
+</tr>
+</tfoot>
+</table>
+<pre class="r"><code>schools_join_math_cors &lt;-
+  schools_join_math %&gt;%
+  select(-year) %&gt;% 
+  select_if(is.numeric) %&gt;%
+  corrr::correlate()
+schools_join_math_cors</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+rowname
+</th>
+<th style="text-align:right;">
+tea_math_prnk
+</th>
+<th style="text-align:right;">
+uil_math_prnk
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+tea_math_prnk
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uil_math_prnk
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<p>So, this correlation value—0.36—seems fairly low. At face value, it certainly does not provide any basis to claim that schools that do well in the academic UIL competitions also do well with SAT/ACT tests. However, perhaps if I used a different methodology, the result would be different. Other metrics used to quantify academic UIL performance could be tested in some kind of sensitivity analysis.</p>
+</div>
+<div id="eda-year-to-year-correlations-cont." class="section level3">
+<h3>EDA: Year-to-Year Correlations, Cont.</h3>
+<p>While I won’t do any kind of rigorous second evaluation here, I do want to try to quantify the impact of the “missing” data dropped due to mismatched school names. If all possible data had been used, would the final correlation value have increased (or decreased) with more (or less) data? Although finding direct answer to this question is impossible, we can evaluate the difference in the year-to-year correlations of scores from the schools that <strong>are joined</strong> with the correlations calculated for all in <strong>“unjoined”</strong> <code>schools_tea</code> and <code>schools_uil</code> data sets. If we find that there are large discrepancies (one way or the other), then we may have some reason to believe that the 0.36 number found above is misleading.</p>
+<p>To perform this task, I create a couple of intermediary data sets, as well as some functions.</p>
+<pre class="r"><code>schools_postjoin_math_tidy &lt;-
+  schools_join_math %&gt;%
+  unite(school_city, school, city) %&gt;% 
+  gather(metric, value, matches(&quot;prnk&quot;))</code></pre>
+<pre class="r"><code>pairwise_cor_f1 &lt;-
+  function(data = NULL, which = c(&quot;tea&quot;, &quot;uil&quot;)) {
+    which &lt;- match.arg(which)
+    data %&gt;%
+      filter(metric %&gt;% str_detect(which)) %&gt;% 
+      # filter_at(vars(value), all_vars(!is.nan(.))) %&gt;% 
+      widyr::pairwise_cor(
+        feature = school_city,
+        item = year,
+        value = value
+      ) %&gt;% 
+      rename(year1 = item1, year2 = item2, cor = correlation) %&gt;% 
+      mutate(source = which %&gt;% toupper())
+  }
+
+pairwise_cor_f2 &lt;-
+  function(data = NULL, which = c(&quot;tea&quot;, &quot;uil&quot;)) {
+    which &lt;- match.arg(which)
+    col &lt;-
+      data %&gt;%
+      names() %&gt;% 
+      str_subset(&quot;math&quot;)
+    data %&gt;%
+      unite(school_city, school, city) %&gt;% 
+      rename(value = !!rlang::sym(col)) %&gt;%
+      mutate(source = which %&gt;% toupper()) %&gt;% 
+      widyr::pairwise_cor(
+        feature = school_city,
+        item = year,
+        value = value
+      ) %&gt;% 
+      rename(year1 = item1, year2 = item2, cor = correlation) %&gt;% 
+      mutate(source = which %&gt;% toupper())
+  }</code></pre>
+<pre class="r"><code>schools_postjoin_math_cors_byyear &lt;-
+  bind_rows(
+    schools_postjoin_math_tidy %&gt;% 
+      pairwise_cor_f1(&quot;tea&quot;),
+    schools_postjoin_math_tidy %&gt;% 
+      pairwise_cor_f1(&quot;uil&quot;)
+  )
+
+schools_prejoin_math_cors_byyear &lt;-
+  bind_rows(
+    schools_tea_math %&gt;%
+      pairwise_cor_f2(&quot;tea&quot;),
+    schools_uil_math %&gt;%
+      pairwise_cor_f2(&quot;uil&quot;)
+  )
+
+schools_math_cors_byyear_diffs &lt;-
+  schools_postjoin_math_cors_byyear %&gt;% 
+  inner_join(schools_prejoin_math_cors_byyear, 
+             by = c(&quot;year1&quot;, &quot;year2&quot;, &quot;source&quot;), 
+             suffix = c(&quot;_join&quot;, &quot;_unjoin&quot;)) %&gt;% 
+  mutate(cor_diff = cor_join - cor_unjoin)</code></pre>
+<p>Ok, enough of the data munging—let’s review the results!</p>
+<pre class="r"><code>schools_math_cors_byyear_diffs_wide &lt;-
+  schools_math_cors_byyear_diffs %&gt;% 
+  filter(year1 &lt;= year2) %&gt;% 
+  select(-matches(&quot;join$&quot;)) %&gt;% 
+  unite(year_pair, year1, year2) %&gt;% 
+  spread(source, cor_diff)
+schools_math_cors_byyear_diffs_wide</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+year_pair
+</th>
+<th style="text-align:right;">
+TEA
+</th>
+<th style="text-align:right;">
+UIL
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2011_2012
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+-0.02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2011_2013
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+-0.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2011_2014
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+<td style="text-align:right;">
+-0.06
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2011_2015
+</td>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:right;">
+-0.03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012_2013
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012_2014
+</td>
+<td style="text-align:right;">
+0.06
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012_2015
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2013_2014
+</td>
+<td style="text-align:right;">
+-0.01
+</td>
+<td style="text-align:right;">
+-0.03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2013_2015
+</td>
+<td style="text-align:right;">
+0.08
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2014_2015
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+-0.01
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="/post/2018-07-21-texas-high-schools-academics-cors_files/figure-html/viz_schools_math_cors_byyear_diffs_show-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>Note that the correlations in the joined data are a bit “stronger”—in the sense that they are more positive—among the TEA SAT/ACT data, although not in any kind of magnificent way. Additionally, the differences for the UIL data are trivial. Thus, we might say that the additional data that could have possibly increased (or decreased) the singular correlation value found—0.36—would not have changed much at all.</p>
+</div>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>So, my initial inclination <a href="https://tonyelhabr.rbind.io/post/analysis-texas-high-school-academics-intro/">in my analysis of academic UIL competitions</a>) seems correct—there is no significant relationship between Texas high school academic competition scores and standardized test scores (for math, between 2011 and 2015). And, with that question answered, I intend to explore this rich data set in other ways in future blog posts.</p>
+</div>

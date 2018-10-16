@@ -1,0 +1,14 @@
+
+html {
+  font-family: 'Roboto', sans-serif;
+  font-size: 15px;
+  color: rgba(0,0,0,0.8);
+  line-height: 1.65;
+}
+
+code,
+.dark pre,
+.dark code {
+  /*color: rgb(238, 242, 13);*/
+  font-size: 1rem;
+}
