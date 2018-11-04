@@ -2,14 +2,22 @@
 title: A Tidy Text Analysis of My Google Search History
 date: "2018-02-16"
 slug: tidy-text-analysis-google-search-history
-categories: []
+categories:
+  - r
 tags:
   - r
-  - google
   - tidytext
   - ggplot2
   - dplyr
-banner: "img/tidy-text-analysis-google-search-history/viz_corrs_network-tony-banner.png"
+  - google
+image:
+  caption: ""
+header:
+  caption: ""
+  image: "tidy-text-analysis-google-search-history/viz_corrs_network-tony-banner.png"
+  preview: true
+params:
+  eval: false
 ---
 
 
@@ -36,11 +44,11 @@ library(&quot;igraph&quot;)
 library(&quot;ggraph&quot;)
 # library(&quot;topicmodels&quot;)
 # devtools::install_github(&quot;tonyelhabr/temisc&quot;)
-library(&quot;temisc&quot;) # Personal package.</code></pre>
-<p>Next, I create a <code>params</code> list in order to emulate what one might do with a parameterized RMarkdown report (where the <code>params</code> would be a part of the yaml header.</p>
-<pre class="r"><code>params &lt;-
+library(&quot;teplot&quot;) # Personal package.</code></pre>
+<p>Next, I create a <code>config</code> list in order to emulate what one might do with a parameterized RMarkdown report (where the <code>config</code> would be a part of the yaml header.</p>
+<pre class="r"><code>config &lt;-
   list(
-    filepath = &quot;data-raw/Tony-My Activity-Search-MyActivity.html&quot;,
+    path = &quot;data-raw/Tony-My Activity-Search-MyActivity.html&quot;,
     name_main = &quot;Tony&quot;,
     color_main = &quot;firebrick&quot;
   )</code></pre>
@@ -68,7 +76,7 @@ scale_fill_func &lt;- function() {
 <pre class="r"><code># Reference:
 # + https://rstudio-pubs-static.s3.amazonaws.com/355045_90b7464be9b4437393670340ad67c310.html#
 
-doc_html &lt;- params$filepath
+doc_html &lt;- config$path
 search_archive &lt;- xml2::read_html(doc_html)
 
 # Extract search time.
@@ -100,7 +108,7 @@ type_search &lt;-
 # + Adding a `name` column to make this code more &quot;parametric&quot;.
 data &lt;-
   tibble(
-    name = params$name_main,
+    name = config$name_main,
     timestamp = date_search,
     date = lubridate::as_date(date_search),
     yyyy = lubridate::year(date_search) %&gt;% as.integer(),
@@ -140,7 +148,7 @@ visualize_time &lt;-
         subtitle = lab_subtitle
       )
     viz_theme &lt;-
-      temisc::theme_te_a() +
+      teplot::theme_te() +
       theme(panel.grid.major.x = element_blank()) +
       theme(legend.position = &quot;none&quot;)
 
@@ -168,11 +176,11 @@ visualize_time &lt;-
     data = data,
     colname_x = &quot;yyyy&quot;,
     geom = &quot;bar&quot;,
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = &quot;By Year&quot;
   )</code></pre>
 <p>The same pattern can be repeated for <code>timestamp</code>, <code>yyyy</code>, <code>mm</code>, <code>wd</code>, and <code>hh</code>.</p>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_time_usage-1.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_time_usage-2.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_time_usage-3.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_time_usage-4.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_time_usage-5.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_time_show-1.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_time_show-2.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_time_show-3.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_time_show-4.png" width="576" style="display: block; margin: auto;" /><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_time_show-5.png" width="576" style="display: block; margin: auto;" /></p>
 <p>I can make a couple of interesting observations about my data.</p>
 <ul>
 <li>It’s evident that I’ve googled stuff more and more frequently over the years.</li>
@@ -216,7 +224,7 @@ unigrams %&gt;% select(word) %&gt;% count(word, sort = TRUE)</code></pre>
 ##  8 sql         453
 ##  9 nba         404
 ## 10 oracle      389
-## # ... with 15,289 more rows</code></pre>
+## # ... with 1.529e+04 more rows</code></pre>
 <pre class="r"><code># References:
 # + https://www.tidytextmining.com/
 # + https://www.tidytextmining.com/ngrams.html
@@ -245,7 +253,7 @@ bigrams %&gt;% select(word) %&gt;% count(word, sort = TRUE)</code></pre>
 ##  8 sweet potato      95
 ##  9 oracle sql        94
 ## 10 chicken breast    88
-## # ... with 33,394 more rows</code></pre>
+## # ... with 3.339e+04 more rows</code></pre>
 <p>With the data parsed into tokens, we can visualize counts of individual n-grams.</p>
 <pre class="r"><code># Reference:
 # + https://github.com/dgrtwo/dgrtwo.github.com/blob/master/_R/2016-08-09-trump-data.Rmd.
@@ -257,7 +265,7 @@ visualize_cnts &lt;- function(data, color = &quot;grey50&quot;, num_top = 20) {
     ggplot(aes(x = word, y = n)) +
     ggalt::geom_lollipop(size = 2, point.size = 4, color = color) +
     coord_flip() +
-    temisc::theme_te_a() +
+    teplot::theme_te() +
     labs(x = NULL, y = NULL) +
     labs(title = &quot;Most Common Words&quot;) +
     theme(legend.position = &quot;none&quot;) +
@@ -268,19 +276,19 @@ num_top_cnt &lt;- 15
 viz_unigram_cnts &lt;-
   visualize_cnts(
     data = unigrams,
-    color = params$color_main,
+    color = config$color_main,
     num_top = num_top_cnt
   )
 viz_unigram_cnts</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_ngram_cnts-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_unigram_cnts_show-1.png" width="576" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>viz_bigram_cnts &lt;-
   visualize_cnts(
     data = bigrams,
-    color = params$color_main,
+    color = config$color_main,
     num_top = num_top_cnt
   )
 viz_bigram_cnts</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_ngram_cnts-2.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_bigram_cnts_show-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>These count totals reflect my personal interests relatively well. In particular, words like <code>nutrition</code> and <code>chicken breast</code>, <code>excel vba</code> and <code>python</code>, and <code>nba</code> and <code>nfl scores</code> highlight my interest in in food/nutrition, software and data analysis, and sports. Additionally, the places I’ve lived re apparent from my searches– <code>ut austin</code> reflects my undergraduate studies at the <a href="https://www.utexas.edu">University of Texas at Austin</a>, <code>baton rouge</code> alludes to my internship with <a href="corporate.exxonmobil.com/">ExxonMobil</a> in Baton Rouge in the summer of 2015, <code>round rock</code> hints to my current residence in Round Rock, Texas.</p>
 <div id="word-clouds" class="section level4">
 <h4>Word Clouds</h4>
@@ -300,21 +308,76 @@ get_rpal_byname &lt;- function(name) {
   paste0(name, c(&quot;&quot;, as.character(seq(1, 4, 1))))
 }
 
-colors_wordcloud &lt;- get_rpal_byname(params$color_main)
+colors_wordcloud &lt;- get_rpal_byname(config$color_main)
 num_top_cnt_wordcloud &lt;- 25
-visualize_cnts_wordcloud(
-  data = unigrams,
-  color = colors_wordcloud,
-  num_top = num_top_cnt_wordcloud
-)</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_cnts_wordcloud-1.png" width="576" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>visualize_cnts_wordcloud(
-  data = bigrams,
-  color = colors_wordcloud,
-  num_top = num_top_cnt_wordcloud
-)</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/visualize_cnts_wordcloud-2.png" width="576" style="display: block; margin: auto;" /></p>
+viz_unigram_cnts_wordcloud &lt;-
+  visualize_cnts_wordcloud(
+    data = unigrams,
+    color = colors_wordcloud,
+    num_top = num_top_cnt_wordcloud
+  )</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>viz_bigram_cnts_wordcloud &lt;-
+  visualize_cnts_wordcloud(
+    data = bigrams,
+    color = colors_wordcloud,
+    num_top = num_top_cnt_wordcloud
+  )</code></pre>
+<pre><code>## NULL</code></pre>
 <p>These word clouds essentially show the same information as the other frequency plots, so it’s not surprising to see the same set of words shown. The word clouds arguably do a better job of emphasizing the words themselves (as opposed to the raw count totals associated with each word(s)).</p>
+<pre class="r"><code>compute_freqs &lt;- function(data, colname_cnt = &quot;word&quot;) {
+  colname_cnt_quo &lt;- rlang::sym(colname_cnt)
+  
+  data %&gt;% 
+    group_by(!!colname_cnt_quo) %&gt;% 
+    mutate(n = n()) %&gt;%
+    # ungroup() %&gt;% 
+    # group_by(!!colname_cnt_quo) %&gt;% 
+    summarize(freq = sum(n) / n()) %&gt;% 
+    ungroup() %&gt;% 
+    arrange(desc(freq))
+}
+
+unigram_freqs &lt;-
+  compute_freqs(
+    data = unigrams,
+    colname_cnt = &quot;word&quot;
+  )
+unigram_freqs</code></pre>
+<pre><code>## # A tibble: 15,299 x 2
+##    word       freq
+##    &lt;chr&gt;     &lt;dbl&gt;
+##  1 nutrition  1677
+##  2 excel      1224
+##  3 ut          979
+##  4 austin      811
+##  5 vba         683
+##  6 python      551
+##  7 chicken     486
+##  8 sql         453
+##  9 nba         404
+## 10 oracle      389
+## # ... with 1.529e+04 more rows</code></pre>
+<pre class="r"><code>bigram_freqs &lt;-
+  compute_freqs(
+    data = bigrams,
+    colname_cnt = &quot;word&quot;
+  )
+bigram_freqs</code></pre>
+<pre><code>## # A tibble: 33,404 x 2
+##    word            freq
+##    &lt;chr&gt;          &lt;dbl&gt;
+##  1 excel vba        598
+##  2 ut austin        474
+##  3 pl sql           167
+##  4 san antonio      126
+##  5 baton rouge      113
+##  6 peanut butter    102
+##  7 round rock       100
+##  8 sweet potato      95
+##  9 oracle sql        94
+## 10 chicken breast    88
+## # ... with 3.339e+04 more rows</code></pre>
 </div>
 </div>
 <div id="word-correlations" class="section level3">
@@ -379,7 +442,7 @@ compute_corrs &lt;-
 num_top_ngrams &lt;- 50
 num_top_corrs &lt;- 50
 
-unigrams_corrs &lt;-
+unigram_corrs &lt;-
   compute_corrs(
     unigrams,
     num_top_ngrams = num_top_ngrams,
@@ -387,25 +450,11 @@ unigrams_corrs &lt;-
     colname_word = &quot;word&quot;,
     colname_feature = &quot;timestamp&quot;
   )
-unigrams_corrs</code></pre>
-<pre><code>## # A tibble: 50 x 4
-##    item1   item2   correlation  rank
-##    &lt;chr&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;int&gt;
-##  1 excel   vba          0.642      1
-##  2 austin  ut           0.503      2
-##  3 oracle  sql          0.292      3
-##  4 column  excel        0.110      4
-##  5 string  convert      0.106      5
-##  6 tx      austin       0.0937     6
-##  7 dplyr   column       0.0905     7
-##  8 convert list         0.0900     8
-##  9 string  python       0.0879     9
-## 10 list    python       0.0817    10
-## # ... with 40 more rows</code></pre>
+unigram_corrs</code></pre>
 <p>Not surprisingly, many of the same word pairs seen among the most frequently used bigrams also appear here.</p>
 <pre class="r"><code># Reference:
 # + http://varianceexplained.org/r/seven-fav-packages/.
-unigrams_corrs_list &lt;-
+unigram_corrs_list &lt;-
   compute_corrs(
     unigrams,
     num_top_ngrams = num_top_ngrams,
@@ -419,21 +468,21 @@ seed &lt;- 42
 set.seed(seed)
 viz_corrs_network &lt;-
   igraph::graph_from_data_frame(
-    d = unigrams_corrs_list$corrs, 
-    vertices = unigrams_corrs_list$words, 
+    d = unigram_corrs_list$corrs, 
+    vertices = unigram_corrs_list$words, 
     directed = TRUE
   ) %&gt;% 
   ggraph::ggraph(layout = &quot;fr&quot;) +
   ggraph::geom_edge_link(edge_width = 1) +
   ggraph::geom_node_point(aes(size = n), fill = &quot;grey50&quot;, shape = 21) +
   ggraph::geom_node_text(ggplot2::aes_string(label = &quot;name&quot;), repel = TRUE) +
-  theme_te_a() +
+  teplot::theme_te() +
   theme(line = element_blank(), rect = element_blank(), axis.text = element_blank(), axis.ticks = element_blank()) +
   theme(legend.position = &quot;none&quot;) +
   labs(x = NULL, y = NULL) +
   labs(title = &quot;Network of Pairwise Correlations&quot;, subtitle = &quot;By Search&quot;)
 viz_corrs_network</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_corrs_network-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_corrs_network_show-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>It looks like the network captures most of the similar terms fairly well. The words for food/nutrition, software, and locations are grouped.</p>
 </div>
 <div id="word-changes-over-time" class="section level3">
@@ -444,7 +493,7 @@ viz_corrs_network</code></pre>
 # + https://www.tidytextmining.com/twitter.html#changes-in-word-use.
 timefloor &lt;- &quot;year&quot;
 top_pct_words &lt;- 0.05
-unigrams_bytime &lt;-
+unigram_bytime &lt;-
   unigrams %&gt;%
   mutate(time_floor = floor_date(timestamp, unit = timefloor)) %&gt;%
   group_by(time_floor, word) %&gt;% 
@@ -457,45 +506,60 @@ unigrams_bytime &lt;-
   mutate(word_total = sum(n)) %&gt;%
   ungroup() %&gt;%
   filter(word_total &gt;= quantile(word_total, 1 - top_pct_words)) %&gt;% 
-  arrange(desc(word_total))</code></pre>
+  arrange(desc(word_total))
+unigram_bytime</code></pre>
+<pre><code>## # A tibble: 1,377 x 5
+##    time_floor          word          n time_total word_total
+##    &lt;dttm&gt;              &lt;chr&gt;     &lt;int&gt;      &lt;int&gt;      &lt;int&gt;
+##  1 2012-01-01 00:00:00 nutrition    63       5683       1677
+##  2 2013-01-01 00:00:00 nutrition   263      13380       1677
+##  3 2014-01-01 00:00:00 nutrition   647      18824       1677
+##  4 2015-01-01 00:00:00 nutrition   388      17202       1677
+##  5 2016-01-01 00:00:00 nutrition   215      28586       1677
+##  6 2017-01-01 00:00:00 nutrition   101      31681       1677
+##  7 2013-01-01 00:00:00 excel         2      13380       1224
+##  8 2014-01-01 00:00:00 excel       111      18824       1224
+##  9 2015-01-01 00:00:00 excel        80      17202       1224
+## 10 2016-01-01 00:00:00 excel       307      28586       1224
+## # ... with 1,367 more rows</code></pre>
 <p>Next, we’ll create logistic models for each word-year pair. These models attempt essentially answer the question “How likely is it that a given word appears in a given year?”</p>
-<pre class="r"><code>unigrams_bytime_models &lt;- 
-  unigrams_bytime %&gt;% 
+<pre class="r"><code>unigram_bytime_models &lt;- 
+  unigram_bytime %&gt;% 
   tidyr::nest(-word) %&gt;% 
   mutate(
     models =
       purrr::map(data, ~ glm(cbind(n, time_total) ~ time_floor, ., family = &quot;binomial&quot;))
   )
 
-unigrams_bytime_models_slopes &lt;-
-  unigrams_bytime_models %&gt;%
+unigram_bytime_models_slopes &lt;-
+  unigram_bytime_models %&gt;%
   tidyr::unnest(purrr::map(models, broom::tidy)) %&gt;%
   filter(term == &quot;time_floor&quot;) %&gt;%
   mutate(adjusted_p_value = p.adjust(p.value))
-unigrams_bytime_models_slopes</code></pre>
+unigram_bytime_models_slopes</code></pre>
 <pre><code>## # A tibble: 255 x 7
-##    word      term  estimate std.error statistic   p.value adjusted_p_value
-##    &lt;chr&gt;     &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;            &lt;dbl&gt;
-##  1 nutrition time~ -1.03e-8  4.89e-10    -21.1  5.09e- 99        1.29e- 96
-##  2 excel     time~  2.06e-8  9.56e-10     21.5  6.33e-103        1.61e-100
-##  3 ut        time~ -9.73e-9  6.34e-10    -15.3  3.75e- 53        9.37e- 51
-##  4 austin    time~ -4.31e-9  7.01e-10    - 6.14 8.20e- 10        1.48e-  7
-##  5 vba       time~  3.47e-8  1.89e- 9     18.3  3.42e- 75        8.64e- 73
-##  6 python    time~ -7.03e-8  4.36e- 9    -16.1  2.09e- 58        5.25e- 56
-##  7 chicken   time~ -1.01e-8  8.99e-10    -11.2  2.71e- 29        6.63e- 27
-##  8 sql       time~  3.08e-8  2.15e- 9     14.3  1.10e- 46        2.73e- 44
-##  9 nba       time~  1.52e-8  1.39e- 9     10.9  8.01e- 28        1.95e- 25
-## 10 oracle    time~  2.17e-8  2.04e- 9     10.7  1.73e- 26        4.13e- 24
+##    word   term    estimate std.error statistic    p.value adjusted_p_value
+##    &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;            &lt;dbl&gt;
+##  1 nutri~ time_~ -1.033e-8 4.891e-10   -21.12  5.093e- 99       1.294e- 96
+##  2 excel  time_~  2.060e-8 9.561e-10    21.54  6.326e-103       1.613e-100
+##  3 ut     time_~ -9.729e-9 6.339e-10   -15.35  3.748e- 53       9.370e- 51
+##  4 austin time_~ -4.307e-9 7.014e-10    -6.141 8.197e- 10       1.476e-  7
+##  5 vba    time_~  3.471e-8 1.892e- 9    18.35  3.415e- 75       8.641e- 73
+##  6 python time_~ -7.032e-8 4.364e- 9   -16.11  2.092e- 58       5.250e- 56
+##  7 chick~ time_~ -1.010e-8 8.992e-10   -11.24  2.708e- 29       6.634e- 27
+##  8 sql    time_~  3.082e-8 2.148e- 9    14.35  1.098e- 46       2.735e- 44
+##  9 nba    time_~  1.522e-8 1.392e- 9    10.93  8.010e- 28       1.947e- 25
+## 10 oracle time_~  2.175e-8 2.042e- 9    10.65  1.727e- 26       4.129e- 24
 ## # ... with 245 more rows</code></pre>
 <p>The p.values of the logistic models indicate whether or not the change in usage of a given word over time is non-trivial. We’ll look at the words with the smallest p.values, indicating that they have the most significant change in usage.</p>
 <pre class="r"><code>num_top_change &lt;- 5
-unigrams_bytime_models_slopes_top &lt;-
-  unigrams_bytime_models_slopes %&gt;% 
+unigram_bytime_models_slopes_top &lt;-
+  unigram_bytime_models_slopes %&gt;% 
   top_n(num_top_change, -adjusted_p_value) 
 
-viz_unigrams_change_bytime &lt;-
-  unigrams_bytime %&gt;% 
-  inner_join(unigrams_bytime_models_slopes_top, by = c(&quot;word&quot;)) %&gt;%
+viz_unigram_change_bytime &lt;-
+  unigram_bytime %&gt;% 
+  inner_join(unigram_bytime_models_slopes_top, by = c(&quot;word&quot;)) %&gt;%
   mutate(pct = n / time_total) %&gt;%
   mutate(label = if_else(time_floor == max(time_floor), word, NA_character_)) %&gt;%
   ggplot(aes(x = time_floor, y = pct, color = word)) +
@@ -503,12 +567,12 @@ viz_unigrams_change_bytime &lt;-
   ggrepel::geom_label_repel(aes(label = label), nudge_x = 1, na.rm = TRUE) +
   scale_y_continuous(labels = scales::percent_format()) +
   scale_color_func() +
-  temisc::theme_te_a() +
+  teplot::theme_te() +
   theme(legend.position = &quot;none&quot;) +
   labs(x = NULL, y = NULL) +
   labs(title = &quot;Largest Changes in Word Frequency&quot;)
-viz_unigrams_change_bytime</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_unigrams_change_bytime-1.png" width="576" style="display: block; margin: auto;" /></p>
+viz_unigram_change_bytime</code></pre>
+<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_unigram_change_bytime_show-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>This visualization does a great job of capturing how my interests/skills have changed over time.</p>
 <ul>
 <li>The rise of <code>excel</code> and <code>vba</code> recently reflect how much I have had to develop my Excel VBA skills at work (after starting my job in mid-2016). (I’ve actually had to enhance other software-related skills, such as with those with <code>SQL</code>, <code>R</code>, and mapping software such as <code>AutoCAD</code>, but Excel’s <code>VBA</code> has a lot of little nuances that make it not so intuitive (in my opinion) and put me more in need of Internet help than anything else.)</li>
@@ -529,22 +593,8 @@ data_tfidf &lt;-
   unigrams %&gt;%
   count(yyyy, word, sort = TRUE) %&gt;% 
   tidytext::bind_tf_idf(word, yyyy, n)
-data_tfidf</code></pre>
-<pre><code>## # A tibble: 26,691 x 6
-##     yyyy word          n      tf   idf  tf_idf
-##    &lt;int&gt; &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
-##  1  2017 excel       724 0.0229  0.336 0.00769
-##  2  2014 nutrition   647 0.0344  0.154 0.00530
-##  3  2017 vba         540 0.0170  0.560 0.00954
-##  4  2016 python      492 0.0172  1.25  0.0216 
-##  5  2015 nutrition   388 0.0226  0.154 0.00348
-##  6  2016 excel       307 0.0107  0.336 0.00361
-##  7  2016 austin      298 0.0104  0.154 0.00161
-##  8  2017 sql         283 0.00893 0.560 0.00500
-##  9  2016 ut          281 0.00983 0.154 0.00152
-## 10  2017 shiny       274 0.00865 1.25  0.0108 
-## # ... with 26,681 more rows</code></pre>
-<pre class="r"><code>num_top_tfidf &lt;- 10
+
+num_top_tfidf &lt;- 10
 viz_tfidf &lt;-
   data_tfidf %&gt;%
   group_by(yyyy) %&gt;%
@@ -560,18 +610,18 @@ viz_tfidf &lt;-
   facet_wrap(~ yyyy, scales = &quot;free&quot;) +
   drlib::scale_x_reordered() +
   coord_flip() +
-  temisc::theme_te_a_dx() +
+  teplot::theme_te_dx() +
   theme(legend.position = &quot;none&quot;) +
   theme(axis.text.x = element_blank()) +
   labs(x = NULL, y = NULL) +
   labs(title = &quot;Highest TF-IDF Words&quot;, subtitle = &quot;By Year&quot;)
 viz_tfidf</code></pre>
-<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_tfidf-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2018-02-16-tidy-text-analysis-google-search-history_files/figure-html/viz_tfidf_show-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>This TF-IDF plot is probably my favorite one out of all of them. It really highlights how my use of the Internet and personal interests have changed over time (perhaps even better than the previous plot.</p>
 <ul>
 <li>Up through graduating from high school in the middle of 2012, my search terms don’t appear correlated with anything in particular. This makes sense to me–at this point in my life, I mostly used Google for doing research for school projects.</li>
 <li>From the middle of 2012 to the middle of 2016, I was in college studying to get a degree in Electrical Engineering. Words such as <code>integral</code>, <code>ut</code>, and <code>neutron</code>, reflect my education. At the same time, my interest in health was strongest during these years, so the food-related words are not surprising.</li>
-<li>My more recent focus on software-related skills is evident in 2016 and beyond. In particular, my growing passion for <code>R</code> in 2017 is illustrated with words such as <code>ggplot</code>, <code>shiny</code>, <code>dplyr</code>, and <code>knitr</code>. This is one aspect of my personal skill development that was not as evident in the previous plot.</li>
+<li>My more recent focus on software-related skills is evident in 2016 and beyond. In particular, my growing passion for <code>R</code> in 2017 is illustrated with words such as <code>{ggplot}</code>, <code>{shiny}</code>, <code>{dplyr}</code>, and <code>{knitr}</code>. This is one aspect of my personal skill development that was not as evident in the previous plot.</li>
 </ul>
 </div>
 </div>

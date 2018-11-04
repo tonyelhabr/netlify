@@ -6,15 +6,13 @@ name = "custom"
 light = false
 
 # Primary
-# NOTE: These are the only changes from the "dark" theme.
-primary = "hsl(61, 90%, 50%)"
-primary_light = "hsl(61, 90%, 60%)"
-primary_dark = "hsl(61, 90%, 40%)"
-
-# These are the original "dark" values.
+# NOTE: See the custom.css file for some comments about these colors.
+# NOTE: Dracula pink is the original primary color.
 # primary = "hsl(339, 90%, 68%)"
 # primary_light = "hsl(339, 90%, 78%)"
 # primary_dark = "hsl(339, 90%, 58%)"
+primary = "hsl(265, 89%, 78%)" # purple
+# primary = "hsl(135, 94%, 65%)" # green
 
 # Menu
 menu_primary = "rgb(20, 22, 34)"

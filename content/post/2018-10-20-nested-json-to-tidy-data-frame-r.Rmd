@@ -2,14 +2,18 @@
 title: Converting nested JSON to a tidy data frame with R
 slug: nested-json-to-tidy-data-frame-r
 date: "2018-10-20"
-categories: []
+categories:
+  - r
 tags:
- - r
- - json
- - dplyr
- - tidyr
- - nfl
-banner: "img/nested-json-to-tidy-data-frame-r/json-everywhere-meme.png"
+  - r
+  - json
+  - dplyr
+  - tidyr
+  - nfl
+header:
+  caption: ""
+  image: "nested-json-to-tidy-data-frame-r/json-everywhere-meme.png"
+  preview: true
 ---
 
 ```{r setup, echo = FALSE}

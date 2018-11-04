@@ -2,24 +2,25 @@
 title: Conversion of Old Posts to Bookdown
 slug: nba-decision-analysis-bookdown
 date: "2018-02-24"
-categories: []
+categories:
+  - project
 tags:
  - r
  - bookdown
  - nba
  - decision analysis
-banner: "img/nba-decision-analysis-bookdown/figure-2-average-raw-and-regressed-first-round-ws-and-profit-voc.jpg"
+image:
+  caption: ""
+header:
+  caption: ""
+  image: "nba-decision-analysis-bookdown/figure-2-average-raw-and-regressed-first-round-ws-and-profit-voc.jpg"
+  preview: true
 ---
 
 I'm happy to announce that I've finished converting the bulk of my old posts
 to an e-book, using the [Yihui Xie](https://yihui.name/en/)'s 
-wonderful [`bookdown` package](https://github.com/rstudio/bookdown).
+wonderful [`{bookdown}` package](https://github.com/rstudio/bookdown).
 The e-book is live [on the docs branch of a GitHub repo](https://tonyelhabr.github.io/nba-decision_analysis/).
-
-
-```{r eval = FALSE, echo = FALSE}
-# ![](//github.com/tonyelhabr/nba-decision_analysis/blob/master/images/nba-draft-pick-value-perfect-information/figure-2-average-raw-and-regressed-first-round-ws-and-profit-voc.JPG)
-```
 
 The posts (now chapters) apply concepts in the field 
 of [decision analysis](https://en.wikipedia.org/wiki/Decision_analysis)

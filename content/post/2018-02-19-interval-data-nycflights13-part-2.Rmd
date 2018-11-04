@@ -2,18 +2,22 @@
 title: Dealing with Interval Data and the nycflights13 package using R, Part 2
 date: "2018-02-19"
 slug: interval-data-nycflights13-part-2
-categories: []
+categories:
+  - r
 tags:
   - r
   - dplyr
   - nycflights13
-  - functions
-banner: "img/interval-data-nycflights13-part-2/datetimes-arithmetic.png"
+  - functional programming
+image:
+  caption: ""
+header:
+  caption: ""
+  image: "interval-data-nycflights13-part-2/datetimes-arithmetic.png"
+  preview: true
+params:
+  eval: false
 ---
-
-```{r eval = FALSE, echo = FALSE}
-# ![](//r4ds.had.co.nz/diagrams/datetimes-arithmetic.png)
-```
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -55,7 +59,7 @@ in different formats given a certain condition, or need multiple elements of the
 After verifying that I the functions work properly on the hand-picked data,
 I'll write one or two "wrapper" functions
 to iterate over larger temporal periods (i.e. months or years).
-Although I've tried to transition to using `purrr` functions for all of my iteration
+Although I've tried to transition to using `{purrr}` functions for all of my iteration
 needs, I still find myself using loops as a "crutch" since I've been using
 them since I first started programming. [^fn_while_loops]
 
@@ -85,13 +89,13 @@ programming.
 
 To make all of this discussion relatable, let me provide an example of some of these concepts together.
 As with my previous write-up,
-I'll use the `nycflight13` data set; however, in order to demonstrate
+I'll use the `{nycflight13}` package; however, in order to demonstrate
 the usefulness of core and wrapper functions,
 I'll work with both the `flights` and `weather` data sets in this package.
 
 ![](/img/interval-data-nycflights13-part-2/relational-nycflights.png)
 
-```{r eval = FALSE, echo = FALSE}
+```{r nycflights_tables, eval = FALSE, echo = FALSE}
 # ![](//r4ds.had.co.nz/diagrams/relational-nycflights.png)
 ```
 
@@ -146,9 +150,9 @@ create_dir <- function(dir) {
 }
 
 # NOTE: This function is not robust! It assumes that there are `year`, `month`, and `day` columns.
-add_yyyymmdd <- function(data) {
+add_ymd <- function(data) {
   data %>% 
-    mutate(yyyymmdd = lubridate::ymd(sprintf("%04.0f-%02.0f-%02.0f", year, month, day)))
+    mutate(ymd = lubridate::ymd(sprintf("%04.0f-%02.0f-%02.0f", year, month, day)))
 }
 
 # The main export function.
@@ -158,27 +162,27 @@ export_files <-
            filename_base,
            dir_base = "data",
            ext = "csv") {
-    data <- data %>% add_yyyymmdd()
-    yyyymmdds <-
+    data <- data %>% add_ymd()
+    ymds <-
       data %>% 
-      distinct(yyyymmdd) %>%
-      arrange(yyyymmdd) %>%
-      pull(yyyymmdd)
+      distinct(ymd) %>%
+      arrange(ymd) %>%
+      pull(ymd)
     
     i <- 1
-    while (i <= length(yyyymmdds)) {
-      yyyymmdd_i <- yyyymmdds[i]
-      data_i <- data %>% filter(yyyymmdd == yyyymmdd_i)
+    while (i <= length(ymds)) {
+      ymd_i <- ymds[i]
+      data_i <- data %>% filter(ymd == ymd_i)
       
-      yyyymm <- strftime(yyyymmdd_i, "%Y-%m")
+      yyyymm <- strftime(ymd_i, "%Y-%m")
       dir_yyyymm <- file.path(dir_base, yyyymm)
-      dir_yyyymmdd_i <- file.path(dir_yyyymm, yyyymmdd_i)
+      dir_ymd_i <- file.path(dir_yyyymm, ymd_i)
       filepath_i <-
-        file.path(dir_yyyymmdd_i, paste0(filename_base, ".", ext))
+        file.path(dir_ymd_i, paste0(filename_base, ".", ext))
       
       create_dir(dir_base)
       create_dir(dir_yyyymm)
-      create_dir(dir_yyyymmdd_i)
+      create_dir(dir_ymd_i)
       
       readr::write_csv(data_i, path = filepath_i)
       i <- i + 1
@@ -191,7 +195,7 @@ export_files(weather_export, filename_base = "weather")
 
 ```
 
-With the setup out of the way, we can start to look at my approach
+With the setup ret of the way, we can start to look at my approach
 for importing and manipulating data from these files.
 
 First, I would write a core function for constructing the 
@@ -388,7 +392,7 @@ of the flights data, such as for only certain destinations (`dest`).
 In addition to
 aggregating over hourly data, filtering for specific destinations will allow me
 to avoid memory issues. To implement this functionality, I use a generically-named
-`keys` argument (that does not need to be specified). Although the `weather` function
+`keys` argument (that does not need to be specified). Although the `*weather()` function
 does not use `keys` for anything,
 it is passed as a parameter to both wrapper processing functions in order
 to make both work with an API function that can call either without needing
@@ -397,23 +401,23 @@ to specify different parameters.
 ```{r process_funcs, eval = FALSE}
 # "Core" processing function.
 process_type_data <- function(data) {
-  data %>% mutate(wd = lubridate::wday(yyyymmdd))
+  data %>% mutate(wd = lubridate::wday(ymd))
 }
 
 process_flights_data <- function(data, keys = NULL) {
-  out <- process_type_data(data)
+  ret <- process_type_data(data)
 
-  out <- 
-    out %>% 
+  ret <- 
+    ret %>% 
     mutate_at(vars(contains("dep_time$|arr_time$")), funs(hh = round(. / 100, 0) - 1)) %>% 
     group_by(dep_time_hh %>% 
     summarize_at(vars(contains("dep|arr")), funs(mean(., na.rm = TRUE))) 
   # This is "custom" processing for the flight-specific function.
-  out <- out %>% select(-minute, -time_hour)
+  ret <- ret %>% select(-minute, -time_hour)
   if (!is.null(keys)) {
-    out <- out %>% filter(dest %in% keys)
+    ret <- ret %>% filter(dest %in% keys)
   }
-  out
+  ret
 }
 
 process_weather_data <- function(data, keys = NULL) {
@@ -452,20 +456,20 @@ get_type_data_bymonth <- function(yyyy, mm, type = types_valid, keys = NULL) {
     
     filepath_i <- filepaths[i]
     message(sprintf("filepath: %s.", filepath_i))
-    yyyymmdd_i <- filepath_i %>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}")
+    ymd_i <- filepath_i %>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}")
     
     data_i <- do.call(func_import, list(filepath = filepath_i))
-    data_i <- do.call(func_process, list(data = data_i, yyyymmdd = yyyymmdd_i, keys = keys))
+    data_i <- do.call(func_process, list(data = data_i, ymd = ymd_i, keys = keys))
     
     data_i_list[i] <- list(data_i)
-    names(data_i_list[i]) <- yyyymmdd_i
+    names(data_i_list[i]) <- ymd_i
     
     message(sprintf("Done processing %02.0f.", i))
     i <- i + 1
   }
 
-  out <- do.call("rbind", data_i_list)
-  out
+  ret <- do.call("rbind", data_i_list)
+  ret
 }
 
 # Using the main function.
@@ -488,7 +492,6 @@ is fairly straightforward.
 All I need are loops for years (`yyyy`) and months (`mm`).
 
 ```{r byyear_func, eval = FALSE}
-types_valid <- c("flights", "weather")
 # The main function for multiple years/months.
 get_type_data_byyear <-
   function(yyyy,
@@ -496,14 +499,14 @@ get_type_data_byyear <-
            type = types_valid ,
            keys) {
     match.arg(type)
-    num_yyyy <- length(yyyy)
-    num_mm <- length(mm)
+    n_yyyy <- length(yyyy)
+    n_mm <- length(mm)
     
-    data_list <- vector("list", num_yyyy * num_mm)
+    data_list <- vector("list", n_yyyy * n_mm)
     y_i <- 1
-    while (y_i <= num_yyyy) {
+    while (y_i <= n_yyyy) {
       m_i <- 1
-      while (m_i <= num_mm) {
+      while (m_i <= n_mm) {
         m_i <- mm[i]
         data_ym <-
           get_type_data_bymonth(

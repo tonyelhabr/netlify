@@ -1,14 +1,46 @@
 
 html {
   font-family: 'Roboto', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   color: rgba(0,0,0,0.8);
   line-height: 1.65;
 }
 
-code,
+.article-banner {
+    /*width: 60%;*/
+    height: auto;
+    /*max-width: 80%;*/
+    max-width: 760px;
+    /*max-height: 80%;*/
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+
+/*
+Default highlight.js is dracula.
+Colors described below (and in data/themes/custom.toml) are the colors used in this scheme.
+
+1: blue: #8be9fd; rgb(139, 233, 253); hsl(191, 97%, 77%)
+2: pink: #f76497; rgb(247, 100, 151); hsl(339, 90%, 68%)
+3: pale yellow: #f8f8f2; rgb(248, 248, 242); hsl(60, 30%, 96%)
+4: green: #50fa7b; rgb(80, 250, 123); hsl(135, 94%, 65%)
+5: yellow: #f1fa8c; rgb(241, 250, 140); hsl(65, 92%, 76%)
+6: dark blue: #6272a4; rgb(98, 114, 164); hsl(225, 27%, 51%)
+7: purple: #bd93f9; rgb(189, 147, 249); hsl(265, 89%, 78%)
+*/
+
+/*code,*/
 .dark pre,
 .dark code {
-  /*color: rgb(238, 242, 13);*/
-  font-size: 1rem;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+
+.hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta {
+  /*color: rgb(247, 100, 151)*/ /*pink*/
+  /*color: rgb(189, 147, 249);*/ /*purple*/
+  color: rgb(80, 250, 123); /*green*/
 }

@@ -9,7 +9,7 @@ title = "Recent Posts"
 subtitle = ""
 
 # Order that this section will appear in.
-weight = 40
+weight = 3
 
 # Filter posts by tag.
 #  By default, show all recent posts.
@@ -24,6 +24,6 @@ count = 10
 #   0 = Simple
 #   1 = Detailed
 #   2 = Stream
-list_format = 1
+list_format = 0
 +++
 

@@ -18,5 +18,6 @@ rm("path_r_profile")
 # if (file.exists("~/.Rprofile")) {
 #   base::sys.source("~/.Rprofile", envir = environment())
 # }
-options(servr.daemon = TRUE)
+# options(servr.daemon = TRUE)
+options(servr.daemon = FALSE)
 library("blogdown")

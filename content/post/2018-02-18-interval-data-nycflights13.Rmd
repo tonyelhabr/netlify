@@ -2,12 +2,20 @@
 title: Dealing with Interval Data and the nycflights13 package using R
 date: "2018-02-17"
 slug: interval-data-nycflights13
-categories: []
+categories:
+  - r
 tags:
   - r
   - dplyr
   - nycflights13
-banner: "img/interval-data-nycflights13/viz_nycflights13-banner.png"
+image:
+  caption: ""
+header:
+  caption: ""
+  image: "interval-data-nycflights13/viz_nycflights13-banner.png"
+  preview: true
+params:
+  eval: false
 ---
 
 ```{r setup, include = FALSE}
@@ -26,7 +34,7 @@ In these cases, I lean on `R` to scrape and compile the data.
 Although some other languages might be superior for such a task, I often
 need to produce some kind of visualization or report at the end, so
 choosing to handle all of the data with `R` is a no-brainer for me--I can
-easily transition to using `ggplot2` and `rmarkdown` to generate some pretty output.
+easily transition to using `{ggplot2}` and `{rmarkdown}` to generate some pretty output.
 
 ## Minute-Level Data
 
@@ -49,13 +57,13 @@ library("lubridate")
 date_1 <- lubridate::ymd("2013-01-01")
 date_2 <- lubridate::ymd("2013-12-31")
 
-yyyymmdd_seq <- seq.Date(date_1, date_2, by = "day")
-yyyymmdd_grid <-
+ymd_seq <- seq.Date(date_1, date_2, by = "day")
+ymd_grid <-
   data_frame(
-    yyyymmdd = lubridate::ymd(yyyymmdd_seq),
-    yyyy = lubridate::year(yyyymmdd_seq),
-    mm = lubridate::month(yyyymmdd_seq),
-    dd = lubridate::day(yyyymmdd_seq)
+    ymd = lubridate::ymd(ymd_seq),
+    yyyy = lubridate::year(ymd_seq),
+    mm = lubridate::month(ymd_seq),
+    dd = lubridate::day(ymd_seq)
   )
 
 hhmmss <-
@@ -66,7 +74,7 @@ hhmmss <-
   as_tibble()
 
 dates_dict <-
-  yyyymmdd_grid %>%
+  ymd_grid %>%
   right_join(hhmmss %>% mutate(yyyy = lubridate::year(date_1), by = "year")) %>% 
   arrange(yyyy, mm, dd, hh, min)
 dates_dict
@@ -97,13 +105,13 @@ and modeling.
 ### An Example (With the `nycflights13` Package)
 
 To provide an example, I'll use the `flights` data set from the 
-[`nycflight13`](https://cran.r-project.org/web/packages/nycflights13/index.html) package. [^fn_hadley]
+[`{nycflight13}`](https://cran.r-project.org/web/packages/nycflights13/index.html) package. [^fn_hadley]
 This package includes information regarding all flights leaving from New York City
 airports in 2013, as well as information regarding weather, airlines, airports, and planes.
 
 [^fn_hadley]:
 Thanks to [Hadley Wickham](http://hadley.nz/)  for compiling this data package, 
-as well as for developing the `lubridate` and `ggplot2` packages.)
+as well as for developing the `{lubridate}` and `{ggplot2}` packages.)
 
 Let's say that I that I'm interested in the average flight departure delay time
 at the JFK airport. I might hypothesize that there is a relationship between
@@ -121,8 +129,8 @@ flights_jfk <-
   nycflights13::flights %>% 
   filter(origin == "JFK") %>% 
   mutate(hh = round(sched_dep_time / 100, 0) - 1) %>% 
-  mutate(yyyymmdd = lubridate::ymd(sprintf("%04.0f-%02.0f-%02.0f", year, month, day))) %>% 
-  mutate(wd = lubridate::wday(yyyymmdd, label = TRUE))
+  mutate(ymd = lubridate::ymd(sprintf("%04.0f-%02.0f-%02.0f", year, month, day))) %>% 
+  mutate(wd = lubridate::wday(ymd, label = TRUE))
 ```
 
 Next, I might create a heat map plotting hours against weekdays.
@@ -133,7 +141,7 @@ library("ggplot2")
 viz_nycflights13 <-
   flights_jfk %>% 
   group_by(wd, hh) %>% 
-  summarize_at(vars(dep_delay), funs(mean(., na.rm = TRUE))) %>% 
+  summarise_at(vars(dep_delay), funs(mean(., na.rm = TRUE))) %>% 
   ungroup() %>% 
   mutate(hh = hh - 1) %>% 
   ggplot(aes(x = hh, y = wd, fill = dep_delay)) +
@@ -149,14 +157,17 @@ viz_nycflights13 <-
     title = "Average Departure Delays at JFK Airport in 2013",
     subtitle = "By Hour and Weekday",
     caption = 
-      paste0("There appears to be more delays near the end of the day.\n",
-             "It's not clear whether there is a relationship with certain days of the week.")
+      paste0(
+        "There appears to be more delays near the end of the day.\n",
+        "It's not clear whether there is a relationship with certain days of the week."
+      )
   )
 viz_nycflights13
 ```
 
-```{r save_viz_nycflights13, include = FALSE, eval = FALSE}
-ggsave(viz_nycflights13, file = "static/img/interval-data-nycflights13/viz_nycflights13-banner.png", units = "in", width = 8, height = 4)
+```{r save_viz_nycflights13, include = FALSE, eval = params$eval}
+path_save_banner <- "static/img/interval-data-nycflights13/viz_nycflights13-banner.png"
+ggsave(viz_nycflights13, file = path_save_banner, units = "in", width = 8, height = 4)
 ```
 
 To investigate the patterns more "scientifically", I might perform a one-way
@@ -169,7 +180,6 @@ summary(aov(dep_delay ~ month, data = flights_jfk))
 summary(aov(dep_delay ~ day, data = flights_jfk))
 summary(aov(dep_delay ~ wd, data = flights_jfk))
 summary(aov(dep_delay ~ hh, data = flights_jfk))
-
 ```
 
 The "statistically significant" p values for the `wd` and `hh` variables
@@ -179,7 +189,6 @@ using each variable as a lone predictor with a linear model where both are used
 as predictors.
 
 ```{r anova_hypothesis}
-
 lm_wd <- lm(dep_delay ~ wd, data = flights_jfk)
 lm_hh <- lm(dep_delay ~ hh, data = flights_jfk)
 lm_both <- lm(dep_delay ~ wd + hh, data = flights_jfk)

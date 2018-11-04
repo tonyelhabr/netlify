@@ -2,22 +2,30 @@
 title: A Tidy Text Analysis of My Google Search History
 date: "2018-02-16"
 slug: tidy-text-analysis-google-search-history
-categories: []
+categories:
+  - r
 tags:
   - r
-  - google
   - tidytext
   - ggplot2
   - dplyr
-banner: "img/tidy-text-analysis-google-search-history/viz_corrs_network-tony-banner.png"
+  - google
+image:
+  caption: ""
+header:
+  caption: ""
+  image: "tidy-text-analysis-google-search-history/viz_corrs_network-tony-banner.png"
+  preview: true
+params:
+  eval: false
 ---
 
 ```{r setup, include = FALSE}
-# knitr::opts_knit$set(root.dir = "content/post/tidy-text-analysis-google-search-history"))
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
   echo = TRUE,
   cache = FALSE,
-  results = "markdown",
+  # results = "markup",
   fig.align = "center",
   fig.show = "asis",
   fig.width = 6,
@@ -27,6 +35,19 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
+```
+
+```{r path_save, include = FALSE}
+path_save <-
+  file.path("static", "data", "google_activity.RData")
+```
+
+```{r load, include = FALSE, eval = !params$eval}
+# NOTE: Load only for blog post.
+# NOTE: Delete `params` becuase it has been saved in RData file.
+# rm("params")
+load(path_save)
+# params$eval <- FALSE
 ```
 
 While brainstorming about cool ways to practice text mining with R
@@ -78,17 +99,17 @@ library("igraph")
 library("ggraph")
 # library("topicmodels")
 # devtools::install_github("tonyelhabr/temisc")
-library("temisc") # Personal package.
+library("teplot") # Personal package.
 ```
 
-Next, I create a `params` list in order to emulate what one might 
-do with a parameterized RMarkdown report (where the `params` would be a 
+Next, I create a `config` list in order to emulate what one might 
+do with a parameterized RMarkdown report (where the `config` would be a 
 part of the yaml header.
 
-```{r define_params}
-params <-
+```{r config}
+config <-
   list(
-    filepath = "data-raw/Tony-My Activity-Search-MyActivity.html",
+    path = "data-raw/Tony-My Activity-Search-MyActivity.html",
     name_main = "Tony",
     color_main = "firebrick"
   )
@@ -117,8 +138,6 @@ scale_fill_func <- function() {
 }
 ```
 
-
-
 ### Import and Clean
 
 Then, on to the "dirty" work of importing and cleaning the data.
@@ -131,7 +150,7 @@ from the .html file
 # Reference:
 # + https://rstudio-pubs-static.s3.amazonaws.com/355045_90b7464be9b4437393670340ad67c310.html#
 
-doc_html <- params$filepath
+doc_html <- config$path
 search_archive <- xml2::read_html(doc_html)
 
 # Extract search time.
@@ -163,7 +182,7 @@ type_search <-
 # + Adding a `name` column to make this code more "parametric".
 data <-
   tibble(
-    name = params$name_main,
+    name = config$name_main,
     timestamp = date_search,
     date = lubridate::as_date(date_search),
     yyyy = lubridate::year(date_search) %>% as.integer(),
@@ -191,13 +210,13 @@ data <- data %>% filter(!(yyyy %in% c(2010, 2018)))
 ```
 
 
-```{r data_io, echo = FALSE}
-filepath_data <- "https://raw.githubusercontent.com/tonyelhabr/googleactivity/master/data/data-tony-cleaned.csv"
-# filepath_data <- "data-ext/data-tony-cleaned.rds"
-# saveRDS(data, file = filepath_data)
-# data <- readRDS(filepath_data)
-# readr::write_csv(data, path = gsub("\\.rds", ".csv", filepath_data)
-data <- readr::read_csv(filepath_data)
+```{r data_io, echo = FALSE, eval = params$eval}
+path_data <- "https://raw.githubusercontent.com/tonyelhabr/googleactivity/master/data/data-tony-cleaned.csv"
+# path_data <- "data-ext/data-tony-cleaned.rds"
+# saveRDS(data, file = path_data)
+# data <- readRDS(path_data)
+# readr::write_csv(data, path = gsub("\\.rds", ".csv", path_data)
+data <- readr::read_csv(path_data)
 ```
 
 ## Analysis
@@ -232,7 +251,7 @@ visualize_time <-
         subtitle = lab_subtitle
       )
     viz_theme <-
-      temisc::theme_te_a() +
+      teplot::theme_te() +
       theme(panel.grid.major.x = element_blank()) +
       theme(legend.position = "none")
 
@@ -259,20 +278,20 @@ visualize_time <-
 Using this function is fairly straightforward. For example, to visualize the count
 of searches by year, it can be invoked in the following manner.
 
-```{r visualize_time_example, eval = FALSE}
+```{r visualize_time_example}
 viz_time_yyyy <-
   visualize_time(
     data = data,
     colname_x = "yyyy",
     geom = "bar",
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = "By Year"
   )
 ```
 
 The same pattern can be repeated for `timestamp`, `yyyy`, `mm`, `wd`, and `hh`.
 
-```{r visualize_time_usage, echo = FALSE}
+```{r visualize_time_usage, echo = FALSE, results = "hide", fig.show = "hide", eval = params$eval}
 lab_subtitle_all <-
   paste0(
     "From ",
@@ -286,7 +305,7 @@ viz_time_all <-
     data = data,
     colname_x = "timestamp",
     geom = "hist",
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = lab_subtitle_all
   )
 viz_time_all
@@ -296,7 +315,7 @@ viz_time_yyyy <-
     data = data,
     colname_x = "yyyy",
     geom = "bar",
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = "By Year"
   )
 viz_time_yyyy 
@@ -305,7 +324,7 @@ viz_time_mm <-
     data = data,
     colname_x = "mm",
     geom = "bar",
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = "By Month"
   )
 viz_time_mm
@@ -314,7 +333,7 @@ viz_time_wd <-
     data = data,
     colname_x = "wd",
     geom = "bar",
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = "By Day of Week"
   )
 viz_time_wd
@@ -323,9 +342,17 @@ viz_time_hh <-
     data = data,
     colname_x = "hh",
     geom = "bar",
-    color = params$color_main,
+    color = config$color_main,
     lab_subtitle = "By Hour"
   )
+viz_time_hh
+```
+
+```{r viz_time_show, echo = FALSE}
+viz_time_all
+viz_time_yyyy 
+viz_time_mm
+viz_time_wd
 viz_time_hh
 ```
 
@@ -354,7 +381,7 @@ viz_time_hh_2 <-
     breaks = c(6, 12, 18),
     labels = c("6am", "Noon", "6pm")
   ) +
-  scale_fill_manual(values = params$color_main) +
+  scale_fill_manual(values = config$color_main) +
   geom_violin(size = 0) +
   geom_hline(
     yintercept = seq(3, 24, by = 3),
@@ -363,7 +390,7 @@ viz_time_hh_2 <-
   ) +
   labs(x = NULL, y = NULL) +
   labs(title = "Count Over Time", lab_subtitle = "By Time of Day") +
-  temisc::theme_te_a_dx() +
+  teplot::theme_te_dx() +
   theme(legend.position = "none", panel.grid = element_blank()) +
   coord_flip()
 viz_time_hh_2
@@ -373,11 +400,11 @@ viz_time_hh_wd <-
   data %>%
   ggplot(aes(x = hh, group = wd, fill = name)) +
   geom_bar() +
-  scale_fill_manual(values = params$color_main) +
+  scale_fill_manual(values = config$color_main) +
   facet_wrap( ~ wd, scales = "free") +
   labs(x = NULL, y = NULL) +
   labs(title = "Count Over Time", lab_subtitle = "By Hour of Day and Time of Day") +
-  temisc::theme_te_a_facet_dx() +
+  teplot::theme_te_facet_dx() +
   theme(legend.position = "none", panel.grid = element_blank())
 viz_time_hh_wd
 # Reference:
@@ -390,7 +417,7 @@ viz_time_wd_yyyy <-
   facet_wrap(~name, scales = "free") +
   labs(x = NULL, y = NULL) +
   labs(title = "Count Over Time", lab_subtitle = "By Day of Week and Year") +
-  temisc::theme_te_a_facet_dx() +
+  teplot::theme_te_facet_dx() +
   theme(legend.position = "bottom", panel.grid = element_blank())
 viz_time_wd_yyyy
 ```
@@ -400,7 +427,7 @@ viz_time_wd_yyyy
 Now we'll "tokenize" the search text into n-grams. We'll parse each
 search query into unigrams and bigrams.
 
-```{r ngrams}
+```{r unigrams, results = "hide", eval = params$eval}
 # Reference (for regular expression):
 # + https://rstudio-pubs-static.s3.amazonaws.com/355045_90b7464be9b4437393670340ad67c310.html#
 rgx_patt <- '(http|https)\\S+\\s*|(#|@)\\S+\\s*|\\n|\\"|(.*.)\\.com(.*.)\\S+\\s|[^[:alnum:]]'
@@ -420,7 +447,13 @@ unigrams <-
   filter(!str_detect(word, rgx_custom_ignore)) %>% 
   filter(str_detect(word, "[a-z]"))
 unigrams %>% select(word) %>% count(word, sort = TRUE)
+```
 
+```{r unigram_show, echo = FALSE}
+unigrams %>% select(word) %>% count(word, sort = TRUE)
+```
+
+```{r bigrams, results = "hide", eval = params$eval}
 # References:
 # + https://www.tidytextmining.com/
 # + https://www.tidytextmining.com/ngrams.html
@@ -438,19 +471,14 @@ bigrams <-
 bigrams %>% select(word) %>% count(word, sort = TRUE)
 ```
 
-```{r ngrams_io, echo = FALSE, eval = FALSE}
-filepath_unigrams <- "data-ext/unigrams-tony.rds"
-filepath_bigrams <- "data-ext/bigrams-tony.rds"
-# saveRDS(unigrams, file = filepath_unigrams)
-# saveRDS(bigrams, file = filepath_bigrams)
-unigrams <- readRDS(file = filepath_unigrams)
-bigrams <- readRDS(file = filepath_bigrams)
+```{r bigram_show, echo = FALSE}
+bigrams %>% select(word) %>% count(word, sort = TRUE)
 ```
 
 With the data parsed into tokens, we can visualize counts of 
 individual n-grams.
 
-```{r viz_ngram_cnts}
+```{r viz_unigram_cnts, results = "hide", fig.show = "hide", eval = params$eval}
 # Reference:
 # + https://github.com/dgrtwo/dgrtwo.github.com/blob/master/_R/2016-08-09-trump-data.Rmd.
 visualize_cnts <- function(data, color = "grey50", num_top = 20) {
@@ -461,7 +489,7 @@ visualize_cnts <- function(data, color = "grey50", num_top = 20) {
     ggplot(aes(x = word, y = n)) +
     ggalt::geom_lollipop(size = 2, point.size = 4, color = color) +
     coord_flip() +
-    temisc::theme_te_a() +
+    teplot::theme_te() +
     labs(x = NULL, y = NULL) +
     labs(title = "Most Common Words") +
     theme(legend.position = "none") +
@@ -472,19 +500,30 @@ num_top_cnt <- 15
 viz_unigram_cnts <-
   visualize_cnts(
     data = unigrams,
-    color = params$color_main,
+    color = config$color_main,
     num_top = num_top_cnt
   )
 viz_unigram_cnts
+```
 
+```{r viz_unigram_cnts_show, echo = FALSE}
+viz_unigram_cnts
+```
+
+```{r viz_bigram_cnts, results = "hide", fig.show = "hide", eval = params$eval}
 viz_bigram_cnts <-
   visualize_cnts(
     data = bigrams,
-    color = params$color_main,
+    color = config$color_main,
     num_top = num_top_cnt
   )
 viz_bigram_cnts
 ```
+
+```{r viz_bigram_cnts_show, echo = FALSE}
+viz_bigram_cnts
+```
+
 
 These count totals reflect my personal interests relatively well.
 In particular, words like `nutrition` and `chicken breast`, 
@@ -506,7 +545,7 @@ Normally, I'm staunchly opposed to word clouds; however,
 when used to initialize a mental model of the data, they're not so bad. 
 I write a basic function so I can use it twice.
 
-```{r visualize_cnts_wordcloud}
+```{r viz_unigram_cnts_wordcloud, results = "hide", fig.show = "hide", eval = params$eval}
 visualize_cnts_wordcloud <-
   function(data, color, num_top = 25) {
     data_proc <- data %>% count(word, sort = TRUE)
@@ -522,20 +561,31 @@ get_rpal_byname <- function(name) {
   paste0(name, c("", as.character(seq(1, 4, 1))))
 }
 
-colors_wordcloud <- get_rpal_byname(params$color_main)
+colors_wordcloud <- get_rpal_byname(config$color_main)
 num_top_cnt_wordcloud <- 25
-visualize_cnts_wordcloud(
-  data = unigrams,
-  color = colors_wordcloud,
-  num_top = num_top_cnt_wordcloud
-)
+viz_unigram_cnts_wordcloud <-
+  visualize_cnts_wordcloud(
+    data = unigrams,
+    color = colors_wordcloud,
+    num_top = num_top_cnt_wordcloud
+  )
+```
 
-visualize_cnts_wordcloud(
-  data = bigrams,
-  color = colors_wordcloud,
-  num_top = num_top_cnt_wordcloud
-)
+```{r viz_unigram_cnts_wordcloud_show, echo = FALSE}
+viz_unigram_cnts_wordcloud
+```
 
+```{r viz_bigram_cnts_wordcloud, results = "hide", fig.show = "hide", eval = params$eval}
+viz_bigram_cnts_wordcloud <-
+  visualize_cnts_wordcloud(
+    data = bigrams,
+    color = colors_wordcloud,
+    num_top = num_top_cnt_wordcloud
+  )
+```
+
+```{r viz_bigram_cnts_wordcloud_show, echo = FALSE}
+viz_bigram_cnts_wordcloud
 ```
 
 These word clouds essentially show the same information as the other frequency plots,
@@ -543,7 +593,7 @@ so it's not surprising to see the same set of words shown. The word clouds
 arguably do a better job of emphasizing the words themselves (as opposed
 to the raw count totals associated with each word(s)).
 
-```{r compute_freqs, include = FALSE}
+```{r unigram_freqs, results = "hide", eval = params$eval}
 compute_freqs <- function(data, colname_cnt = "word") {
   colname_cnt_quo <- rlang::sym(colname_cnt)
   
@@ -557,19 +607,29 @@ compute_freqs <- function(data, colname_cnt = "word") {
     arrange(desc(freq))
 }
 
-unigrams_freqs <-
+unigram_freqs <-
   compute_freqs(
     data = unigrams,
     colname_cnt = "word"
   )
-unigrams_freqs
+unigram_freqs
+```
 
-bigrams_freqs <-
+```{r unigram_freqs_show, echo = FALSE}
+unigram_freqs
+```
+
+```{r bigram_freqs, results = "hide", eval = params$eval}
+bigram_freqs <-
   compute_freqs(
     data = bigrams,
     colname_cnt = "word"
   )
-bigrams_freqs
+bigram_freqs
+```
+
+```{r bigram_freqs_show, echo = FALSE}
+bigram_freqs
 ```
 
 ### Word Correlations
@@ -580,7 +640,7 @@ because we'll need to perform the same actions twice--once to view the computed
 values, and another time to put the data in the proper format for a network visualization.
 (We need both the counts and the correlations of each word pair to create node-edge pairs.)
 
-```{r compute_corrs_func}
+```{r compute_corrs_func, results = "hide", eval = params$eval}
 # Reference:
 # + https://www.tidytextmining.com/ngrams.html
 # + http://varianceexplained.org/r/seven-fav-packages/.
@@ -640,7 +700,7 @@ compute_corrs <-
 num_top_ngrams <- 50
 num_top_corrs <- 50
 
-unigrams_corrs <-
+unigram_corrs <-
   compute_corrs(
     unigrams,
     num_top_ngrams = num_top_ngrams,
@@ -648,16 +708,18 @@ unigrams_corrs <-
     colname_word = "word",
     colname_feature = "timestamp"
   )
-unigrams_corrs
+unigram_corrs
 ```
+
+
 
 Not surprisingly, many of the same word pairs seen among the most frequently used
 bigrams also appear here.
 
-```{r viz_corrs_network}
+```{r viz_corrs_network, results = "hide", fig.show = "hide", eval = params$eval}
 # Reference:
 # + http://varianceexplained.org/r/seven-fav-packages/.
-unigrams_corrs_list <-
+unigram_corrs_list <-
   compute_corrs(
     unigrams,
     num_top_ngrams = num_top_ngrams,
@@ -671,19 +733,23 @@ seed <- 42
 set.seed(seed)
 viz_corrs_network <-
   igraph::graph_from_data_frame(
-    d = unigrams_corrs_list$corrs, 
-    vertices = unigrams_corrs_list$words, 
+    d = unigram_corrs_list$corrs, 
+    vertices = unigram_corrs_list$words, 
     directed = TRUE
   ) %>% 
   ggraph::ggraph(layout = "fr") +
   ggraph::geom_edge_link(edge_width = 1) +
   ggraph::geom_node_point(aes(size = n), fill = "grey50", shape = 21) +
   ggraph::geom_node_text(ggplot2::aes_string(label = "name"), repel = TRUE) +
-  theme_te_a() +
+  teplot::theme_te() +
   theme(line = element_blank(), rect = element_blank(), axis.text = element_blank(), axis.ticks = element_blank()) +
   theme(legend.position = "none") +
   labs(x = NULL, y = NULL) +
   labs(title = "Network of Pairwise Correlations", subtitle = "By Search")
+viz_corrs_network
+```
+
+```{r viz_corrs_network_show, echo = FALSE}
 viz_corrs_network
 ```
 
@@ -703,12 +769,12 @@ follow the approach shown in the
 
 First, we'll group my word usage by year and look only at the most used words.
 
-```{r unigrams_bytime}
+```{r unigram_bytime, results = "hide", eval = params$eval}
 # Reference:
 # + https://www.tidytextmining.com/twitter.html#changes-in-word-use.
 timefloor <- "year"
 top_pct_words <- 0.05
-unigrams_bytime <-
+unigram_bytime <-
   unigrams %>%
   mutate(time_floor = floor_date(timestamp, unit = timefloor)) %>%
   group_by(time_floor, word) %>% 
@@ -722,42 +788,52 @@ unigrams_bytime <-
   ungroup() %>%
   filter(word_total >= quantile(word_total, 1 - top_pct_words)) %>% 
   arrange(desc(word_total))
+unigram_bytime
 ```
+
+```{r unigram_bytime_show, echo = FALSE}
+unigram_bytime
+```
+
 
 Next, we'll create logistic models for each word-year pair. These models attempt
 essentially answer the question "How likely is it that a given word appears in a
 given year?"
 
-```{r unigrams_bytime_models}
-unigrams_bytime_models <- 
-  unigrams_bytime %>% 
+```{r unigram_bytime_models_slopes, results = "hide", eval = params$eval}
+unigram_bytime_models <- 
+  unigram_bytime %>% 
   tidyr::nest(-word) %>% 
   mutate(
     models =
       purrr::map(data, ~ glm(cbind(n, time_total) ~ time_floor, ., family = "binomial"))
   )
 
-unigrams_bytime_models_slopes <-
-  unigrams_bytime_models %>%
+unigram_bytime_models_slopes <-
+  unigram_bytime_models %>%
   tidyr::unnest(purrr::map(models, broom::tidy)) %>%
   filter(term == "time_floor") %>%
   mutate(adjusted_p_value = p.adjust(p.value))
-unigrams_bytime_models_slopes
+unigram_bytime_models_slopes
+```
+
+```{r unigram_bytime_models_slopes_show, echo = FALSE}
+unigram_bytime_models_slopes
 ```
 
 The p.values of the logistic models indicate whether or not the change in usage
 of a given word over time is non-trivial. We'll look at the words with the smallest
 p.values, indicating that they have the most significant change in usage.
 
-```{r viz_unigrams_change_bytime}
+```{r viz_unigram_change_bytime, results = "hide", fig.show = "hide", eval = params$eval}
 num_top_change <- 5
-unigrams_bytime_models_slopes_top <-
-  unigrams_bytime_models_slopes %>% 
+unigram_bytime_models_slopes_top <-
+  unigram_bytime_models_slopes %>% 
   top_n(num_top_change, -adjusted_p_value) 
 
-viz_unigrams_change_bytime <-
-  unigrams_bytime %>% 
-  inner_join(unigrams_bytime_models_slopes_top, by = c("word")) %>%
+viz_unigram_change_bytime <-
+  unigram_bytime %>% 
+  inner_join(unigram_bytime_models_slopes_top, by = c("word")) %>%
   mutate(pct = n / time_total) %>%
   mutate(label = if_else(time_floor == max(time_floor), word, NA_character_)) %>%
   ggplot(aes(x = time_floor, y = pct, color = word)) +
@@ -765,11 +841,15 @@ viz_unigrams_change_bytime <-
   ggrepel::geom_label_repel(aes(label = label), nudge_x = 1, na.rm = TRUE) +
   scale_y_continuous(labels = scales::percent_format()) +
   scale_color_func() +
-  temisc::theme_te_a() +
+  teplot::theme_te() +
   theme(legend.position = "none") +
   labs(x = NULL, y = NULL) +
   labs(title = "Largest Changes in Word Frequency")
-viz_unigrams_change_bytime
+viz_unigram_change_bytime
+```
+
+```{r viz_unigram_change_bytime_show, echo = FALSE}
+viz_unigram_change_bytime
 ```
 
 This visualization does a great job of capturing how my interests/skills
@@ -808,7 +888,7 @@ of the most "unique" words in a given document compared to other documents.
 For this analysis,
 we'll treat the years of search history as documents.
 
-```{r viz_tfidf, fig.width = 8, fig.height = 8}
+```{r viz_tfidf, results = "hide", fig.show = "hide", eval = params$eval}
 # References:
 # + https://www.tidytextmining.com/tfidf.html
 # + https://juliasilge.com/blog/sherlock-holmes-stm/
@@ -816,7 +896,6 @@ data_tfidf <-
   unigrams %>%
   count(yyyy, word, sort = TRUE) %>% 
   tidytext::bind_tf_idf(word, yyyy, n)
-data_tfidf
 
 num_top_tfidf <- 10
 viz_tfidf <-
@@ -834,11 +913,15 @@ viz_tfidf <-
   facet_wrap(~ yyyy, scales = "free") +
   drlib::scale_x_reordered() +
   coord_flip() +
-  temisc::theme_te_a_dx() +
+  teplot::theme_te_dx() +
   theme(legend.position = "none") +
   theme(axis.text.x = element_blank()) +
   labs(x = NULL, y = NULL) +
   labs(title = "Highest TF-IDF Words", subtitle = "By Year")
+viz_tfidf
+```
+
+```{r viz_tfidf_show, echo = FALSE}
 viz_tfidf
 ```
 
@@ -855,7 +938,7 @@ my education. At the same time, my interest in health was strongest during these
 so the food-related words are not surprising.
 + My more recent focus on software-related skills is evident in 2016 and beyond.
 In particular, my growing passion for `R` in 2017 is illustrated with words such as
-`ggplot`, `shiny`, `dplyr`, and `knitr`. This is one aspect of my personal skill
+`{ggplot}`, `{shiny}`, `{dplyr}`, and `{knitr}`. This is one aspect of my personal skill
 development that was not as evident in the previous plot.
 
 
@@ -872,4 +955,12 @@ Thanks again to David Robinson and Julia Silge for their great
 It demonstrates simple, yet powerful, techniques
 that can be easily leveraged to gain meaningful insight into nearly anything you can imagine.
 
+```{r save, include = FALSE, eval = params$eval}
+# NOTE TO SELF: Do not save with blog post or if calling rmarkdown::render().
+rm(list = c("config"))
+# if(!dir.exists(dirname(path_save))) {
+#   dir.create(dirname(path_save), recursive = TRUE)
+# }
+save.image(file = path_save)
+```
 

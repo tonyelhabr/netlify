@@ -2,22 +2,29 @@
 title: Visualizing Texas High School SAT Math Scores with Bubble Grids
 slug: bubble-grid-texas-high-school
 date: "2018-07-22"
-categories: []
+categories:
+  - r
 tags:
- - r
- - ggplot2
- - sf
- - bubble grid
- - texas
- - sat
- - math
-banner: "img/analysis-texas-high-school-academics/viz_schools_grid.png"
+  - r
+  - ggplot2
+  - sf
+  - bubble grid
+  - texas
+  - academics
+image:
+  caption: ""
+header:
+  caption: ""
+  image: "analysis-texas-high-school-academics/viz_schools_grid.png"
+  preview: true
+params:
+  eval: false
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
-  # eval = FALSE
+  # eval = params$eval
   echo = TRUE,
   # cache = TRUE,
   cache = FALSE,
@@ -40,9 +47,13 @@ path_save <-
 ```
 
 
-```{r load}
+```{r load, eval = !params$eval}
 # NOTE TO SELF: Uncomment this and comment out shapefile imports for blog post.
+# if(exists("params")) {
+#   rm("params")
+# }
 load(file = path_save)
+# params$eval <- FALSE
 ```
 
 Two awesome things inspired this post:
@@ -104,13 +115,13 @@ library("teplot")
 library("sf")
 ```
 
-```{r schools_dl, eval = FALSE}
+```{r schools_dl, eval = params$eval}
 url_schools <- "https://opendata.arcgis.com/datasets/059432fd0dcb4a208974c235e837c94f_0.geojson"
 path_dest_schools <- file.path("data-raw", "schools")
 downloader::download(url = url_schools, destfile = path_dest_schools)
 ```
 
-```{r schools_raw_sf, eval = FALSE}
+```{r schools_raw_sf, eval = params$eval}
 schools_raw_sf <-
   path_dest %>%
   sf::st_read() %>%
@@ -118,7 +129,7 @@ schools_raw_sf <-
   janitor::clean_names()
 ```
 
-```{r schools_sf, eval = FALSE}
+```{r schools_sf, eval = params$eval}
 schools_sf <-
   schools_raw_sf %>%
   mutate_at(vars(district, campus, county, region, gradegrp), funs(as.integer)) %>%
@@ -152,28 +163,28 @@ schools_sf <-
   )
 ```
 
-```{r path_schools_sf, eval = FALSE}
+```{r path_schools_sf, eval = params$eval}
 path_schools_sf <- 
   file.path(config$dir_data, "schools_sf.shp")
 ```
 
-```{r schools_sf_export, eval = FALSE}
+```{r schools_sf_export, eval = params$eval}
 schools_sf %>% 
   st_write(path_schools_sf, delete_dsn = TRUE)
 ```
 
-```{r schools_sf_import, eval = FALSE}
+```{r schools_sf_import, eval = params$eval}
 schools_sf <-
   st_read(path_schools_sf)
 ```
 
-```{r counties_dl, eval = FALSE}
+```{r counties_dl, eval = params$eval}
 url_counties <- "https://opendata.arcgis.com/datasets/c71146b6426248a5a484d8b3c192b9fe_0.geojson"
 path_dest_counties <- file.path("data-raw", "counties")
 downloader::download(url = url_counties, destfile = path_dest_counties)
 ```
 
-```{r counties_raw_sf, eval = FALSE}
+```{r counties_raw_sf, eval = params$eval}
 counties_raw_sf <-
   path_dest_counties %>%
   sf::st_read() %>%
@@ -181,7 +192,7 @@ counties_raw_sf <-
   janitor::clean_names()
 ```
 
-```{r counties_sf, eval = FALSE}
+```{r counties_sf, eval = params$eval}
 counties_sf <-
   counties_raw_sf %>%
   mutate(county = fename %>% toupper()) %>%
@@ -189,28 +200,28 @@ counties_sf <-
 counties_sf
 ```
 
-```{r path_counties_sf, eval = FALSE}
+```{r path_counties_sf, eval = params$eval}
 path_counties_sf <- 
   file.path(config$dir_data, "counties_sf.shp")
 ```
 
-```{r counties_sf_export, eval = FALSE}
+```{r counties_sf_export, eval = params$eval}
 counties_sf %>% 
   st_write(path_counties_sf, delete_dsn = TRUE)
 ```
 
-```{r counties_sf_import, eval = FALSE}
+```{r counties_sf_import, eval = params$eval}
 counties_sf <-
   st_read(path_counties_sf)
 ```
 
-```{r cities_dl, eval = FALSE}
+```{r cities_dl, eval = params$eval}
 url_cities <- "https://opendata.arcgis.com/datasets/993d420b9f0742b9afa06622d27a37e0_0.geojson"
 path_dest_cities <- file.path("data-raw", "cities")
 downloader::download(url = url_cities, destfile = path_dest_cities)
 ```
 
-```{r cities_sf_raw, eval = FALSE}
+```{r cities_sf_raw, eval = params$eval}
 cities_raw_sf <-
   path_dest_cities %>%
   sf::st_read() %>% 
@@ -218,7 +229,7 @@ cities_raw_sf <-
   janitor::clean_names()
 ```
 
-```{r cities_sf, eval = FALSE}
+```{r cities_sf, eval = params$eval}
 city_nms <-
   c("Austin", "Corpus Christi", "Dallas", "El Paso", "Houston", "Laredo", "Lubbock", "Odessa", "San Antonio")
 cities_sf_filt <-
@@ -237,29 +248,29 @@ cities_sf <-
 cities_sf
 ```
 
-```{r path_cities_sf, eval = FALSE}
+```{r path_cities_sf, eval = params$eval}
 path_cities_sf <- 
   file.path(config$dir_data, "cities_sf.shp")
 ```
 
-```{r cities_sf_export, eval = FALSE}
+```{r cities_sf_export, eval = params$eval}
 cities_sf %>% 
   st_write(path_cities_sf, delete_dsn = TRUE)
 ```
 
-```{r cities_sf_import, eval = FALSE}
+```{r cities_sf_import, eval = params$eval}
 cities_sf <-
   st_read(path_cities_sf)
 ```
 
 
-```{r hwys_dl, eval = FALSE}
+```{r hwys_dl, eval = params$eval}
 url_hwys <- "https://opendata.arcgis.com/datasets/e661b4004aee4c939569a563b6bb881a_0.geojson"
 path_dest_hwys <- file.path("data-raw", "hwys")
 downloader::download(url = url_hwys, destfile = path_dest_hwys)
 ```
 
-```{r hwys_sf_raw, eval = FALSE}
+```{r hwys_sf_raw, eval = params$eval}
 hwys_raw_sf <-
   path_dest_hwys %>%
   sf::st_read() %>%
@@ -267,7 +278,7 @@ hwys_raw_sf <-
   janitor::clean_names()
 ```
 
-```{r hwys_sf, eval = FALSE}
+```{r hwys_sf, eval = params$eval}
 hwys_sf_n_us <-
   hwys_raw_sf %>%
   as.data.frame() %>%
@@ -281,22 +292,22 @@ hwys_sf <-
 hwys_sf
 ```
 
-```{r path_hwys_sf, eval = FALSE}
+```{r path_hwys_sf, eval = params$eval}
 path_hwys_sf <- 
   file.path(config$dir_data, "hwys_sf.shp")
 ```
 
-```{r hwys_sf_export, eval = FALSE}
+```{r hwys_sf_export, eval = params$eval}
 hwys_sf %>% 
   st_write(path_hwys_sf, delete_dsn = TRUE)
 ```
 
-```{r hwys_sf_import, eval = FALSE}
+```{r hwys_sf_import, eval = params$eval}
 hwys_sf <-
   st_read(path_hwys_sf)
 ```
 
-```{r schools_tea, eval = FALSE}
+```{r schools_tea, eval = params$eval}
 schools_tea <-
   teproj::import_ext_csv(
     schools_tea,
@@ -314,7 +325,7 @@ schools_tea_filt <-
   select(test, year, school, district, county, city, value)
 ```
 
-```{r tx_border, eval = FALSE}
+```{r tx_border, eval = params$eval}
 tx_border <- 
   teplot::get_map_data_state(state = "tx") %>% 
   as_tibble()
@@ -335,7 +346,7 @@ tx_border %>% glimpse()
 Here I create the grid of data that I'll use for the visual. (Thanks
 to Jonas for [his example](http://jschoeley.github.io/2018/06/30/bubble-grid-map.html).)
 
-```{r schools_grid, include = TRUE, eval = FALSE}
+```{r schools_grid, include = TRUE, eval = params$eval}
 counties_grid_sf <-
   counties_sf %>%
   st_make_grid(n = c(40, 40))
@@ -350,17 +361,17 @@ schools_grid_sf <-
   cbind(st_coordinates(.))
 ```
 
-```{r path_schools_grid_sf, eval = FALSE}
+```{r path_schools_grid_sf, eval = params$eval}
 path_schools_grid_sf <- 
   file.path(config$dir_data, "schools_grid_sf.shp")
 ```
 
-```{r schools_grid_sf_export, eval = FALSE}
+```{r schools_grid_sf_export, eval = params$eval}
 schools_grid_sf %>% 
   st_write(path_schools_grid_sf, delete_dsn = TRUE)
 ```
 
-```{r schools_grid_sf_import, eval = FALSE}
+```{r schools_grid_sf_import, eval = params$eval}
 schools_grid_sf <-
   st_read(path_schools_grid_sf)
 ```
@@ -410,7 +421,7 @@ viz_schools_grid <-
 viz_schools_grid
 ```
 
-```{r viz_schools_grid_export, eval = FALSE}
+```{r viz_schools_grid_export, eval = params$eval}
 teproj::export_ext_png(
   viz_schools_grid,
   export = config$export_viz,
@@ -446,13 +457,13 @@ I'll need an additional data.frame for this exercise---`schools_tea_filt_join`--
 is just the `schools_tea_filt` data joined with counties data that
 can be retrieved from a call to `ggplot2::map_data()`.
 
-```{r tx_counties, eval = FALSE}
+```{r tx_counties, eval = params$eval}
 tx_counties <- 
   teplot::get_map_data_county(state = "tx") %>% 
   as_tibble()
 ```
 
-```{r tx_counties_debug, eval = FALSE}
+```{r tx_counties_debug, eval = params$eval}
 # NOTE: After trying anti_joins in both directions, noticed that "dewitt" should
 # have a space in the `schools_tea` data.
 tx_counties %>% 
@@ -466,7 +477,7 @@ tx_counties %>%
 
 ```
 
-```{r schools_tea_filt_join, eval = FALSE}
+```{r schools_tea_filt_join, eval = params$eval}
 schools_tea_filt_join <-
   tx_counties %>% 
   left_join(
@@ -523,7 +534,7 @@ viz_schools_chlr <-
 viz_schools_chlr
 ```
 
-```{r viz_schools_chlrexport, eval = FALSE}
+```{r viz_schools_chlrexport, eval = params$eval}
 teproj::export_ext_png(
   viz_schools_chlr,
   export = config$export_viz,
@@ -536,8 +547,8 @@ teproj::export_ext_png(
 
 This choropleth actually isn't so bad, but I think I still prefer the bubble grid.
 
-```{r save, include = FALSE}
+```{r save, include = FALSE, eval = params$eval}
 # NOTE TO SELF: Do not save with blog post or if calling rmarkdown::render().
-# save.image(file = path_save)
+save.image(file = path_save)
 ```
 

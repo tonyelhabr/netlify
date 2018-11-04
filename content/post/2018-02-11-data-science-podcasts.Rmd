@@ -2,13 +2,16 @@
 title: A Completely Subjective Ranking of Data Science Podcasts
 date: "2018-02-11"
 slug: data-science-podcasts
-categories: []
-tags:
-  - podcasts
+categories:
   - data science
+tags:
+  - data science
+  - podcasts
   - r
   - python
-banner: "img/data-science-podcasts/podcast-banner.png"
+banner:
+  caption: ""
+  image: "img/data-science-podcasts/podcast-banner.png"
 ---
 
 I love podcasts.

@@ -2,14 +2,18 @@
 title: Converting nested JSON to a tidy data frame with R
 slug: nested-json-to-tidy-data-frame-r
 date: "2018-10-20"
-categories: []
+categories:
+  - r
 tags:
- - r
- - json
- - dplyr
- - tidyr
- - nfl
-banner: "img/nested-json-to-tidy-data-frame-r/json-everywhere-meme.png"
+  - r
+  - json
+  - dplyr
+  - tidyr
+  - nfl
+header:
+  caption: ""
+  image: "nested-json-to-tidy-data-frame-r/json-everywhere-meme.png"
+  preview: true
 ---
 
 
@@ -27,10 +31,10 @@ banner: "img/nested-json-to-tidy-data-frame-r/json-everywhere-meme.png"
 <pre class="r"><code>resp &lt;- httr::GET(url)
 resp</code></pre>
 <pre><code>## Response [http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?&amp;dates=2018&amp;seasontype=2&amp;week=1]
-##   Date: 2018-10-14 18:05
+##   Date: 2018-10-24 18:41
 ##   Status: 200
 ##   Content-Type: application/json;charset=UTF-8
-##   Size: 185 kB</code></pre>
+##   Size: 189 kB</code></pre>
 <p>Everything seems to be going well. However, after using another handy <code>{httr}</code> function—<code>content()</code>—to extract the data, we see that the data is an nasty nested format! (I only print out some of the top-level elements to avoid cluttering the page.)</p>
 <pre class="r"><code>cont_raw &lt;- httr::content(resp)
 str(cont_raw, max.level = 3, list.len = 4)</code></pre>
@@ -101,7 +105,7 @@ glimpse(data_raw_ugly, max.level = 3, list.len = 4)</code></pre>
 <p>So, what to do now? Well, after some struggling, I stumbled upon the following solution to put me on the right path.</p>
 <pre class="r"><code>data_raw &lt;- enframe(unlist(cont_raw))
 data_raw</code></pre>
-<pre><code>## # A tibble: 6,461 x 2
+<pre><code>## # A tibble: 6,629 x 2
 ##    name                     value                   
 ##    &lt;chr&gt;                    &lt;chr&gt;                   
 ##  1 leagues.id               28                      
@@ -114,15 +118,15 @@ data_raw</code></pre>
 ##  8 leagues.season.endDate   2019-02-06T07:59Z       
 ##  9 leagues.season.type.id   2                       
 ## 10 leagues.season.type.type 2                       
-## # ... with 6,451 more rows</code></pre>
+## # ... with 6,619 more rows</code></pre>
 <p>Combining <code>unlist()</code> and <code>tibble::enframe()</code>, we are able to get a (very) long data.frame without any nested elements! Note that the would-have-been-nested elements are joined by “.” in the “name” column, and the values associated with these elements are in the “value” column. (These are the default column names that <code>tibble::enframe()</code> assigns to the <code>tibble</code> that it creates from a list.)</p>
 <p>While this <code>tibble</code> is still not in a tidy format—there are variables implicitly stored in the “name” column rather than in their own columns—it’s in a much more user-friendly format (in my opinion). (e.g. The variable <code>&quot;leagues.season.startDate&quot;</code> implicitly encodes three variables—<code>&quot;leagues&quot;</code>, <code>&quot;season&quot;</code>, and <code>&quot;startDate&quot;</code>—each deserving of their own column.)</p>
 <p>Given the format of the implicit variable sin the “name” column, We can use <code>tidyr::separate()</code> to create columns for each.</p>
 <pre class="r"><code>data_raw %&gt;% separate(name, into = c(paste0(&quot;x&quot;, 1:10)))</code></pre>
-<pre><code>## Warning: Expected 10 pieces. Missing pieces filled with `NA` in 6461
+<pre><code>## Warning: Expected 10 pieces. Missing pieces filled with `NA` in 6629
 ## rows [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 ## 20, ...].</code></pre>
-<pre><code>## # A tibble: 6,461 x 11
+<pre><code>## # A tibble: 6,629 x 11
 ##    x1     x2      x3    x4    x5    x6    x7    x8    x9    x10   value   
 ##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;   
 ##  1 leagu~ id      &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  28      
@@ -135,11 +139,11 @@ data_raw</code></pre>
 ##  8 leagu~ season  endD~ &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2019-02~
 ##  9 leagu~ season  type  id    &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2       
 ## 10 leagu~ season  type  type  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2       
-## # ... with 6,451 more rows</code></pre>
+## # ... with 6,619 more rows</code></pre>
 <p>We get a warning indicating when using <code>separate()</code> because we have “over-estimated” how many columns we will need to create. Note that, with my specification of (dummy) column names with the <code>into</code> argument, I guessed that there we would need 10 columns. Why 10? Because I expected that 10 would be more than I needed, and it’s better to over-estimate and remove the extra columns in a subsequent step than to under-estimate and lose data because there are not enough columns to put the “separated” data in.</p>
 <p>We can get rid of the warning by providing an appropriate value for <code>separate()</code>’s <code>fill</code> argument. (Note that <code>&quot;warn&quot;</code> is the default value of the <code>fill</code> argument.)</p>
 <pre class="r"><code>data_raw %&gt;% separate(name, into = c(paste0(&quot;x&quot;, 1:10)), fill = &quot;right&quot;)</code></pre>
-<pre><code>## # A tibble: 6,461 x 11
+<pre><code>## # A tibble: 6,629 x 11
 ##    x1     x2      x3    x4    x5    x6    x7    x8    x9    x10   value   
 ##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;   
 ##  1 leagu~ id      &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  28      
@@ -152,7 +156,7 @@ data_raw</code></pre>
 ##  8 leagu~ season  endD~ &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2019-02~
 ##  9 leagu~ season  type  id    &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2       
 ## 10 leagu~ season  type  type  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2       
-## # ... with 6,451 more rows</code></pre>
+## # ... with 6,619 more rows</code></pre>
 <p>However, while this action gets rid of the warning, it does not actually resolve the underlying issue—specifying the correct number of columns to create with <code>separate()</code>. We can do that by identifying the <code>name</code> with the most number of <code>.</code>s.</p>
 <pre class="r"><code>rgx_split &lt;- &quot;\\.&quot;
 n_cols_max &lt;-
@@ -169,7 +173,7 @@ data_sep &lt;-
   data_raw %&gt;% 
   separate(name, into = nms_sep, sep = rgx_split, fill = &quot;right&quot;)
 data_sep</code></pre>
-<pre><code>## # A tibble: 6,461 x 8
+<pre><code>## # A tibble: 6,629 x 8
 ##    name1   name2      name3    name4 name5 name6 name7 value              
 ##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;              
 ##  1 leagues id         &lt;NA&gt;     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  28                 
@@ -182,7 +186,7 @@ data_sep</code></pre>
 ##  8 leagues season     endDate  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2019-02-06T07:59Z  
 ##  9 leagues season     type     id    &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2                  
 ## 10 leagues season     type     type  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  2                  
-## # ... with 6,451 more rows</code></pre>
+## # ... with 6,619 more rows</code></pre>
 <p>By my interpretation, this <code>data_sep</code> variable is in tidy format. Of course, it has</p>
 </div>
 <div id="post-processing-the-data" class="section level2">
