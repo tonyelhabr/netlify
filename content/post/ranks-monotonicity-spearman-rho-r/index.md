@@ -860,42 +860,24 @@ significance, but I think, in all, this was a worthwhile exploration.
 
 ------------------------------------------------------------------------
 
-[^1]: The market analyst does not necessarily hypothesize why annual
-projections tend to be high (i.e. perhaps due to
-over-confidence)
+[^1]: The market analyst does not necessarily hypothesize why annual projections tend to be high (i.e. perhaps due to over-confidence)
 
-[^2]: Additionally, prediction is not the concern—rather, quantification
-of trend is. (While regression certainly can help with trend
-identification, its capability to create predictions is perhaps its
-better use.)
+[^2]: Additionally, prediction is not the concern—rather, quantification of trend is. (While regression certainly can help with trend identification, its capability to create predictions is perhaps its better use.)
 
 [^3]: I’ll leave the reader to dive into all of the theory.
 
-[^4]: In reality, the rank values could also be any arbitrary value on the
-real number scale.
+[^4]: In reality, the rank values could also be any arbitrary value on the real number scale.
 
-[^5]: A sum of sums (instead of an average of sums) could be used here and
-the subsequent results would not change.\
-[^6]: This is not completely necessary, but I believe that it makes the
-computation(s) and the calculated values “generalizable” for any
-`n`-length sequence.
+[^5]: A sum of sums (instead of an average of sums) could be used here and the subsequent results would not change.
+
+[^6]: This is not completely necessary, but I believe that it makes the computation(s) and the calculated values “generalizable” for any `n`-length sequence.
+
 [^7]: I realized this through some trial and error.
 
-[^8]: Here, there are only `n + 1` (i.e. 5 unique `abs(estimate)`s and
-`p.value`s. This result is **not** generally true. (For example,
-when choosing `n = 5`, there will be more than `6` unique values of
-each metric.)
+[^8]: Here, there are only `n + 1` (i.e. 5 unique `abs(estimate)`s and `p.value`s. This result is **not** generally true. (For example, when choosing `n = 5`, there will be more than `6` unique values of each metric.)
 
-[^9]: This presents a good opportunity to implement a version of the
-“nest-mutate-unnest” idiom that can be very effective for creating
-many models. The [“many models”
-chapter](http://r4ds.had.co.nz/many-models.html) in the [*R For Data
-Science* book](http://r4ds.had.co.nz) provides an excellent example
-of this process.
+[^9]: This presents a good opportunity to implement a version of the “nest-mutate-unnest” idiom that can be very effective for creating many models. The [“many models” chapter](http://r4ds.had.co.nz/many-models.html) in the [*R For Data Science* book](http://r4ds.had.co.nz) provides an excellent example of this process.
 
-[^10]: Unfortunately this is due to the nature of the data and the
-simulation, so nothing can be done about it.
+[^10]: Unfortunately this is due to the nature of the data and the simulation, so nothing can be done about it.
 
-[^11]: Note that the 33% number found for `n = 4` is not generally true,
-although this percentage does not seem to change drastically with
-different values of `n`.
+[^11]: Note that the 33% number found for `n = 4` is not generally true, although this percentage does not seem to change drastically with different values of `n`.

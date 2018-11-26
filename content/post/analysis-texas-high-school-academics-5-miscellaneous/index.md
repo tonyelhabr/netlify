@@ -420,5 +420,4 @@ exporation. And, with that said, I think this is a good point to bring
 an end to my investigation of Texas high school academic UIL
 competitions.
 
-[^1]: I don't explicitly try to filter for twins only, but it's reasonable
-to believe that many, if not most, are twins.
+[^1]: I don't explicitly try to filter for twins only, but it's reasonable to believe that many, if not most, are twins.

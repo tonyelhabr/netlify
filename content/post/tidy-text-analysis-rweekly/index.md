@@ -466,7 +466,7 @@ at, so definitely check them out!
 
 [^1]: Who knows, if it’s good enough, maybe I’ll even make an attempt to make it available on [CRAN](https://cran.r-project.org/).
 
-[^2]: Actually, I downloaded the data locally so that I would not have to    worry about GitHub API request limits. Thus, in addition to other    custom processing steps that I added, my final code does not    necessarily resemble hers.
+[^2]: Actually, I downloaded the data locally so that I would not have to worry about GitHub API request limits. Thus, in addition to other custom processing steps that I added, my final code does not necessarily resemble hers.
 
 [^3]: I didn’t end up actually using all of the added columns here.
 

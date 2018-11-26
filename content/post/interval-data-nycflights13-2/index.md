@@ -517,40 +517,19 @@ readability and re-usability of the code.
 
 ------------------------------------------------------------------------
 
-[^1]: When I do use traditional loops, I nearly always opt for `while`
-loops instead of `for` loops, despite the potential trap of an infinite
-loop if I forget to write the increment for the index. I believe that
-`while` loops are more dynamic for situations where the vector/list
-being iterated upon is not continuous. Also, I find `while` loops easier
-to debug.
+[^1]: When I do use traditional loops, I nearly always opt for `while` loops instead of `for` loops, despite the potential trap of an infinite loop if I forget to write the increment for the index. I believe that `while` loops are more dynamic for situations where the vector/list being iterated upon is not continuous. Also, I find `while` loops easier to debug.
 
-[^2]: In software design, this kind of idiom is similar to the [adapter
-pattern](https://en.wikipedia.org/wiki/Adapter_pattern) and [facade
-pattern](https://en.wikipedia.org/wiki/Facade_pattern) in
-object-oriented (OO) programming.
+[^2]: In software design, this kind of idiom is similar to the [adapter pattern](https://en.wikipedia.org/wiki/Adapter_pattern) and [facade pattern](https://en.wikipedia.org/wiki/Facade_pattern) in object-oriented (OO) programming.
 
-[^3]: Either way, one could easily adapt this function depending on the
-use case.
+[^3]: Either way, one could easily adapt this function depending on the use case.
 
-[^4]: See [this article](https://martinfowler.com/bliki/FlagArgument.html)
-for a discussion of Boolean arguments used to determine the action of
-functions.)
+[^4]: See [this article](https://martinfowler.com/bliki/FlagArgument.html) for a discussion of Boolean arguments used to determine the action of functions.)
 
-[^5]: One must be careful with adding processing action that can be done
-just as easily on the entire data set after it has been collected. For
-example, adding a column for the day of the week of a certain date
-should be done at the end of the entire data extraction process.
+[^5]: One must be careful with adding processing action that can be done just as easily on the entire data set after it has been collected. For example, adding a column for the day of the week of a certain date should be done at the end of the entire data extraction process.
 
-[^6]: Note that reducing any kind of processing of raw data until
-completely necessary may require some re-factoring after initial
-development of the processing function, where only a single file's data
-is being used to test a subsequent function.
+[^6]: Note that reducing any kind of processing of raw data until completely necessary may require some re-factoring after initial development of the processing function, where only a single file's data is being used to test a subsequent function.
 
-[^7]: Note that I explicitly set `keys = NULL` by default in order to
-avoid a "missing" error when using `do.call()` with the processing
-function.
+[^7]: Note that I explicitly set `keys = NULL` by default in order to avoid a "missing" error when using `do.call()` with the processing function.
 
-[^8]: If one had done some fairly custom processing prior to combining all
-of the data, then one might need re-extract all of the data again if the
-processing actions need to be changed at some later point in time.
-
+[^8]: If one had done some fairly custom processing prior to combining all of the data, then one might need re-extract all of the data again if the processing actions need to be changed at some later point in time.
+ 

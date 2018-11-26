@@ -241,18 +241,10 @@ ways--by competition type, by competition level, by year, and by
 variations of these. Next, we'll take a closer look at some more
 specific questions, focusing on individual competitors.
 
-[^1]: The State competition level is not shown because it there is no
-"sub-grouping" of State (like there is 1, 2, 3, ... for each of the
-groupings shown).
+[^1]: The State competition level is not shown because it there is no "sub-grouping" of State (like there is 1, 2, 3, ... for each of the groupings shown).
 
-[^2]: As a technical note, Districts, Regions, and Conferences are not
-really all of the same "type" of data. Nevertheless, these different
-"groupings" each stratify the sample population in some manner.
+[^2]: As a technical note, Districts, Regions, and Conferences are not really all of the same "type" of data. Nevertheless, these different "groupings" each stratify the sample population in some manner.
 
-[^3]: Actually, it might be true that there *is* some increase in test
-difficulty with advancing competitions, but such an adjustment, if it is
-truly made, does not quite offset the skill level of the advancing
-competitors.
+[^3]: Actually, it might be true that there *is* some increase in test difficulty with advancing competitions, but such an adjustment, if it is truly made, does not quite offset the skill level of the advancing competitors.
 
-[^4]: Recall that there is no apparent trend when not distinguishing by
-competition level.
+[^4]: Recall that there is no apparent trend when not distinguishing by competition level.

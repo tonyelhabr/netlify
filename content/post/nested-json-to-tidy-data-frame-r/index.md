@@ -490,14 +490,9 @@ be the last time I write about something of this nature.
 
 ------------------------------------------------------------------------
 
-[^1]: I use `data.frame` and `tibble` interchangeably. 
-See [this chapter](http://r4ds.had.co.nz/tibbles.html) of the 
-[***R for Data Science***](http://r4ds.had.co.nz/) 
-for more details about the differences/similarities between the two.
+[^1]: I use `data.frame` and `tibble` interchangeably. See [this chapter](http://r4ds.had.co.nz/tibbles.html) of the [***R for Data Science***](http://r4ds.had.co.nz/) for more details about the differences/similarities between the two.
 
-[^2]: (See the webpage here: <http://www.espn.com/nfl/scoreboard/_/year/2018/seasontype/2/week/1>. 
-Note that we won’t be scraping the html, but, instead, the underlying JSON 
-from which the html is generated.)
+[^2]: (See the webpage here: <http://www.espn.com/nfl/scoreboard/_/year/2018/seasontype/2/week/1>. Note that we won’t be scraping the html, but, instead, the underlying JSON  from which the html is generated.)
 
 [^3]: I say that it’s a secret because it’s API documentation is out of date.
 

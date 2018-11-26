@@ -214,7 +214,7 @@ schools_tea <-
 schools_tea
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>test</th>
@@ -547,7 +547,7 @@ schools_tea_cors_byyear %>%
   filter(year1 <= year2)
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>year1</th>
@@ -617,7 +617,7 @@ Ok, now let’s bring in the “cleaned” school data (`schools_uil`) that I
 collected and cleaned in my UIL analysis. I’ll subset the data to
 include only the same years found in `schools_tea`—2011 through 2015.
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>school</th>
@@ -1117,7 +1117,7 @@ schools_uil_math <-
 schools_uil_math
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>year</th>
@@ -1271,7 +1271,7 @@ schools_tea_math <-
 schools_tea_math
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>year</th>
@@ -1422,7 +1422,7 @@ schools_join_math <-
 schools_join_math
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>year</th>
@@ -1592,7 +1592,7 @@ schools_join_math_cors <-
 schools_join_math_cors
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>rowname</th>
@@ -1721,7 +1721,7 @@ schools_math_cors_byyear_diffs_wide <-
 schools_math_cors_byyear_diffs_wide
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
 <th>year_pair</th>

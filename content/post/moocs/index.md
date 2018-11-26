@@ -317,29 +317,17 @@ your goals!
 
 ------------------------------------------------------------------------
 
-[^1]: Difficulty scale is defined as follows: 1 = high school class, 2 =
-community college class, 3 = typical class at baseline college, 4 =
-typical class at elite college, and 5 = advanced class at elite college.
+[^1]: Difficulty scale is defined as follows: 1 = high school class, 2 = community college class, 3 = typical class at baseline college, 4 = typical class at elite college, and 5 = advanced class at elite college.
 
 [^2]: This is the easiest of 5 MOOCs listed.
 
-[^3]: I use the terms "machine learning" and "advanced statistics"
-interchangeably here, although I realize that some [data
-scientists](http://www.analyticsvidhya.com/blog/2015/07/difference-machine-learning-statistical-modeling)
-insist that there is some non-trivial difference between them.
+[^3]: I use the terms "machine learning" and "advanced statistics" interchangeably here, although I realize that some [data scientists](http://www.analyticsvidhya.com/blog/2015/07/difference-machine-learning-statistical-modeling) insist that there is some non-trivial difference between them.
 
-[^4]: Interestingly, I don't think this is the most well-known
-statistics-based MOOC offered by Stanford. That honor belongs to *[CS
-229: Machine Learning](http://cs229.stanford.edu/info.html)*.
+[^4]: Interestingly, I don't think this is the most well-known statistics-based MOOC offered by Stanford. That honor belongs to *[CS 229: Machine Learning](http://cs229.stanford.edu/info.html)*.
 
-[^5]: Most agree that choosing one language and sticking to it is a good
-idea. For the record, `python` is the winner of this debate for me.
+[^5]: Most agree that choosing one language and sticking to it is a good idea. For the record, `python` is the winner of this debate for me.
 
-[^6]: Although end-of-chapter book questions are not required, I would
-recommend them as a supplement. <a 
-href="https://github.com/asadoughi/stat-learning">Unofficial solutions
-to book questions</a> are available on GitHub.)
+[^6]: Although end-of-chapter book questions are not required, I would recommend them as a supplement. <a  href="https://github.com/asadoughi/stat-learning">Unofficial solutions to book questions</a> are available on GitHub.)
 
-[^7]: I must warn you, this was the course whose material I skimmed over
-the most out of the five listed here, so my opinion here might be a bit
-misguided.
+[^7]: I must warn you, this was the course whose material I skimmed over the most out of the five listed here, so my opinion here might be a bit misguided.
+ 

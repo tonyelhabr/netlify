@@ -217,6 +217,9 @@ working with `R`, then I suggest using packages as a solution to your
 DRY problems.
 
 ------------------------------------------------------------------------
+
 [^1]: [Hadley Wickham](https://twitter.com/hadleywickham) suggested that a book might be even better.
+
 [^2]: Although several of these have actually been published on CRAN (suggesting that they are really more than just personal packages), each started out as just a package for the individual.
+
 [^3]: It seems common to include one’s initials in the name of a personal package, so I have copied that format.

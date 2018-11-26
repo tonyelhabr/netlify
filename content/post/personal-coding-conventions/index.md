@@ -454,14 +454,8 @@ syntax, etc., but maybe that’s just me. [^3]
 
 
 
-[^1]: Of course, other programming languages/communities have their own
-sets of standards that deserve merit.
+[^1]: Of course, other programming languages/communities have their own sets of standards that deserve merit.
 
-[^2]: Note that Camel Case is the preferred style amongst the Visual Basic
-community.
+[^2]: Note that Camel Case is the preferred style amongst the Visual Basic community.
 
-[^3]: If you enjoy this topic, then you probably enjoy classic
-software-related debates such as ["spaces vs.
-tabs"](https://stackoverflow.blog/2017/06/15/developers-use-spaces-make-money-use-tabs/)
-and ["R vs.
-python"](https://www.datacamp.com/community/tutorials/r-or-python-for-data-analysis).
+[^3]: If you enjoy this topic, then you probably enjoy classic software-related debates such as ["spaces vs. tabs"](https://stackoverflow.blog/2017/06/15/developers-use-spaces-make-money-use-tabs/) and ["R vs. python"](https://www.datacamp.com/community/tutorials/r-or-python-for-data-analysis).

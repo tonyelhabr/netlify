@@ -767,16 +767,12 @@ more that could be explored.
 
 [^1]: See the previous post.
 
-[^2]: The assumption here is that each student takes four years to
-complete high school.
+[^2]: The assumption here is that each student takes four years to complete high school.
 
-[^3]: A unique competition is defined as one having a unique year,
-competition type, and competition level.
+[^3]: A unique competition is defined as one having a unique year, competition type, and competition level.
 
-[^4]: The average may also be considered a valid means of aggregating the
-values for each individual.
+[^4]: The average may also be considered a valid means of aggregating the values for each individual.
 
 [^5]: I'll leave further analysis for another person and/or time.
 
-[^6]: I don't think it is relevant to require that the scores be in
-consecutive years, so I don't enforce that criteria.
+[^6]: I don't think it is relevant to require that the scores be in consecutive years, so I don't enforce that criteria.

@@ -245,16 +245,10 @@ at irregular intervals, but that’s a story for another day.
 
 ------------------------------------------------------------------------
 
-[^1]: The technique that I show here would have to be adjusted slightly if
-working with more than one year at a time, but it wouldn't be difficult
-to do so. I tend to only use this design pattern for one year at a time
-anyways.
+[^1]: The technique that I show here would have to be adjusted slightly if working with more than one year at a time, but it wouldn't be difficult to do so. I tend to only use this design pattern for one year at a time anyways.
 
-[^2]: By the way, how cool is following one `dplyr::count()` call with
-another? I only found out about that nice little trick recently.
+[^2]: By the way, how cool is following one `dplyr::count()` call with another? I only found out about that nice little trick recently.
 
-[^3]: Thanks to [Hadley Wickham](http://hadley.nz/) for compiling this
-data package, as well as for developing the `{lubridate}` and
-`{ggplot2}` packages.)
+[^3]: Thanks to [Hadley Wickham](http://hadley.nz/) for compiling this data package, as well as for developing the `{lubridate}` and {ggplot2}` packages.)
 
 

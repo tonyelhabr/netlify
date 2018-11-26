@@ -107,7 +107,8 @@ viz_pd_sas_2016
 There are an infinite number of ways to visualize data like this, but I
 thought this was interesting because of the temporal nature of the data.
 
-[^1]: The figure shown here comes from the [introductory chapter of the *R
-for Data Science* book](http://r4ds.had.co.nz/introduction.html)
+------------------------------------------------------------------------
+
+[^1]: The figure shown here comes from the [introductory chapter of the *R for Data Science* book](http://r4ds.had.co.nz/introduction.html)
 
 [^2]: Here, I use the NBA data that I have already scraped and cleaned.

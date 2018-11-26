@@ -73,807 +73,303 @@ my other posts to see how I created these data sets.)
 schools_tea
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
-<th style="text-align:left;">
-test
-</th>
-<th style="text-align:right;">
-year
-</th>
-<th style="text-align:left;">
-school
-</th>
-<th style="text-align:left;">
-district
-</th>
-<th style="text-align:left;">
-county
-</th>
-<th style="text-align:left;">
-city
-</th>
-<th style="text-align:right;">
-math
-</th>
-<th style="text-align:right;">
-reading
-</th>
-<th style="text-align:left;">
-writing
-</th>
-<th style="text-align:right;">
-english
-</th>
-<th style="text-align:right;">
-science
-</th>
-<th style="text-align:right;">
-total
-</th>
+<th>test</th>
+<th>year</th>
+<th>school</th>
+<th>district</th>
+<th>county</th>
+<th>city</th>
+<th>math</th>
+<th>reading</th>
+<th>writing</th>
+<th>english</th>
+<th>science</th>
+<th>total</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-A C JONES
-</td>
-<td style="text-align:left;">
-BEEVILLE ISD
-</td>
-<td style="text-align:left;">
-BEE
-</td>
-<td style="text-align:left;">
-CORPUS CHRISTI
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-18
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>A C JONES</td>
+<td>BEEVILLE ISD</td>
+<td>BEE</td>
+<td>CORPUS CHRISTI</td>
+<td>19</td>
+<td>18</td>
+<td>NA</td>
+<td>17</td>
+<td>19</td>
+<td>18</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-A J MOORE ACAD
-</td>
-<td style="text-align:left;">
-WACO ISD
-</td>
-<td style="text-align:left;">
-MCLENNAN
-</td>
-<td style="text-align:left;">
-WACO
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-18
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>A J MOORE ACAD</td>
+<td>WACO ISD</td>
+<td>MCLENNAN</td>
+<td>WACO</td>
+<td>19</td>
+<td>18</td>
+<td>NA</td>
+<td>16</td>
+<td>18</td>
+<td>18</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-A M CONS
-</td>
-<td style="text-align:left;">
-COLLEGE STATION ISD
-</td>
-<td style="text-align:left;">
-BRAZOS
-</td>
-<td style="text-align:left;">
-HUNTSVILLE
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-24
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>A M CONS</td>
+<td>COLLEGE STATION ISD</td>
+<td>BRAZOS</td>
+<td>HUNTSVILLE</td>
+<td>26</td>
+<td>24</td>
+<td>NA</td>
+<td>23</td>
+<td>24</td>
+<td>24</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-A MACEO SMITH HIGH SCHOOL
-</td>
-<td style="text-align:left;">
-DALLAS ISD
-</td>
-<td style="text-align:left;">
-DALLAS
-</td>
-<td style="text-align:left;">
-RICHARDSON
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-14
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>A MACEO SMITH HIGH SCHOOL</td>
+<td>DALLAS ISD</td>
+<td>DALLAS</td>
+<td>RICHARDSON</td>
+<td>16</td>
+<td>14</td>
+<td>NA</td>
+<td>13</td>
+<td>15</td>
+<td>14</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ABBOTT SCHOOL
-</td>
-<td style="text-align:left;">
-ABBOTT ISD
-</td>
-<td style="text-align:left;">
-HILL
-</td>
-<td style="text-align:left;">
-WACO
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-20
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ABBOTT SCHOOL</td>
+<td>ABBOTT ISD</td>
+<td>HILL</td>
+<td>WACO</td>
+<td>20</td>
+<td>20</td>
+<td>NA</td>
+<td>19</td>
+<td>21</td>
+<td>20</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ABERNATHY
-</td>
-<td style="text-align:left;">
-ABERNATHY ISD
-</td>
-<td style="text-align:left;">
-HALE
-</td>
-<td style="text-align:left;">
-LUBBOCK
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-21
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ABERNATHY</td>
+<td>ABERNATHY ISD</td>
+<td>HALE</td>
+<td>LUBBOCK</td>
+<td>22</td>
+<td>20</td>
+<td>NA</td>
+<td>19</td>
+<td>21</td>
+<td>21</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ABILENE
-</td>
-<td style="text-align:left;">
-ABILENE ISD
-</td>
-<td style="text-align:left;">
-TAYLOR
-</td>
-<td style="text-align:left;">
-ABILENE
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-21
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ABILENE</td>
+<td>ABILENE ISD</td>
+<td>TAYLOR</td>
+<td>ABILENE</td>
+<td>21</td>
+<td>21</td>
+<td>NA</td>
+<td>20</td>
+<td>21</td>
+<td>21</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ACADEMY
-</td>
-<td style="text-align:left;">
-ACADEMY ISD
-</td>
-<td style="text-align:left;">
-BELL
-</td>
-<td style="text-align:left;">
-WACO
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-23
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ACADEMY</td>
+<td>ACADEMY ISD</td>
+<td>BELL</td>
+<td>WACO</td>
+<td>24</td>
+<td>23</td>
+<td>NA</td>
+<td>21</td>
+<td>24</td>
+<td>23</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ACADEMY HIGH SCHOOL
-</td>
-<td style="text-align:left;">
-HAYS CISD
-</td>
-<td style="text-align:left;">
-HAYS
-</td>
-<td style="text-align:left;">
-AUSTIN
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ACADEMY HIGH SCHOOL</td>
+<td>HAYS CISD</td>
+<td>HAYS</td>
+<td>AUSTIN</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ACADEMY OF CAREERS AND TECHNOLOGIE
-</td>
-<td style="text-align:left;">
-ACADEMY OF CAREERS AND TECHNOLOGIE
-</td>
-<td style="text-align:left;">
-BEXAR
-</td>
-<td style="text-align:left;">
-SAN ANTONIO
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-14
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ACADEMY OF CAREERS AND TECHNOLOGIE</td>
+<td>ACADEMY OF CAREERS AND TECHNOLOGIE</td>
+<td>BEXAR</td>
+<td>SAN ANTONIO</td>
+<td>15</td>
+<td>14</td>
+<td>NA</td>
+<td>12</td>
+<td>14</td>
+<td>14</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ACADEMY OF CREATIVE ED
-</td>
-<td style="text-align:left;">
-NORTH EAST ISD
-</td>
-<td style="text-align:left;">
-BEXAR
-</td>
-<td style="text-align:left;">
-SAN ANTONIO
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ACADEMY OF CREATIVE ED</td>
+<td>NORTH EAST ISD</td>
+<td>BEXAR</td>
+<td>SAN ANTONIO</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ADRIAN SCHOOL
-</td>
-<td style="text-align:left;">
-ADRIAN ISD
-</td>
-<td style="text-align:left;">
-OLDHAM
-</td>
-<td style="text-align:left;">
-AMARILLO
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-19
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ADRIAN SCHOOL</td>
+<td>ADRIAN ISD</td>
+<td>OLDHAM</td>
+<td>AMARILLO</td>
+<td>19</td>
+<td>18</td>
+<td>NA</td>
+<td>20</td>
+<td>19</td>
+<td>19</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ADVANTAGE ACADEMY
-</td>
-<td style="text-align:left;">
-ADVANTAGE ACADEMY
-</td>
-<td style="text-align:left;">
-DALLAS
-</td>
-<td style="text-align:left;">
-RICHARDSON
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-18
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ADVANTAGE ACADEMY</td>
+<td>ADVANTAGE ACADEMY</td>
+<td>DALLAS</td>
+<td>RICHARDSON</td>
+<td>18</td>
+<td>20</td>
+<td>NA</td>
+<td>19</td>
+<td>16</td>
+<td>18</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-AGUA DULCE
-</td>
-<td style="text-align:left;">
-AGUA DULCE ISD
-</td>
-<td style="text-align:left;">
-NUECES
-</td>
-<td style="text-align:left;">
-CORPUS CHRISTI
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-19
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>AGUA DULCE</td>
+<td>AGUA DULCE ISD</td>
+<td>NUECES</td>
+<td>CORPUS CHRISTI</td>
+<td>21</td>
+<td>19</td>
+<td>NA</td>
+<td>18</td>
+<td>20</td>
+<td>19</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-AIM CENTER
-</td>
-<td style="text-align:left;">
-VIDOR ISD
-</td>
-<td style="text-align:left;">
-ORANGE
-</td>
-<td style="text-align:left;">
-BEAUMONT
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>AIM CENTER</td>
+<td>VIDOR ISD</td>
+<td>ORANGE</td>
+<td>BEAUMONT</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
+<td>NA</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-AKINS
-</td>
-<td style="text-align:left;">
-AUSTIN ISD
-</td>
-<td style="text-align:left;">
-TRAVIS
-</td>
-<td style="text-align:left;">
-AUSTIN
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-17
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>AKINS</td>
+<td>AUSTIN ISD</td>
+<td>TRAVIS</td>
+<td>AUSTIN</td>
+<td>19</td>
+<td>17</td>
+<td>NA</td>
+<td>16</td>
+<td>17</td>
+<td>17</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ALAMO HEIGHTS
-</td>
-<td style="text-align:left;">
-ALAMO HEIGHTS ISD
-</td>
-<td style="text-align:left;">
-BEXAR
-</td>
-<td style="text-align:left;">
-SAN ANTONIO
-</td>
-<td style="text-align:right;">
-25
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-24
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ALAMO HEIGHTS</td>
+<td>ALAMO HEIGHTS ISD</td>
+<td>BEXAR</td>
+<td>SAN ANTONIO</td>
+<td>25</td>
+<td>24</td>
+<td>NA</td>
+<td>24</td>
+<td>24</td>
+<td>24</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ALBA-GOLDEN
-</td>
-<td style="text-align:left;">
-ALBA-GOLDEN ISD
-</td>
-<td style="text-align:left;">
-WOOD
-</td>
-<td style="text-align:left;">
-KILGORE
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-19
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ALBA-GOLDEN</td>
+<td>ALBA-GOLDEN ISD</td>
+<td>WOOD</td>
+<td>KILGORE</td>
+<td>20</td>
+<td>19</td>
+<td>NA</td>
+<td>18</td>
+<td>20</td>
+<td>19</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ALBANY JR-SR
-</td>
-<td style="text-align:left;">
-ALBANY ISD
-</td>
-<td style="text-align:left;">
-SHACKELFORD
-</td>
-<td style="text-align:left;">
-ABILENE
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-22
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ALBANY JR-SR</td>
+<td>ALBANY ISD</td>
+<td>SHACKELFORD</td>
+<td>ABILENE</td>
+<td>24</td>
+<td>22</td>
+<td>NA</td>
+<td>21</td>
+<td>22</td>
+<td>22</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ACT
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:left;">
-ALDINE
-</td>
-<td style="text-align:left;">
-ALDINE ISD
-</td>
-<td style="text-align:left;">
-HARRIS
-</td>
-<td style="text-align:left;">
-HOUSTON
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-18
-</td>
+<td>ACT</td>
+<td>2011</td>
+<td>ALDINE</td>
+<td>ALDINE ISD</td>
+<td>HARRIS</td>
+<td>HOUSTON</td>
+<td>19</td>
+<td>17</td>
+<td>NA</td>
+<td>16</td>
+<td>18</td>
+<td>18</td>
 </tr>
 </tbody>
 <tfoot>
@@ -887,933 +383,345 @@ NA
 ``` {.r}
 schools_uil
 ```
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
-<th style="text-align:left;">
-school
-</th>
-<th style="text-align:left;">
-city
-</th>
-<th style="text-align:right;">
-complvl_num
-</th>
-<th style="text-align:right;">
-score
-</th>
-<th style="text-align:right;">
-year
-</th>
-<th style="text-align:right;">
-conf
-</th>
-<th style="text-align:left;">
-complvl
-</th>
-<th style="text-align:left;">
-comp
-</th>
-<th style="text-align:right;">
-advanced
-</th>
-<th style="text-align:right;">
-n_state
-</th>
-<th style="text-align:right;">
-n_bycomp
-</th>
-<th style="text-align:right;">
-prnk
-</th>
-<th style="text-align:right;">
-n_defeat
-</th>
-<th style="text-align:left;">
-w
-</th>
+<th>school</th>
+<th>city</th>
+<th>complvl_num</th>
+<th>score</th>
+<th>year</th>
+<th>conf</th>
+<th>complvl</th>
+<th>comp</th>
+<th>advanced</th>
+<th>n_state</th>
+<th>n_bycomp</th>
+<th>prnk</th>
+<th>n_defeat</th>
+<th>w</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
-HASKELL
-</td>
-<td style="text-align:left;">
-HASKELL
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-616
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>HASKELL</td>
+<td>HASKELL</td>
+<td>13</td>
+<td>616</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>8</td>
+<td>1.00</td>
+<td>7</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-POOLVILLE
-</td>
-<td style="text-align:left;">
-POOLVILLE
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-609
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.86
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>POOLVILLE</td>
+<td>POOLVILLE</td>
+<td>13</td>
+<td>609</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>8</td>
+<td>0.86</td>
+<td>6</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-LINDSAY
-</td>
-<td style="text-align:left;">
-LINDSAY
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-553
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>LINDSAY</td>
+<td>LINDSAY</td>
+<td>17</td>
+<td>553</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>7</td>
+<td>1.00</td>
+<td>6</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-PLAINS
-</td>
-<td style="text-align:left;">
-PLAINS
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-537
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>PLAINS</td>
+<td>PLAINS</td>
+<td>3</td>
+<td>537</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>10</td>
+<td>1.00</td>
+<td>9</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-SAN ISIDRO
-</td>
-<td style="text-align:left;">
-SAN ISIDRO
-</td>
-<td style="text-align:right;">
-32
-</td>
-<td style="text-align:right;">
-534
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>SAN ISIDRO</td>
+<td>SAN ISIDRO</td>
+<td>32</td>
+<td>534</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>4</td>
+<td>1.00</td>
+<td>3</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-CANADIAN
-</td>
-<td style="text-align:left;">
-CANADIAN
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-527
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>CANADIAN</td>
+<td>CANADIAN</td>
+<td>7</td>
+<td>527</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>7</td>
+<td>1.00</td>
+<td>6</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-GARDEN CITY
-</td>
-<td style="text-align:left;">
-GARDEN CITY
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-518
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>GARDEN CITY</td>
+<td>GARDEN CITY</td>
+<td>10</td>
+<td>518</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>8</td>
+<td>1.00</td>
+<td>7</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-WATER VALLEY
-</td>
-<td style="text-align:left;">
-WATER VALLEY
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-478
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.86
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>WATER VALLEY</td>
+<td>WATER VALLEY</td>
+<td>10</td>
+<td>478</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>0.86</td>
+<td>6</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-GRUVER
-</td>
-<td style="text-align:left;">
-GRUVER
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-464
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.83
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>GRUVER</td>
+<td>GRUVER</td>
+<td>7</td>
+<td>464</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>0.83</td>
+<td>5</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-YANTIS
-</td>
-<td style="text-align:left;">
-YANTIS
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-451
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>YANTIS</td>
+<td>YANTIS</td>
+<td>19</td>
+<td>451</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>10</td>
+<td>1.00</td>
+<td>9</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-SHINER
-</td>
-<td style="text-align:left;">
-SHINER
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-450
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>SHINER</td>
+<td>SHINER</td>
+<td>27</td>
+<td>450</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>9</td>
+<td>1.00</td>
+<td>8</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-WEST TEXAS
-</td>
-<td style="text-align:left;">
-STINNETT
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-443
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.67
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>WEST TEXAS</td>
+<td>STINNETT</td>
+<td>7</td>
+<td>443</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>0.67</td>
+<td>4</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-HONEY GROVE
-</td>
-<td style="text-align:left;">
-HONEY GROVE
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-440
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.83
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>HONEY GROVE</td>
+<td>HONEY GROVE</td>
+<td>17</td>
+<td>440</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>7</td>
+<td>0.83</td>
+<td>5</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-LATEXO
-</td>
-<td style="text-align:left;">
-LATEXO
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-439
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>LATEXO</td>
+<td>LATEXO</td>
+<td>23</td>
+<td>439</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>10</td>
+<td>1.00</td>
+<td>9</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-MUENSTER
-</td>
-<td style="text-align:left;">
-MUENSTER
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-436
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.67
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>MUENSTER</td>
+<td>MUENSTER</td>
+<td>17</td>
+<td>436</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>0.67</td>
+<td>4</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-VAN HORN
-</td>
-<td style="text-align:left;">
-VAN HORN
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-436
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>VAN HORN</td>
+<td>VAN HORN</td>
+<td>1</td>
+<td>436</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>7</td>
+<td>1.00</td>
+<td>6</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-SLOCUM
-</td>
-<td style="text-align:left;">
-ELKHART
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-415
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.89
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>SLOCUM</td>
+<td>ELKHART</td>
+<td>23</td>
+<td>415</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>0.89</td>
+<td>8</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-ERA
-</td>
-<td style="text-align:left;">
-ERA
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-415
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.50
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
+<td>ERA</td>
+<td>ERA</td>
+<td>17</td>
+<td>415</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>0</td>
+<td>0</td>
+<td>7</td>
+<td>0.50</td>
+<td>3</td>
+<td>FALSE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-GOLDTHWAITE
-</td>
-<td style="text-align:left;">
-GOLDTHWAITE
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-413
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>GOLDTHWAITE</td>
+<td>GOLDTHWAITE</td>
+<td>15</td>
+<td>413</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>7</td>
+<td>1.00</td>
+<td>6</td>
+<td>TRUE</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-NEWCASTLE
-</td>
-<td style="text-align:left;">
-NEWCASTLE
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-408
-</td>
-<td style="text-align:right;">
-2011
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:left;">
-District
-</td>
-<td style="text-align:left;">
-Calculator Applications
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-1.00
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
+<td>NEWCASTLE</td>
+<td>NEWCASTLE</td>
+<td>12</td>
+<td>408</td>
+<td>2011</td>
+<td>1</td>
+<td>District</td>
+<td>Calculator Applications</td>
+<td>1</td>
+<td>0</td>
+<td>10</td>
+<td>1.00</td>
+<td>9</td>
+<td>TRUE</td>
 </tr>
 </tbody>
 <tfoot>
@@ -1854,73 +762,41 @@ summ_schools_joinfuzzy_1 <-
 summ_schools_joinfuzzy_1
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
-<th style="text-align:left;">
-metric
-</th>
-<th style="text-align:left;">
-value
-</th>
+<th>metric</th>
+<th>value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
-n_x
-</td>
-<td style="text-align:left;">
-12,367
-</td>
+<td>n_x</td>
+<td>12,367</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_y
-</td>
-<td style="text-align:left;">
-17,542
-</td>
+<td>n_y</td>
+<td>17,542</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_joined
-</td>
-<td style="text-align:left;">
-12,119
-</td>
+<td>n_joined</td>
+<td>12,119</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_x_unjoined
-</td>
-<td style="text-align:left;">
-5,423
-</td>
+<td>n_x_unjoined</td>
+<td>5,423</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_y_unjoined
-</td>
-<td style="text-align:left;">
-248
-</td>
+<td>n_y_unjoined</td>
+<td>248</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-x_in_y_pct
-</td>
-<td style="text-align:left;">
-98
-</td>
+<td>x_in_y_pct</td>
+<td>98</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-y_in_x_pct
-</td>
-<td style="text-align:left;">
-69
-</td>
+<td>y_in_x_pct</td>
+<td>69</td>
 </tr>
 </tbody>
 </table>
@@ -1952,73 +828,41 @@ summ_schools_joinfuzzy_2 <-
 summ_schools_joinfuzzy_2
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
-<th style="text-align:left;">
-metric
-</th>
-<th style="text-align:left;">
-value
-</th>
+<th>metric</th>
+<th>value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
-n_x
-</td>
-<td style="text-align:left;">
-11,666
-</td>
+<td>n_x</td>
+<td>11,666</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_y
-</td>
-<td style="text-align:left;">
-16,898
-</td>
+<td>n_y</td>
+<td>16,898</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_joined
-</td>
-<td style="text-align:left;">
-11,399
-</td>
+<td>n_joined</td>
+<td>11,399</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_x_unjoined
-</td>
-<td style="text-align:left;">
-5,499
-</td>
+<td>n_x_unjoined</td>
+<td>5,499</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_y_unjoined
-</td>
-<td style="text-align:left;">
-267
-</td>
+<td>n_y_unjoined</td>
+<td>267</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-x_in_y_pct
-</td>
-<td style="text-align:left;">
-98
-</td>
+<td>x_in_y_pct</td>
+<td>98</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-y_in_x_pct
-</td>
-<td style="text-align:left;">
-67
-</td>
+<td>y_in_x_pct</td>
+<td>67</td>
 </tr>
 </tbody>
 </table>
@@ -2052,73 +896,41 @@ summ_schools_joinfuzzy_3 <-
 summ_schools_joinfuzzy_3
 ```
 
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table>
 <thead>
 <tr>
-<th style="text-align:left;">
-metric
-</th>
-<th style="text-align:left;">
-value
-</th>
+<th>metric</th>
+<th>value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
-n_x
-</td>
-<td style="text-align:left;">
-2,842
-</td>
+<td>n_x</td>
+<td>2,842</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_y
-</td>
-<td style="text-align:left;">
-15,076
-</td>
+<td>n_y</td>
+<td>15,076</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_joined
-</td>
-<td style="text-align:left;">
-1,697
-</td>
+<td>n_joined</td>
+<td>1,697</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_x_unjoined
-</td>
-<td style="text-align:left;">
-13,379
-</td>
+<td>n_x_unjoined</td>
+<td>13,379</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-n_y_unjoined
-</td>
-<td style="text-align:left;">
-1,145
-</td>
+<td>n_y_unjoined</td>
+<td>1,145</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-x_in_y_pct
-</td>
-<td style="text-align:left;">
-60
-</td>
+<td>x_in_y_pct</td>
+<td>60</td>
 </tr>
 <tr>
-<td style="text-align:left;">
-y_in_x_pct
-</td>
-<td style="text-align:left;">
-11
-</td>
+<td>y_in_x_pct</td>
+<td>11</td>
 </tr>
 </tbody>
 </table>
@@ -2172,16 +984,9 @@ implement. (I may come back and visit this idea in a future post.)
 
 ------------------------------------------------------------------------
 
-[^1]: In fact, the rigor involved in cleaning the UIL data obliged be to
-completely hide it from the reader in my write-ups on the
-topic.
+[^1]: In fact, the rigor involved in cleaning the UIL data obliged be to completely hide it from the reader in my write-ups on the topic.
 
-[^2]: Check out [my post on the “DRY” principle and its application to `R` 
-packages](/post/dry-principle-make-a-package/). Creating packages
-for actions that you perform across projects is a real
-time-saver!
+[^2]: Check out [my post on the “DRY” principle and its application to `R`  packages](/post/dry-principle-make-a-package/). Creating packages for actions that you perform across projects is a real time-saver!
 
-[^3]: Actually, I also joined on `year` in the previous post (in order to
-make sure that school scores across years were “aligned”
-properly.
+[^3]: Actually, I also joined on `year` in the previous post (in order to make sure that school scores across years were “aligned” properly.
 

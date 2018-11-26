@@ -137,9 +137,4 @@ like it.
 
 ------------------------------------------------------------------------
 
-
-[^1]: These can also be be embedded into .html files knitted from a .Rmd
-file, but I think that it's more natural in the `{flexdashboard}`
-context. Also, I believe that the HTML format is the only standard .Rmd
-output format that has interactive capability, so other output formats
-cannot be used if opting for the `knitr`-Rmarkdown combo.
+[^1]: These can also be be embedded into .html files knitted from a .Rmdfile, but I think that it's more natural in the `{flexdashboard}`  context. Also, I believe that the HTML format is the only standard .Rmd output format that has interactive capability, so other output formats cannot be used if opting for the `knitr`-Rmarkdown combo.

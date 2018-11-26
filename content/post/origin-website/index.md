@@ -284,45 +284,22 @@ enjoy.
 Anyways, that's all I have to say in this way-too-long back-story
 detailing the origin of this website. [^9] 
 
-[^1]: Of course, these weren't the only sources of inspiration for me.
-Perhaps I will discuss other people and resources that I drew
-inspiration from in a later post.
+------------------------------------------------------------------------
 
-[^2]: Perhaps he will go into more detail to it later in his explanation
-of his background.
+[^1]: Of course, these weren't the only sources of inspiration for me. Perhaps I will discuss other people and resources that I drew inspiration from in a later post.
 
-[^3]: More recently, the sports section at [Nate
-Silver](https://twitter.com/NateSilver538)'s
-[FiveThirtyEight](http://fivethirtyeight.com/) website has become a
-main-stay favorite of mine.
+[^2]: Perhaps he will go into more detail to it later in his explanation of his background.
 
-[^4]: As with the resources that inspired me during that first time that I
-lived by myself, perhaps I will discuss some of my other favorite
-websites to read on a regular basis in a later post.
+[^3]: More recently, the sports section at [Nate Silver](https://twitter.com/NateSilver538)'s [FiveThirtyEight](http://fivethirtyeight.com/) website has become a main-stay favorite of mine.
 
-[^5]: As many experienced programmers will attest when comparing
-programming languages, its more about the programmer and his preferences
-and capabilities than about the features of the language itself. Just
-about any language can be used to do perform the same tasks as another.
+[^4]: As with the resources that inspired me during that first time that I lived by myself, perhaps I will discuss some of my other favorite websites to read on a regular basis in a later post.
+
+[^5]: As many experienced programmers will attest when comparing programming languages, its more about the programmer and his preferences and capabilities than about the features of the language itself. Just about any language can be used to do perform the same tasks as another.
 
 [^6]: which many others have done
 
-[^7]: Codeacademy is often cited as great starting point for beginner
-programmers, I took Codeacademy's `JavaScript` course back when I was in
-high school and wanted to investigate computer science. After finding
-that the `JavaScript` course was engaging, I concluded that Codeacademy
-was a good go-to resource for learning the basics of any other
-programming language that I might want to learn in the future.
+[^7]: Codeacademy is often cited as great starting point for beginner programmers, I took Codeacademy's `JavaScript` course back when I was in high school and wanted to investigate computer science. After finding that the `JavaScript` course was engaging, I concluded that Codeacademy was a good go-to resource for learning the basics of any other programming language that I might want to learn in the future.
 
-[^8]: "Settle" is an apt verb choice here--there are so many free online
-classes and open-source learning resources available that picking just
-one to start with can be difficult, especially for a perfectionist like
-me who might be left wondering if there is a better alternative.
+[^8]: "Settle" is an apt verb choice here--there are so many free online classes and open-source learning resources available that picking just one to start with can be difficult, especially for a perfectionist like me who might be left wondering if there is a better alternative.
 
-[^9]: You might come to notice that I like to write in a very elaborate
-and sometimes unnecessarily long fashion. The previous sentence is a
-perfect example of that. I realize that this style doesn't really lend
-itself to top-notch analysis and isn't highly regarded in this
-discipline. I assure you that one of my goals with this website is to
-learn to write more concisely (which is imminent for my actual full-time
-job) and improve as technical writer in every way possible.
+[^9]: You might come to notice that I like to write in a very elaborate and sometimes unnecessarily long fashion. The previous sentence is a perfect example of that. I realize that this style doesn't really lend itself to top-notch analysis and isn't highly regarded in this discipline. I assure you that one of my goals with this website is to learn to write more concisely (which is imminent for my actual full-time job) and improve as technical writer in every way possible.

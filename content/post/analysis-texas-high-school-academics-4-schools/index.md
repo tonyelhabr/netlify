@@ -303,13 +303,6 @@ Certainly analysis of schools in these academic UIL competitions
 deserves some more attention than that given here, but I think some of
 the biggest questions about school performance have been answered.
 
-[^1]: Actually, I don't specifically enforce the criteria that the
-previous year is used. Rather, I use the most recent year's value, which
-may or may not be the previous year if the school did not compete in the
-previous year.
+[^1]: Actually, I don't specifically enforce the criteria that theprevious year is used. Rather, I use the most recent year's value, which may or may not be the previous year if the school did not compete in the previous year.
 
-[^2]: For more information regarding interpretation of p-value
-distributions, I recommend reading [David
-Robinson](http://varianceexplained.org/)'s [very helpful blog
-post](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/)
-on the topic.
+[^2]: For more information regarding interpretation of p-value distributions, I recommend reading [David Robinson](http://varianceexplained.org/)'s [very helpful blog post](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/) on the topic.
