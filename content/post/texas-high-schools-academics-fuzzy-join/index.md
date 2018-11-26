@@ -23,7 +23,7 @@ Introduction
 ------------
 
 As a follow-up to [a previous
-post](/post/correlations-texas-high-school-academics/) about
+post](/post/texas-high-schools-academics-cors/) about
 correlations between Texas high school academic UIL competition scores
 and SAT/ACT scores, I wanted explore some of the “alternatives” to
 joining the two data sets—which come from different sources. In that

@@ -21,7 +21,7 @@ header:
 wonderful resources for people like me who have a passion to learn. In a
 nutshell, they are college-level courses published by reputable
 universities and/or instructors for free. Some of the most well-known
-platforms include [Udacity](www.udacity.com/),
+platforms include [Udacity](https://www.udacity.com/),
 [Coursera](https://www.coursera.org/), and [edX](https://www.edx.org/),
 but you can also find many courses and related materials directly on
 university websites or other sites such as

@@ -154,12 +154,12 @@ viz_map_bycnts_stamen <-
 viz_map_bycnts_stamen
 ```
 
-![](viz_unigram_cnts_stamen-1.png)
+![](viz_map_bycnts_stamen-1.png)
 
 To give a separate example, I used my `{tetext}` package for nearly all
 of the code in [the flexdashboard that I created for analyzing the
 Twitter acccounts of NBA
-teams.](/post/2018-03-11-nba-tweets-tms-flexdashboard/nba-tms) There, I
+teams.](/post/nba-tweets-tms-flexdashboard) There, I
 simply called the function `tetext::visualize_time_facet()` to generate
 a fairly illustrative visual.
 
@@ -177,7 +177,7 @@ viz_time_facet_all <-
 viz_time_facet_all
 ```
 
-![](viz_unigram_cnts_facet-1.png)
+![](viz_map_bycnts_facet-1.png)
 
 Getting Started
 ---------------
@@ -191,7 +191,7 @@ more about it. To name a few:
 -   [*R Packages* book](http://r-pkgs.had.co.nz/) by [Hadley
     Wickham](https://twitter.com/hadleywickham)
 -   [Karl Broman’s primer](kbroman.org/pkg_primer/)
--   [Jenny Bryan’s class tutorial](stat545.com/packages00_index.html)
+-   [Jenny Bryan’s class tutorial](http://stat545.com/packages00_index.html)
 
 (There’s a good reason why these resources show up at the top of a
 Google search for “R packages”.)

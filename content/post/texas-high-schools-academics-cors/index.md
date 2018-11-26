@@ -23,7 +23,7 @@ Introduction
 ------------
 
 I wanted to do a follow-up on [my series of
-posts](/post/analysis-texas-high-school-academics-intro/) about Texas
+posts](/post/analysis-texas-high-school-academics-1-intro/) about Texas
 high school [University Interscholastic
 League](http://www.uiltexas.org/) (UIL) academic competitions to more
 closely evaluate the relationship between the school performance in
@@ -51,7 +51,7 @@ Data Collection
 
 While I already have collected and cleaned the UIL data that I’ll need
 by virtue of my work for [my series of posts analyzing the UIL
-competitions](/post/analysis-texas-high-school-academics-intro/), I did
+competitions](/post/analysis-texas-high-school-academics-1-intro/), I did
 not retrieve data for standardized test scores. To my delight, the
 [Texas Education Agency’s website](https://tea.texas.gov) publishes
 Texas high school SAT and ACT scores for the years 2011 through 2015.
@@ -972,7 +972,7 @@ exist with this data set.
 
 Importantly, some choice about how to quantify performance needs to be
 made. As I discussed in [my long-form series of posts exploring the UIL
-academic data](/post/analysis-texas-high-school-academics-intro/), the
+academic data](/post/analysis-texas-high-school-academics-1-intro/), the
 evaluation of performance is somewhat subjective. Should we use number
 of times a school advanced to the next level of competition in a given
 year? (Note that there are three competition levels—`District`,
@@ -1798,7 +1798,7 @@ Conclusion
 ----------
 
 So, my initial inclination [in my analysis of academic UIL
-competitions](/post/analysis-texas-high-school-academics-intro/)) seems
+competitions](/post/analysis-texas-high-school-academics-1-intro/)) seems
 correct—there is no significant relationship between Texas high school
 academic competition scores and standardized test scores (for math,
 between 2011 and 2015). And, with that question answered, I intend to

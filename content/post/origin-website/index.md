@@ -36,7 +36,7 @@ attending the [University of Texas at Austin](https://utexas.edu/) (UT
 Austin), from where they both graduated with degrees in civil
 engineering. Interest in embracing my multi-cultural heritage and in
 tuning into the intelligence passed down to me prompted me to partake in
-challenging [International Baccalaureate](http://www.ibo.org/) (IB)
+challenging [International Baccalaureate](https://www.ibo.org/) (IB)
 classes in high school. These higher-level classes helped me achieve my
 academic potential, and the diverse nature of the IB curriculum exposed
 me to a wide-range of topics that captivated me, including physics and
@@ -48,7 +48,7 @@ enriching, my professors knowledgeable and engaging, and my fellow
 students friendly and hard-working. To sum up my extracurricular
 activities, I served as a member and officer in professional societies
 such as the UT student branch of [Institute of Electronic and Electrical
-Engineers](ttps://www.ieee.org/) (IEEE), worked as night-time department
+Engineers](https://www.ieee.org/) (IEEE), worked as night-time department
 tutor for two classes over the course of two semesters, and completed
 three separate internships during my undergraduate tenure. All of these
 experiences re-affirmed my passion for problem-solving and the

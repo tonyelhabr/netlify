@@ -993,7 +993,7 @@ without it feeling overwhelming.
 
 [^2]: Note that I use the name `ord` to represent “ordinality” of the color–that is, primary, secondary, tertiary, or quaternary.
 
-[^3]: In fact, the current consensus among sports fans is that the [MLB has a decaying fan-base in the U.S. because it is failing to attract younger fans](https://www.huffingtonpost.com/laura-hanby-hudgens/the-decline-of-baseball-a_b_9630782.html). This opinion is typically based on conjectures about the game’s slow pace, but, who knows, maybe colors also has something to do with it! (I’m only kidding. I pride myself in guarding against the [correlation-equals-causation fallacy](https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation).)
+[^3]: In fact, the current consensus among sports fans is that the [MLB has a decaying fan-base in the U.S. because it is failing to attract younger fans](https://www.huffpost.com/entry/the-decline-of-baseball-a_b_9630782). This opinion is typically based on conjectures about the game’s slow pace, but, who knows, maybe colors also has something to do with it! (I’m only kidding. I pride myself in guarding against the [correlation-equals-causation fallacy](https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation).)
 
 [^4]: Again, in case you think I’m serious, let me be clear–yes, it is most likely a coincidence.
 

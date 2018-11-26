@@ -94,8 +94,8 @@ exposure would not be a problem.)
 -   **Average Episode Length:** 30 min.
 -   **Publishing Frequencty:** weekly
 
-[Katie Malone](katie@lineardigressions.com) and [Ben
-Jaffe](ben@lineardigressions.com) put out weekly podcasts that have a
+[Katie Malone](https://twitter.com/multiarmbandit) and [Ben
+Jaffe](https://twitter.com/benjaffe) put out weekly podcasts that have a
 consistent format--discussion of a single data-related concept, where
 Katie, a physicist-turned-data-scientist plays the role of a teacher and
 Ben, a web developer with interest in data scientist, plays the role of
@@ -184,7 +184,7 @@ Others Worth Mentioning
 These other podcasts are ones that I have tried out, but don't really
 listen to on a consistent basis.
 
--   [Partially Derivative](partiallyderivative.com/)
+-   Partially Derivative
 
 Similar to [Not So Standard Deviations](http://nssdeviations.com/) in
 style (i.e. ranges from casual conversation to serious discussion of

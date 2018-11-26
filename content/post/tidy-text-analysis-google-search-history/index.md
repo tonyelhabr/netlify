@@ -411,7 +411,7 @@ food/nutrition, software and data analysis, and sports. Additionally,
 the places I’ve lived re apparent from my searches– `ut austin` reflects
 my undergraduate studies at the [University of Texas at
 Austin](https://www.utexas.edu), `baton rouge` alludes to my internship
-with [ExxonMobil](corporate.exxonmobil.com/) in Baton Rouge in the
+with [ExxonMobil](https://corporate.exxonmobil.com/) in Baton Rouge in the
 summer of 2015, `round rock` hints to my current residence in Round
 Rock, Texas.
 
@@ -791,7 +791,7 @@ have changed over time.
     couple of years, but now have found myself less in need of
     researching because I know a good deal about it now.
 -   The appearance of `ib` might be confusing to the reader. “IB” stands
-    for [International Baccalaureate](www.ibo.org/) (IB) which is a high
+    for [International Baccalaureate](https://www.ibo.org/) (IB) which is a high
     school program for that is similar to th [Advanced
     Placement](https://apstudent.collegeboard.org/apcourse) (AP) program
     that United States high school students are probably more familiar
