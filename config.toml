@@ -40,6 +40,8 @@ enableGitInfo = false
 # NOTE: Added this.
 # relativeurls = true
 # rssLimit = 10
+# [permalinks]
+#   post = ":slug"
 
 [outputs]
   home = [ "HTML", "CSS", "RSS", "JSON" ]
@@ -147,7 +149,7 @@ enableGitInfo = false
 
   # Enable global LaTeX math rendering?
   #   If false, you can enable it locally on a per page basis.
-  math = false
+  math = true
 
   # Highlight.js options
   #   highlight
@@ -235,6 +237,12 @@ enableGitInfo = false
     # List publications and talks related to the project?
     list_children = true
 
+    # Post list format.
+    #   0 = Simple
+    #   1 = Detailed
+    #   2 = Stream
+    post_format = 0
+    
     # Publication list format.
     #   0 = Simple
     #   1 = Detailed
