@@ -1,6 +1,6 @@
 ---
 title: Fuzzy Matching with Texas High School Academic Competition Results and SAT/ACT Scores
-slug: fuzzymathc-texas-high-school-academics
+# slug: fuzzymath-texas-high-school-academics
 date: "2018-08-04"
 categories:
   - r
@@ -44,7 +44,7 @@ matching attempts ultimately led me to “settle” upon
 Fuzzy Matching
 --------------
 
-In its raw form,the UIL data—scraped from <https://www.hpscience.net/>
+In its raw form,the UIL data—scraped from https<nolink>://www.hpscience.net/
 (which was the only site that I found to have the academic competition
 scores)—is much “more unclean” than the data from the SAT and ACT data
 from the [TEA website](https://tea.texas.gov/). In particular, many of

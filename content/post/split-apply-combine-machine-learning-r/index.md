@@ -23,7 +23,7 @@ Introduction
 
 Much discussion in the R community has revolved around the proper way to
 implement the
-[“split-apply-combine”](https://www.google.com/search?q=split+apply+combine&rlz=1C1GGRV_enUS751US752&oq=split+apply+combine&aqs=chrome..69i57j69i60l2.2919j0j4&sourceid=chrome&ie=UTF-8).
+[“split-apply-combine”](http://vita.had.co.nz/papers/plyr.html).
 In particular, I love the exploration of this topic [in this blog
 post](https://coolbutuseless.bitbucket.io/2018/03/03/split-apply-combine-my-search-for-a-replacement-for-group_by---do/).
 It seems that the “preferred” approach is `dplyr::group_by()` +

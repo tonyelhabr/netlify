@@ -177,7 +177,7 @@ viz_time_facet_all <-
 viz_time_facet_all
 ```
 
-![](viz_map_bycnts_facet-1.png)
+![](viz_map_bycnts-1.png)
 
 Getting Started
 ---------------
@@ -190,7 +190,7 @@ more about it. To name a few:
     post](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/)
 -   [*R Packages* book](http://r-pkgs.had.co.nz/) by [Hadley
     Wickham](https://twitter.com/hadleywickham)
--   [Karl Broman’s primer](kbroman.org/pkg_primer/)
+-   [Karl Broman’s primer](http://kbroman.org/pkg_primer/)
 -   [Jenny Bryan’s class tutorial](http://stat545.com/packages00_index.html)
 
 (There’s a good reason why these resources show up at the top of a

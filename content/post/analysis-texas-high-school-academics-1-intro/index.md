@@ -71,7 +71,7 @@ rankings by academic competitions may be more indicative.
 To make some sense of the my analysis, the reader should be aware of the
 following details about the data.
 
--   The competition data was scraped from <https://www.hpscience.net/>
+-   The competition data was scraped from https<nolink>://www.hpscience.net/
     for all years from 2008 through 2017. [^1] The data is not listed in
     an extremely user-friendly format (in my opinion). Consequently, the
     "cleaned" data is imperfect in some ways.
@@ -95,11 +95,11 @@ following details about the data.
 -   The UIL defines **32 total Districts** in Texas, which are
     aggregated into **4 Regions**. (The source of the geo-spatial data
     is
-    <https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer>.)
+    <https://nces.ed.gov/opengis/rest/services/K12_School_Locations>.)
 
 + The UIL defines __32 total Districts__ in Texas, which are aggregated into __4 Regions__.
 (The source of the geo-spatial data is
-https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer.)
+<https://nces.ed.gov/opengis/rest/services/K12_School_Locations>.)
 
 ![](viz_map_bycomplvl_grid-1.png)
 ![](viz_map_bycomplvl_grid-2.png)

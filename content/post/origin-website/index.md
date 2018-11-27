@@ -212,7 +212,7 @@ better object-oriented language than `Java` (which I was originally
 intent on learning before looking up alternatives), and that, more
 generally, `python` is one of the easiest languages to pick up. Not
 wanting to spend eternity weighing the pros and cons of `R` versus
-`python` [6], I made a rather arbitrary decision and picked `python`
+`python` [^6], I made a rather arbitrary decision and picked `python`
 (perhaps just because it sounds cooler).
 
 I started out simple by taking
@@ -256,7 +256,7 @@ able to settle on a course--namely, [Udacity's UD 120: Intro to Machine
 Learning](https://www.udacity.com/course/intro-to-machine-learning--ud120)--that
 satisfied these desires. [^8] I won't go into too much detail here about
 this course and the four other [Massive Online Open
-Courses](https://www.mooc-list.com/) (MOOCs) that I took afterwards
+Courses](http://www.mooc-list.com/) (MOOCs) that I took afterwards
 because probably that deserves its own write-up. Anyways, to summarize
 their collective effect, the MOOCs provided me a significant amount of
 confidence in my technical capabilities.

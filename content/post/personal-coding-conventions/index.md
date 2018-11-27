@@ -133,7 +133,7 @@ realize that a `str_replace()` or `str_detect()` would save me some
 effort because I don’t have to use a `.` to anonymously specify the
 `x`/`string` argument. Nonetheless, I have found that using the
 `stringr` functions is not necessarily second nature for me because the
-base R methods shown in many [Stack Overflow](www.stackoverflow.com)
+base R methods shown in many [Stack Overflow](http://www.stackoverflow.com)
 have ingrained in me non-`tidyverse` style. (I should be clear–these
 other techniques are not “bad” or “incorrect” in any way.)
 
@@ -365,7 +365,7 @@ Projects and Workflow
 
 I draw heavy inspiration on my format of a project skeleton from the
 ideas laid out in [Nice R’s blog post on
-projects](https://nicercode.github.io/blog/2013-04-05-project/) and in
+projects](https://nicercode.github.io/blog/2013-04-05-why-nice-code/) and in
 [Carl Boettiger’s description of his
 workflow](http://www.carlboettiger.info/2012/05/06/research-workflow.html).
 

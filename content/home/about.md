@@ -29,10 +29,10 @@ weight = 1
 +++
 
 I work full-time as an Market Operations (Electricity) Engineer at
-[Electric Reliability Council of Texas (ERCOT)](www.ercot.com),
+[Electric Reliability Council of Texas (ERCOT)](http://www.ercot.com),
 the independent system operator (ISO) for the Texas Bulk Electric System (BES).
 I completed my undergraduate education 
-at the [University of Texas at Austin](www.utexas.edu) in May 2016, receiving a B.S. in Electrical Engineering.
+at the [University of Texas at Austin](http://www.utexas.edu) in May 2016, receiving a B.S. in Electrical Engineering.
 I am currently a part-time student in the
 [Georgia Tech Online Masters of Science in Analytics](https://pe.gatech.edu/master-science-degrees/online-master-science-analytics)
 (OMSA) degree program (Fall 2018 cohort).

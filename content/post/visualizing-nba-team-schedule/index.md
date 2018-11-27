@@ -37,7 +37,7 @@ visualization that I saw in the [Top 50 ggplot visualizations
 post](https://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html)
 on the <https://r-statisctics.co> website.
 
-![](http://r-statistics.co/screenshots/ggplot_masterlist_42.png)
+![](ggplot_masterlist_42.png)
 
 To implement a plot of this nature, I decided to look at how my hometown
 team, the San Antonio Spurs, fared last season (2016) in terms of point

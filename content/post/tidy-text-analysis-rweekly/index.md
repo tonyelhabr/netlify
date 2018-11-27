@@ -419,7 +419,7 @@ Let’s try to identify words that have risen and fallen in popularity.
 While there are many ways of doing, let’s try segmenting the [R
 Weekly](https://rweekly.org/) posts into intervals of 60 days and
 computing the [term-frequency,
-inverse-document-frequency]((https://www.tidytextmining.com/tfidf.html))
+inverse-document-frequency]((https://www.tidytextmining.com/tfidf)
 (TF-IDF) of words across these intervals. (I apologize if the resolution
 is sub-par.)
 

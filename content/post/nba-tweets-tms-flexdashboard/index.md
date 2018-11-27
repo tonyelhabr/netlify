@@ -37,6 +37,6 @@ things I've been meaning to do:
     regarded for leading the sports industry in engaging fans through
     modern technological means.
 
-[The dashboard can be accessed here.](/files/nba-tms.html)
+[The dashboard can be accessed here.](/nba-tms.html)
 
 ![](viz_unigram_cnts_facet.png)

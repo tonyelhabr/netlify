@@ -26,7 +26,7 @@ the
 format to be my favorite. I used it to create the storyboard that I
 wrote about in a [previous post about tracking the activity of NBA team
 Twitter
-accounts](/post/2018-03-11-nba-tweets-tms-flexdashboard/nba-tms).
+accounts](/post/nba-tweets-tms-flexdashboard).
 
 
 ![](viz_unigram_cnts_facet.png)

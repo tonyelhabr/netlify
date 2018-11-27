@@ -52,4 +52,4 @@ url_code = ""
     + Explore the interaction of social media and the NBA.
 + __Deliverable(s):__ [A dashboard.](/files/nba-tms.html)
 
-See [my post](/post/nba-tweets-tm-flexdashboard) for more details.
+See [my post](/post/nba-tweets-tms-flexdashboard) for more details.
