@@ -17,7 +17,7 @@ header:
   image: "featured.jpg"
 ---
 
-[Massive Online Open Courses](https://www.mooc-list.com/) (MOOCs) are
+[Massive Online Open Courses](http://www.mooc-list.com/) (MOOCs) are
 wonderful resources for people like me who have a passion to learn. In a
 nutshell, they are college-level courses published by reputable
 universities and/or instructors for free. Some of the most well-known

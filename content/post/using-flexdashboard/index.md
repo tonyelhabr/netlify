@@ -105,7 +105,7 @@ functionality for a “toggle” button to show/hide code.
 
 When modifying a theme’s CSS, the typical/recommended approach is to use
 the browser’s “Inspect” tool (or some browser extension such as
-[Selector Gadget](selectorgadget.com/) to identify which specific styles
+[Selector Gadget](http://selectorgadget.com/) to identify which specific styles
 to adjust.
 
 For example, if the theme that is chosen for the `{flexdashboard}` (in

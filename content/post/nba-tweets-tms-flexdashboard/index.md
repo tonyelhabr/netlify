@@ -25,7 +25,7 @@ things I've been meaning to do:
 -   Try out the [`{flexdashboard}`
     package](https://rmarkdown.rstudio.com/flexdashboard/), which is
     [supposed to be good for prototypying larger
-    dashboards](/post/using-flexdashboard) (perhapscreated with
+    dashboards](/post/using-flexdashboard) (perhaps created with
     [`{shinydashboard}`](https://rstudio.github.io/shinydashboard/).
 -   Test out my (mostly completed) personal [`{tetext}`
     package](https://github.com/tonyelhabr/tetext) for quick and tidy
@@ -37,6 +37,6 @@ things I've been meaning to do:
     regarded for leading the sports industry in engaging fans through
     modern technological means.
 
-[The dashboard can be accessed here.](/nba-tms.html)
+[The dashboard can be accessed here.](nba-tms.html)
 
 ![](viz_unigram_cnts_facet.png)

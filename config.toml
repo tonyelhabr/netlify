@@ -345,11 +345,6 @@ enableGitInfo = false
   url = "#projects"
   weight = 3
 
-# [[menu.main]]
-#   name = "Contact"
-#   url = "#contact"
-#   weight = 6
-
 # NOTE: Added this.
 # [[menu.main]]
 #   name = "Presentations"

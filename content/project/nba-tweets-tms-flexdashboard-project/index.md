@@ -50,6 +50,6 @@ url_code = ""
     + Try out the [`{flexdashboard}` package](https://rmarkdown.rstudio.com/flexdashboard/).
     + Test my personal [`{tetext}` package](https://github.com/tonyelhabr/tetext).
     + Explore the interaction of social media and the NBA.
-+ __Deliverable(s):__ [A dashboard.](/files/nba-tms.html)
++ __Deliverable(s):__ [A dashboard.](nba-tms.html)
 
 See [my post](/post/nba-tweets-tms-flexdashboard) for more details.

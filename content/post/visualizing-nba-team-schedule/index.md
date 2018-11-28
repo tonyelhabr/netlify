@@ -35,7 +35,7 @@ to make a visualization just for the sake of trying something I hadn't
 done before. [^2] In particular, I was inspired by the calendar heat map
 visualization that I saw in the [Top 50 ggplot visualizations
 post](https://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html)
-on the <https://r-statisctics.co> website.
+on the <https://r-statistics.co> website.
 
 ![](ggplot_masterlist_42.png)
 
