@@ -17,3 +17,8 @@ weight = 10
 
 If you like `R` and blogs, be sure to check out the 
 [R-bloggers](https://www.r-bloggers.com/) site!
+
+If you are an `R`-user and are looking for a job, 
+check out <https://www.r-users.com/>!
+
+
