@@ -37,7 +37,7 @@ defaultContentLanguageInSubdir = false
 # Get last modified date for content from Git?
 enableGitInfo = false
 
-# NOTE: Added this.
+# Note: Added this.
 # relativeurls = true
 # rssLimit = 10
 # [permalinks]
@@ -46,7 +46,7 @@ enableGitInfo = false
 [outputs]
   home = [ "HTML", "CSS", "RSS", "JSON" ]
   section = [ "HTML", "RSS" ]
-  # NOTE: Added these, per suggestion at https://lmyint.github.io/post/hugo-academic-tips/#resources.
+  # Note: Added these, per suggestion at https://lmyint.github.io/post/hugo-academic-tips/#resources.
   taxonomy = [ "HTML", "RSS" ]
   taxonomyTerm = [ "HTML", "RSS" ]
 
@@ -132,7 +132,7 @@ enableGitInfo = false
 
   # Date and time format (refer to https://sourcethemes.com/academic/docs/customization/#date-format )
   #   Examples: "Mon, Jan 2, 2006" or "2006-01-02"
-  # NOTE: Changed this.
+  # Note: Changed this.
   # date_format = "Jan 2, 2006"
   date_format = "2006-01-02"
   #   Examples: "3:04 pm" or "15:04"
@@ -178,7 +178,7 @@ enableGitInfo = false
   #   https://sourcethemes.com/academic/docs/writing-markdown-latex/#highlighting-options
   highlight = true
   # highlight = false
-  # NOTE: Changed this.
+  # Note: Changed this.
   # highlight_languages = []
   highlight_languages = ["r", "yaml"]
   # highlight_style = "github"
@@ -195,7 +195,7 @@ enableGitInfo = false
 
   # Link custom CSS and JS assets
   #   (relative to /static/css and /static/js respectively)
-  # NOTE: Changed this.
+  # Note: Changed this.
   # custom_css = []
   # custom_css = ["custom.css", "vs2015.css"]
   # custom_css = ["custom.css", "monokai.css"]
@@ -228,7 +228,7 @@ enableGitInfo = false
   [params.publications]
     # Date format (refer to https://sourcethemes.com/academic/docs/customization/#date-format )
     #   Examples: "Mon, Jan 2, 2006" or "2006-01-02"
-    # NOTE: Changed this.
+    # Note: Changed this.
     # date_format = "January, 2006"
     date_format = "2006-01-02"
 
@@ -285,7 +285,7 @@ enableGitInfo = false
     icon_pack = "fab"
     link = "//twitter.com/TonyElHabr"
 
-  # NOTE: Commented this out.
+  # Note: Commented this out.
   # [[params.social]]
   #   icon = "google-scholar"
   #   icon_pack = "ai"
@@ -296,19 +296,21 @@ enableGitInfo = false
     icon_pack = "fab"
     link = "//github.com/tonyelhabr"
 
-  # NOTE: Added this.
+  # Note: Added this.
   [[params.social]]
-    icon = "linkedin"
+    # Reference: https://github.com/rbind/apreshill/commit/63fb71931b84d100255a77a35392bbcd172fb834
+    # icon = "linkedin"
+    icon = "linkedin-in"
     icon_pack = "fab"
     link = "//linkedin.com/in/anthony-elhabr"
 
-  # NOTE: Added this.
+  # Note: Added this.
   [[params.social]]
     icon = "code"
     icon_pack = "fas"
     link = "https://rpubs.com/aelhabr/"
     
-  # NOTE: Added this.
+  # Note: Added this.
   [[params.social]]
     icon = "cv"
     icon_pack = "ai"
@@ -345,25 +347,25 @@ enableGitInfo = false
   url = "#projects"
   weight = 3
 
-# NOTE: Added this.
+# Note: Added this.
 # [[menu.main]]
 #   name = "Presentations"
 #   url = "/presentations/"
 #   weight = 7
 
-# NOTE: Added this.
+# Note: Added this.
 # [[menu.main]]
 #   name = "Software"
 #   url = "/software/"
 #   weight = 8
 
-# NOTE: Added this.
+# Note: Added this.
 # [[menu.main]]
 #   name = "Miscellaneous"
 #   url = "/misc/"
 #   weight = 9
 
-# NOTE: Added this.
+# Note: Added this.
 [[menu.main]]
   name = "RBloggers"
   url = "#rbloggers"
