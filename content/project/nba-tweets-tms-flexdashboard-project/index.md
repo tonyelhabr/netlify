@@ -10,7 +10,7 @@ summary = "Exploration of Twitter sentiment for each NBA team."
 
 # Tags: can be used for filtering projects.
 # Example: `tags = ["gametophytes", "DNA barcoding", "community ecology"]`
-tags = ["nba", "r"]
+tags = ["r", "nba", "twitter"]
 
 # Optional external URL for project (replaces project detail page).
 external_link = ""

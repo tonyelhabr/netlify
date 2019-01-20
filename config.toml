@@ -348,10 +348,10 @@ enableGitInfo = false
   weight = 3
 
 # Note: Added this.
-# [[menu.main]]
-#   name = "Presentations"
-#   url = "/presentations/"
-#   weight = 7
+[[menu.main]]
+  name = "Presentations"
+  url = "#presentations"
+  weight = 4
 
 # Note: Added this.
 # [[menu.main]]

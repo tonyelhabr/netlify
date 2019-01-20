@@ -255,7 +255,7 @@ data_raw %>% separate(name, into = c(paste0("x", 1:10)), fill = "right")
 However, while this action gets rid of the warning, it does not actually
 resolve the underlying issue—specifying the correct number of columns to
 create with `separate()`. We can do that by identifying the `name` with
-the most number of `.`s.
+the most number of "dots" (i.e. `.`s).
 
 ``` {.r}
 rgx_split <- "\\."
@@ -298,8 +298,9 @@ data_sep
     ## 10 leagues season     type     type  <NA>  <NA>  <NA>  2                  
     ## # ... with 6,619 more rows
 
-By my interpretation, this `data_sep` variable is in tidy format. Of
-course, it has
+By my interpretation, this `data_sep` variable is in tidy format. (Of
+course, there is still lots of cleaning to be done before it can
+actually be useful!)
 
 
 
