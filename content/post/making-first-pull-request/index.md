@@ -82,6 +82,13 @@ to navigate you to https://github.com/{{user}}/{{repo}}.git
 then "Create pull request" on the subsequent page, and then "Create pull request"
 again (on the page that allows you to add comments). [^10]
 
+Note that if your pull request is not accepted upon the first commit, then you'll
+need to repeat steps 3 and 4. And, instead of repeating step 5, you should
+make a comment on the existing pull request on GitHub. (Assuming that the pull
+request reviewer left you some comments, then you should just reply to theirs.)
+
+### Additional Notes
+
 There are a couple of extra/alternative things you should consider doing 
 in this process (although these are completely optional).
 

@@ -1,109 +1,428 @@
 ---
-title: A Summary (of Sorts) of rstudio::conf 2019
-draft: true
-date: "2018-01-27"
+title: Summarizing rstudio::conf 2019 Summaries with Tidy Text Techniques
+date: "2019-01-27"
 categories:
   - r
 tags:
   - r
   - rstudioconf
+  - tidytext
 image:
   caption: ""
   focal_point: ""
-  preview_only: false
+  preview_only: true
 header:
   caption: ""
   image: "featured.jpg"
 ---
 
+To be honest, I planned on writing a review of this past weekend’s
+[rstudio::conf 2019](https://resources.rstudio.com/rstudio-conf-2019),
+but several other people have already done a great job of doing
+that—just check out [Karl Broman’s aggregation of reviews at the bottom
+of the page here](https://github.com/kbroman/RStudioConf2019Slides)!
+(More on this in a second.) In short, my thoughts on the whole
+experience are captured perfectly by [Nick
+Strayer](http://nickstrayer.me/)’s tweet the day after the conference
+ended.
 
-## Links
+{{< tweet 1086681100787822592 >}}
 
-- [Karl Broman's GitHub repo](https://github.com/kbroman/RStudioConf2019Slides]
-linking most (if not all) presentations
+Anyways, I figured that this was the perfect opportunity to do some
+[“tidy text analysis”](https://www.tidytextmining.com/)! Why not extract
+the text from the reviews of others—linked in Karl’s repo—and make “my
+own” summary of the event? Plotting word frequencies and sentiments,
+while not exactly “cutting edge” compared to robust
+[NLP](https://en.wikipedia.org/wiki/Neuro-linguistic_programming)
+techniques, is perfect for getting a nice, simple overview of the
+conference. (I have applied some of the techniques described by [David
+Robinson](http://varianceexplained.org/) and [Julia
+Silge](https://juliasilge.com/blog) in their [*Tidy Text Mining with R*
+book](https://www.tidytextmining.com/) [more than
+once](/post/tidy-text-analysis-google-search-history) [in the
+past](/post/tidy-text-analysis-rweekly), but not recently, and not on
+this topic.)
 
-- [Garrick Adenbuie](https://twitter.com/grrrck)'s [Shiny app](https://apps.garrickadenbuie.com/rstudioconf-2019/)
+Moreover, after reading [Bob Rudis’s recent
+post](https://rud.is/b/2019/01/21/hrbrthemes-0-6-0-on-cran-other-in-development-package-news/)
+and discovering his work-in-progress " `{curl}` +`{httr}` + `{rvest}`"
+package called [`{reapr}`](https://git.sr.ht/~hrbrmstr/reapr), I
+realized that the work of cleaning the HTML and text for each person’s
+blog post would not be so bad. In fact, it turned out to be as easy as
+`reapr::reap_url() %>% reapr::mill()` (with only a little bit of extra
+work :smile:)!
 
-- [Brooke Watson](https://twitter.com/brookLYNevery1)'s Twitter feed (in general)
+After trying a couple of different approaches (e.g. bigrams, topic
+modeling, etc.) and experimenting with some different visualizations, I
+ended up making the two plots below. (To the interested reader, I’ve
+included all of the code at the bottom of this post.) From the second
+plot—where positive sentiment heavily outweighs negative sentiment—one
+thing is clear: the `R` community is **super supportive and positive**,
+just as Nick alluded to in his tweet.
 
+![](viz_top_n-1.png) ![](viz_sentiments-1.png)
 
-## Conference Take-Aways
+I’ve said it before and I’ll happily said it again: thanks again to
+David Robinson and Julia Silge for their great [*Tidy Text Mining with
+R* book](https://www.tidytextmining.com/) and everything else that
+they’ve done for the community! The techniques that they’ve documented
+and shared are super helpful for doing a quick exploration just like
+this.
 
-The main thing I'm taking away from my experience at the conference
-(and the [`{tidyverse}` Developer Day](https://www.tidyverse.org/articles/2018/11/tidyverse-developer-day-2019/)
-afterwards) is this:
-[the `R` community](https://community.rstudio.com/) is as 
-**passionate** and **compassionate** as it is online.
+    # Reference for adding appendix: https://yihui.name/en/2018/09/code-appendix/
+    DIR_POST <- "content/post/rstudio-conf-2019-summary"
+    PATH_SANS_EXT <- "index-to-render"
+    PATH_RMD <- file.path(DIR_POST, paste0(PATH_SANS_EXT, ".Rmd"))
+    PATH_OUTPUT <- file.path(DIR_POST, paste0(PATH_SANS_EXT, ".md"))
 
-![](https://github.com/rstudio/learning-r-survey/blob/master/plots/R%20Capabilities%20Users%20Like%20Best%20(R%20Users%20Only).pdf)
+    # PATH_R <- paste0(PATH_SANS_EXT, ".R")
+    # rmarkdown::render(knitr::spin(PATH_R, knit = FALSE))
 
-By "passionate", I mostly mean how people are driven to address
-the problems of the community---both the `R` programming community and society
-at large---via packages, teaching others, conducting projects to help
-not-for-profit organizations, etc.
+    # # Spell-checking.
+    # spelling::spell_check_files(PATH_RMD)
 
-By "compassionate", I'm referring to how friendly and considerate everyone is.
-I never had an easier time striking up conversations with strangers than I did
-at the conference! (As a natural introvert, this was a very different kind
-of thing for me.)
-I truly got the feeling that everyone was excited to hear what 
-others were working on, more so than customary "politeness"
-might call for. [^#]
+    # # Convert from Rmd to output specified in YAML.
+    # rmarkdown::render(PATH_RMD, output_file = PATH_OUTPUT, output_dir = DIR_POST, knit_root_dir = DIR_POST, intermediates_dir = DIR_POST)
+    # rmarkdown::render(PATH_RMD)
+    # rmarkdown::render(PATH_RMD, output_file = PATH_OUTPUT)
 
-[^#] While it's normal for individuals
-to patienly sit throught to what others have to say
-in organized settings such as a conference---whether it be 
-listening to a presenter or in discussions outside of presentations---from
-my experience, it's certainly **not** the case that people always actively 
-absorb what they hear.
-more so than one might be as a well-manered individual.
+    knitr::opts_knit$set(root.dir = here::here(DIR_POST))
+    knitr::opts_chunk$set(
+      echo = FALSE,
+      cache = FALSE,
+      include = FALSE,
+      fig.show = "hide",
+      fig.align = "center",
+      fig.width = 4.5,
+      fig.asp = 1.5,
+      warning = FALSE,
+      message = FALSE
+    )
+    library("tidyverse")
+    library("teplot")
+    # library("hrbrthemes")
+    # theme_set(teplot::theme_te())
+    url <- "https://github.com/kbroman/RStudioConf2019Slides/blob/master/ReadMe.md"
+    page <- url %>% reapr::reap_url()
 
-These two superlatives---passion and compassion---
-were expressed perhaps most prominently via
-the manner in which speakers who gave talks discussingw
-their own work were eager to highlight how they
-were either assisted or inspired by others.
+    nodes_p <- page$parsed_html %>%  rvest::html_nodes("p") 
+    # nodes_p %>% rev() %>% magrittr::extract(1:20)
 
+    extract_nodes_after <- function(x, pattern) {
+      stopifnot(class(x) == "xml_nodeset")
+      text <- rvest::html_text(x)
+      mask <- str_detect(text, pattern)
+      mask <- dplyr::cumany(mask)
+      x[mask]
+    }
 
-## Miscellanous Tidbits
+    nodes_blogposts <-
+      nodes_p %>%
+      extract_nodes_after("^Jacqueline Nolis")
 
-+ Speaking as one who went into industry immediately after getting
-my undergraduate degree (although now I'm working on getting my Master's
-while I work full-time), I was impressed by the "nobility" of those 
-in academia. I spoke with several current PhD students who discussed
-how their efforts to give back to the open-source community (and
-society at large) through the research projects that they are working on.
-+ This is not to say anything "bad" about industry folk. All of the industry
-people who I interacted with expressed interest in giving back to the
-community (and, if they are already doing so, doing it even more).
+    str_subset_inv <- function(string, pattern, invert = TRUE) {
+      setdiff(string, str_subset(string, pattern))
+    }
 
-+ Meetin Carl Howe @cdhowe, Jim Hester @jimhester_, Amelia McNamara @AmeliaMN,
-Dewey Dunnington @paleolimbot, Ryo Nakagaware @R_by_Ryo
+    extract_nodes_without <- function(x, pattern) {
+      stopifnot(class(x) == "xml_nodeset")
+      text <- rvest::html_text(x)
+      res <- str_subset_inv(text, pattern)
+      res
+    }
 
-+ Mara has a daily morning report, just like I run some scripts every morning
-to fetch sports data.
-+ All of the presenters that I saw were very good speakers. 
-Maybe there is some bias because R is heavily tied to academia, and more
-than a handful of speakers have teaching backgrounds (so they are
-more likely to be comfortable in front of large audiences and expressing
-their thoughts well). Even then, those without teaching backgrounds
-were so good (e.g. Joe Cheng).
-+ `{glue}` package was originally going to be named `{fstring}`
-+ For the first time, met someone who had never directly communicated with before
-who knew me from my blog. It turns out that I knew him too.
-+ Talked with the creator of the `{ggspatial}` package about some
-of the challenges he faced as a developer.
+    # nodes_blogposts %>% rvest::html_text()
+    # nodes_blogposts %>% rvest::html_nodes("a") %>% rvest::html_text()
 
-## Random Thoughts
+    links <-
+      nodes_blogposts %>% 
+      rvest::html_nodes("a") %>% 
+      rvest::html_attr("href") %>% 
+      str_subset_inv("twitter|reources")
 
-+ Got FOMO? I'll tell you something---you get the same feeling even when attending
-becasue there are so many great things to attend and people to talk to that you
-don't end up having enough time to do it all!
+    mdtext <- nodes_blogposts %>% rvest::html_text()  
+    authors <- mdtext %>% str_extract("(^[^,]+)")
+    # titles <- mdtext %>% str_replace("(^.*)\\,[\\s\\n]+(.*$)", "\\2")
 
-+ It would be really nice to have a voice that projects well :smile:. As one
-who does not have such a voice, I feel like I have to yell just to get people
-to hear me.
+    blogposts <-
+      tibble(
+        idx_blog = seq.int(1L, length(authors)),
+        author = authors,
+        link = links
+      )
+    blogposts
 
-+ Unless perhaps if you're "Twitter famous", don't forget your business cards!
+    # Exclude Nolis and Lopp due to difficulty with Medium articles.
+    # Exclude Cortina because it is an "analysis" type of article.
+    # Exclude Nantz because it is just a description of a podcast.
+    blogposts_filt <-
+      blogposts %>% 
+      filter(!str_detect(author, "Nolis|Lopp|Cortina|Nantz"))
 
-+ Coffee and churros make for a great combination!
+    blogposts_content <-
+      blogposts_filt %>% 
+      mutate(content = purrr::map(link, ~reapr::reap_url(.x) %>% reapr::mill()))
+    blogposts_content
+    # content1 <-
+    #   blogposts %>%
+    #   slice(2) %>%
+    #   pull(link) %>%
+    #   reapr::reap_url() %>%
+    #   reapr::mill()
+    # 
+    # tokens1 <-
+    #   content1 %>% 
+    #   str_split("\\n") %>% 
+    #   enframe(name = "line", value = "text") %>% 
+    #   unnest() %>% 
+    #   # Still some empty lines to remove.
+    #   filter(text != "") %>% 
+    #   # tidytext::unnest_tokens(output = "word", text)
+    #   tidytext::unnest_tokens(output = "ngram", input = text, token = "ngrams", n = 3)
+    # tokens1
+    tidy_1post <-
+      function(text) {
+        text %>%
+          str_split("\\n") %>% 
+          enframe(name = "line", value = "text") %>% 
+          unnest() %>% 
+          # Still some empty lines to remove.
+          filter(text != "") %>% 
+          # For unigrams.
+          tidytext::unnest_tokens(output = "word", input = text)
+        # For bigrams.
+          # tidytext::unnest_tokens(output = "ngram", input = text, token = "ngrams", n = 2)
+      }
+
+    posts_tokenized <-
+      blogposts_content %>%
+      select(-link) %>% 
+      mutate(tokens = purrr::map(content, tidy_1post))
+    posts_tokenized
+    tokens <-
+      posts_tokenized %>%
+      select(author, tokens) %>% 
+      unnest(tokens)
+    tokens
+
+    stopwords_base <- tidytext::get_stopwords()
+    # stopwords_base <- tidytext::get_stopwords(source = "smart")
+
+    # Remove the numbers used for ordered lists as well as html-related things
+    # (mostly from Medium posts?).
+    stopwords_custom <-
+      as.character(0:9) %>%
+      # c(
+      #   "https",
+      #   "url",
+      #   "href",
+      #   "httpstatus",
+      #   "alts",
+      #   "anchortype",
+      #   "rel",
+      #   "github.com",
+      #   "200",
+      #   "markups",
+      #   "name",
+      #   "text",
+      #   "title",
+      #   "type",
+      #   "start",
+      #   "end",
+      #   "originalwidth",
+      #   "originalheight",
+      #   "true",
+      #   "false",
+      #   "id"
+      # ) %>%
+      tibble(word = .)
+
+    stopwords <-
+      bind_rows(stopwords_base, stopwords_custom)
+
+    tokens %>%
+      count(word, sort = TRUE)
+    tokens %>%
+      anti_join(stopwords) %>% 
+      count(author, word, sort = TRUE)
+
+    # # If `ngram` is a bigram, then...
+    # tokens_filt <- 
+    #   tokens %>%
+    #   separate(ngram, into = c(paste0("word", 1:2)), remove = FALSE) %>% 
+    #   anti_join(stopwords, by = c("word1" = "word")) %>% 
+    #   anti_join(stopwords, by = c("word2" = "word"))
+    # tokens_filt
+
+    tokens_filt <- 
+      tokens %>%
+      anti_join(stopwords)
+    tokens_filt
+    theme_custom <- function() { 
+      teplot::theme_te(base_size = 12) +
+        theme(panel.grid.major.y = element_blank())
+    }
+    lab_title_suffix <- "in blog post reviews of rstudio::conf 2019."
+    lab_caption <- "By Tony ElHabr"
+
+    tokens_filt_n <-
+      tokens_filt %>% 
+      count(word, sort = TRUE)
+
+    viz_top_n <-
+      tokens_filt_n %>% 
+      top_n(20, n) %>% 
+      mutate(word = reorder(word, n)) %>%
+      ggplot(aes(x = word, y = n)) +
+      geom_col(fill = "grey50") +
+      coord_flip() +
+      theme_custom()  +
+      labs(
+        x = NULL,
+        y = "word Count",
+        title = sprintf("Most frequently used words\n%s", lab_title_suffix),
+        subtitle = "Unsuprisingly, words like `r`, `rstudio`, and `data`\nare most prominent.",
+        caption = lab_caption 
+      )
+    viz_top_n
+
+    # teproj::export_ext_png(
+    #   viz_top_n, 
+    #   # dir = DIR_POST,
+    #   units = "in",
+    #   height = 8,
+    #   width = 4.5
+    # )
+    # sentiments_bing <- tidytext::get_sentiments("bing")
+    sentiments_afinn <- tidytext::get_sentiments("afinn")
+    # Reference: http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html#Lollipop%20Chart
+    # pal2 <- c("positive" = "#00ba38", "negative" = "#f8766d")
+
+    # # If `ngram` is a bigram...
+    # tokens_filt %>%
+    #   left_join(sentiments_afinn %>% rename_all(funs(paste0(., "1")))) %>% 
+    #   left_join(sentiments_afinn %>% rename_all(funs(paste0(., "2")))) %>% 
+    #   mutate_at(vars(matches("score")), funs(coalesce(., 0L, .))) %>% 
+    #   mutate(n = score1 + score2) %>% 
+    #   top_n(20, n) %>% 
+    #   ggplot(aes(x = ngram, y = n)) + ...
+
+    viz_sentiments <-
+      tokens_filt %>%
+      # inner_join(sentiments_bing) %>% 
+      # count(word, sentiment, sort = TRUE) %>% 
+      # top_n(20, n) %>% 
+      # mutate_at(vars(word), funs(reorder(.,  n))) %>% 
+      # ggplot(aes(x = word, y = n, fill = sentiment)) +
+      inner_join(sentiments_afinn) %>% 
+      group_by(word) %>% 
+      summarise(.n = n(), .sum = sum(score)) %>% 
+      ungroup() %>% 
+      mutate(sentiment = if_else(.sum >= 0, "positive", "negative")) %>% 
+      top_n(30, abs(.sum)) %>%
+      mutate_at(vars(word), funs(reorder(.,  .sum))) %>% 
+      ggplot(aes(x = word, y = .sum, fill = sentiment)) +
+      scale_fill_manual(values = c("negative" = "grey20", "positive" = "grey70")) +
+      geom_col(show.legend = FALSE) +
+      coord_flip() +
+      theme_custom() +
+      labs(
+        x = NULL,
+        y = "AFINN polarity score",
+        title = sprintf("Words contributing most to sentiment\n%s", lab_title_suffix),
+        subtitle = "The content is MUCH more positve than negative.",
+        caption = lab_caption
+      )
+    viz_sentiments
+
+    # teproj::export_ext_png(
+    #   viz_sentiments, 
+    #   # dir = DIR_POST,
+    #   units = "in",
+    #   height = 8,
+    #   width = 4.5
+    # )
+    # stopwords_custom_topics <-
+    #   c(
+    #     "r",
+    #     "rstudio",
+    #     "data",
+    #     "science",
+    #     "conference",
+    #     "conf",
+    #     "talk",
+    #     "talks",
+    #     "2019"
+    #   ) %>%
+    #   tibble(word = .)
+    # 
+    # dtms <-
+    #   tokens_filt %>% 
+    #   anti_join(stopwords_custom_topics) %>% 
+    #   count(author, word) %>% 
+    #   tidytext::cast_dfm(author, word, n)
+    # 
+    # topics <- dtms %>% stm::stm(K = 4, verbose = FALSE, init.type = "Spectral")
+    # topics
+    # topics_betas <- topics %>% broom::tidy()
+    # topics_betas %>% 
+    #   group_by(topic) %>%
+    #   top_n(2, beta) %>% 
+    #   arrange(desc(beta)) %>% 
+    #   head(30)
+    # 
+    # topics_betas_top_n <-
+    #   topics_betas %>%
+    #   group_by(topic) %>% 
+    #   top_n(100, beta)
+    # topics_betas_top_n %>% 
+    #   spread(topic, beta) %>% 
+    #   filter_all(all_vars(!is.na(.)))
+    # 
+    # viz_topics <-
+    #   topics_betas %>%
+    #   group_by(topic) %>%
+    #   top_n(10, beta) %>%
+    #   ungroup() %>%
+    #   mutate(
+    #     topic = paste0("Topic ", topic),
+    #     term = tidytext::reorder_within(term, beta, topic)
+    #   ) %>%
+    #   ggplot(aes(term, beta, fill = as.factor(topic))) +
+    #   geom_col(show.legend = FALSE) +
+    #   facet_wrap(~ topic, scales = "free_y") +
+    #   coord_flip() +
+    #   tidytext::scale_x_reordered() +
+    #   theme_custom() +
+    #   theme(axis.text.x = element_blank()) +
+    #   labs(
+    #     x = NULL,
+    #     y = "Beta probability of ngram belonging to topic",
+    #     title = sprintf("Major \"latent\" topics and associated words discussed\n%s", lab_title_suffix),
+    #     subtitle = "Although the topics themselves aren't clear, it's clear that\n`shiny`, `production`, `community`, and `packages` were major focal points.",
+    #     caption = lab_caption
+    #   )
+    # viz_topics
+    # Just to help myself out... DEFINITELY NOT a "best practice".
+    DIR_VIZ <- file.path(DIR_POST, "index-to-render_files", "figure-markdown_strict")
+    ..file_copy <-
+      function(file_from,
+               file_to = file_from,
+               dir_from = DIR_VIZ,
+               dir_to = DIR_POST) {
+        invisible(file.copy(
+          from = file.path(dir_from, file_from),
+          to = file.path(dir_to, file_to),
+          overwrite = TRUE
+        ))
+      }
+    .file_copy <- function(file_from, ...) {
+      ..file_copy(file_from = file_from, ...)
+    }
+    .file_copy_rename <-
+      function(file_from, file_to = "featured.jpg", dir_from = DIR_POST, ...) {
+        ..file_copy(file_from = file_from, file_to = file_to, dir_from = dir_from, ...)
+      }
+    .file_copy("viz_top_n-1.png")
+    .file_copy("viz_sentiments-1.png")
+    .file_copy_rename("viz_sentiments-1.png")
