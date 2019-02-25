@@ -1,11 +1,5 @@
 
-library("base")
-library("methods")
-library("datasets")
-library("utils")
-library("grDevices")
-library("graphics")
-library("stats")
+base::.First.sys()
 
 path_r_profile <- "~/.Rprofile"
 if(file.exists(path_r_profile)) {

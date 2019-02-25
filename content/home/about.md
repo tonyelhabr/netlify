@@ -28,7 +28,7 @@ weight = 1
  
 +++
 
-I work full-time as an Market Operations (Electricity) Engineer at
+I work full-time as an Operations Engineer (Grid Analysis) at
 [Electric Reliability Council of Texas (ERCOT)](http://www.ercot.com),
 the independent system operator (ISO) for the Texas Bulk Electric System (BES).
 I completed my undergraduate education 
