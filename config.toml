@@ -367,8 +367,8 @@ enableGitInfo = false
 
 # Note: Added this.
 [[menu.main]]
-  name = "RBloggers"
-  url = "#rbloggers"
+  name = "External Links"
+  url = "#links"
   weight = 10
 
 # Search.
