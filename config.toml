@@ -62,14 +62,14 @@ enableGitInfo = false
 
   # Your details.
   name = "Tony ElHabr"
-  role = "Market Operations (Electricity) Engineer, ERCOT; Student, Georgia Tech"
+  role = "Operations Engineer (Grid Analysis), ERCOT; Student, Georgia Tech"
 
   # Organizations/Affiliations.
   #   Separate multiple entries with a comma, using the form: `[ {name="Org1", url=""}, {name="Org2", url=""} ]`.
   organizations = [ {name="ERCOT", url="http://www.ercot.com/" }, {name="Georgia Institute of Technology", url="https://www.gatech.edu/"}]
 
   gravatar = false  # Get your avatar from Gravatar.com? (true/false)
-  avatar = "tony-profile.png"  # Specify an avatar image (in `static/img/` folder) or delete value to disable avatar.
+  avatar = "tony-tidydevday-2.jpg"  # Specify an avatar image (in `static/img/` folder) or delete value to disable avatar.
 
   # Details for the Contact Widget
   email = "anthonyelhabr@gmail.com"
@@ -120,7 +120,7 @@ enableGitInfo = false
   description = ""
 
   # Default image for social sharing and search engines. Place image in `static/img/` folder and specify image name here.
-  sharing_image = "tony-profile.png"
+  sharing_image = "tony-tidydevday-2.jpg"
 
   # Twitter username (without @). Used when a vistor shares your site on Twitter.
   twitter = "TonyElHabr"
