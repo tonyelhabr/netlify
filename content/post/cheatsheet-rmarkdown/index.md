@@ -1,7 +1,7 @@
 ---
 title: Making a Cheat sheet with Rmarkdown
 date: "2019-07-07"
-draft = true
+draft: true
 categories:
   - r
 tags:
