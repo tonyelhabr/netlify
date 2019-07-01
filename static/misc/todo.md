@@ -1,8 +1,8 @@
 
 # Posts to create
 
-- List of R-bloggers/links to follow/subscribe to. (Use "Miscellaneous" page from old website.)
-- Emulation of ERCOT LMP countour map.
+[ ] List of R-bloggers/links to follow/subscribe to. (Use "Miscellaneous" page from old website.)
+[x] Emulation of ERCOT LMP countour map.
     - Part 1: One map. Discuss sources. (Follow succint format demonstrated by
     https://nsaunders.wordpress.com/2018/11/28/extracting-data-from-news-articles-australian-pollution-by-postcode/.)
     Suggest that it would be cool to emulate other people's cool things as a blog post "series".
@@ -13,7 +13,7 @@
             - https://www.maths.lancs.ac.uk/~rowlings/Teaching/UseR2012/cheatsheet.html
     - Part 2: Compare maps.
 
-- NBA RAPM:
+[ ] NBA RAPM:
     - Part 1: Discuss results.
         - References:
             - https://github.com/EvanZ/nba-rapm.
@@ -26,9 +26,9 @@
         - References:
             - https://blog.sellorm.com/2017/12/30/command-line-utilities-in-r-pt-6/
     to create command line utilities easily.
-- Summary of `rconf2018`.
-- sports-predict project.
-- twitterbot project.
+[x] Summary of `rconf2018`.
+[ ] sports-predict project.
+[ ] twitterbot project.
     - References
         - https://github.com/mkearney/cspan_data.
         - https://github.com/RMHogervorst/tweetwikidatadeaths

@@ -18,6 +18,7 @@ header:
   image: "featured.jpg"
 ---
 
+***UPDATE: This post was updated on 2019-06-30.***
 
 I love podcasts. I would estimate that I listen to between 1 to 6 (yes,
 6 <f0><U+009F><U+0098><U+00B1>) per day. Consequently, I have opinions
@@ -134,6 +135,11 @@ topic that Kyle is presenting.
 [DataFramed](https://www.datacamp.com/community/podcast)
 --------------------------------------------------------
 
+***UPDATE: Note that this podcast seems to have been discontinued
+amidst the [DataCamp scandal](https://www.buzzfeednews.com/article/daveyalba/datacamp-sexual-harassment-metoo-tech-startup)
+and [fallout](https://noamross.github.io/datacamp-sexual-assault/)
+in April 2019.***
+
 ![](dataframed.png)
 
 -   **Personal Rating:** 0.4 [Euclidean
@@ -178,13 +184,35 @@ whatever he can. While I can't stand the cheesy video-game music that he
 uses for transitions, I suffer through it because it somehow symbolizes
 his "average-Joe-just-trying-to-do-his-best" complex to me.
 
+[Python Bytes](https://pythonbytes.fm/)
+------------------------------------
+
+![](oythonbytes.png)
+
+-   **Personal Rating:** 0.81 [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance)
+-   **Average Episode Length:** 20 min.
+-   **Publishing Frequency:** Once per week
+
+In this weekly podcast, co-hosts [Michael Kennedy](https://blog.michaelckennedy.net/)
+and [Brian Okken](http://pythontesting.net/) provide listeners with about
+set of "quick hits", usually covering recent news in the `python` ecosphere.
+Even though I don't use `python` as much as I do `R`, I want to be able
+to stay connected to both communities. Understanding what's going on in
+the `python` community can provide some insight into the `rstats` community.
+(For example, if package development and maintenance has become a hot topic
+amongst `python` developers, those discussion might spill over to the `R`
+developer community.) Additionally, if I do need to spend lots of time
+doing a `python` project, I want to feel confident that I'm up-to-date
+on current `python` best practices.
+
+
 Others Worth Mentioning
 -----------------------
 
 These other podcasts are ones that I have tried out, but don't really
 listen to on a consistent basis.
 
--   Partially Derivative
+-   [Partially Derivative](http://partiallyderivative.com/)
 
 Similar to [Not So Standard Deviations](http://nssdeviations.com/) in
 style (i.e. ranges from casual conversation to serious discussion of
@@ -199,13 +227,11 @@ make it difficult to follow. Nonetheless, high quality content.
 
 -   [Talk Python To Me](https://talkpython.fm/)
 
-Definitely a good show for `python` enthusiasts. I binged a ton of
+Definitely a good show for `python` enthusiasts. [^1] I binged a ton of
 episodes when I was picking up `python`. However, ever since I've
 started using `R` as my main language, I've put this one on the
 back-burner.
-
--   [O'Reilly Data Show
-    Podcast](https://www.oreilly.com/topics/oreilly-data-show-podcast)
+-   [O'Reilly Data Show Podcast](https://www.oreilly.com/topics/oreilly-data-show-podcast)
 
 Episodes consist mostly of interviews with industry guests. Seems to be
 more focused on "big data" and enterprise applications. Not super
@@ -215,3 +241,7 @@ engaging for me simply because it is nearly all business talk.
 
 Focused more so on data visualization than any of the other podcasts.
 Guest-oriented. Provides a TED-talk kind of vibe.
+
+--------------------------------------------------------------------------------
+
+[^1]: This podcast is hosted by [Michael Kennedy](https://blog.michaelckennedy.net/), so if you enjoy [Python Bytes](https://pythonbytes.fm/), then you'll probably like this one too.

@@ -19,6 +19,9 @@ header:
   image: "featured.jpg"
 ---
 
+
+***UPDATE: The data retrieval demonstrated in this post no longer seems to work due to a change in the ESPN'S "secret" API. In any matter, the techniques for working with JSON data are still valid.***
+
 In this “how-to” post, I want to detail an approach that others may find
 useful for converting nested (nasty!) json to a
 [tidy](http://r4ds.had.co.nz/tidy-data.html) (nice!)
