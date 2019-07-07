@@ -73,7 +73,7 @@ Using the template from
 [this Stack Overflow post](https://tex.stackexchange.com/questions/8827/preparing-cheat-sheets) [^6] as a basis, I ended
 up creating a relatively minimal template.
 For the curious reader, see [this GitHub repo](https://github.com/tonyelhabr/cheat-sheet-rmarkdown),
-for the latest version of my template. It also includes an example cheat sheet.
+for the latest version of [my template](https://github.com/tonyelhabr/cheat-sheet-rmarkdown/blob/master/template.tex). It also includes an [example cheat sheet](https://github.com/tonyelhabr/cheat-sheet-rmarkdown/blob/master/cheat-sheet-example.Rmd).
 
 ![](cheat-sheet-example.png)
 
@@ -83,13 +83,14 @@ The "gist" of my template is shown below.
 
 ```
 % Packages and preamble
-[...]
+% ...
 
 \begin{document}
 
 \begin{multicols*}{4}
 
 $body$
+
 \end{multicols*}
 
 \end{document}
@@ -197,7 +198,7 @@ multi-line equations.
 ![A multi-line equation preview](preview-multi-line-equation.png)
 
 
-## What Works for Me May Not Work For You
+##What Works for Me May Not Work For You
 
 Although what I've described in this post has been working well for me---and
 I'd encourage others to try it out---I don't claim it
