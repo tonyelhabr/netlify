@@ -1,7 +1,6 @@
 ---
 title: Making a Cheat Sheet with Rmarkdown
 date: "2019-07-07"
-draft: true
 categories:
   - r
 tags:
