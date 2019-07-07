@@ -16,6 +16,10 @@ header:
   image: "featured.jpg"
 ---
 
+UPDATE (2019-07-07): Check out [this `{usethis}` article](https://usethis.r-lib.org/articles/articles/pr-functions.html) 
+for a more automated way of doing a pull request.
+
+
 To be honest, I planned on writing a review of this past weekend’s
 [rstudio::conf 2019](https://resources.rstudio.com/rstudio-conf-2019),
 but several other people have already done a great job of doing
@@ -33,7 +37,7 @@ Anyways, I figured that this was the perfect opportunity to do some
 the text from the reviews of others—linked in Karl’s repo—and make “my
 own” summary of the event? Plotting word frequencies and sentiments,
 while not exactly “cutting edge” compared to robust
-[NLP](https://en.wikipedia.org/wiki/Neuro-linguistic_programming)
+[natural language processing](https://en.wikipedia.org/wiki/Natural_language_processing)
 techniques, is perfect for getting a nice, simple overview of the
 conference. (I have applied some of the techniques described by [David
 Robinson](http://varianceexplained.org/) and [Julia
