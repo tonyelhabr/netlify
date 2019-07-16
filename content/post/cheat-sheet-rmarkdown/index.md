@@ -123,8 +123,7 @@ So, exactly how do you use a custom template with `{rmarkdown}`?
 It's as simple as specifying the path to your template file with the `template`
 option in the YAML header of your Rmarkdown document. [^9]
 
-[^9]: You can specify other options as well, such as `keep_latex: true`
-o  an alternative LaTex engine with `latex_engine`.
+[^9]: You can specify other options as well, such as `keep_latex: true` for an alternative LaTex engine with `latex_engine`.
 
 
 ```
@@ -197,7 +196,7 @@ multi-line equations.
 ![A multi-line equation preview](preview-multi-line-equation.png)
 
 
-##What Works for Me May Not Work For You
+## What Works for Me May Not Work For You
 
 Although what I've described in this post has been working well for me---and
 I'd encourage others to try it out---I don't claim it
