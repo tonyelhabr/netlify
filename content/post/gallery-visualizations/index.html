@@ -1,0 +1,235 @@
+---
+title: Generating a Gallery of Visualizations for a Static Website (using R)
+date: "2019-07-20"
+draft: true
+categories:
+  - r
+tags:
+  - r
+  - blogdown
+  - portfolio
+image:
+  caption: ""
+  focal_point: ""
+  preview_only: true
+header:
+  caption: ""
+  image: "featured.jpg"
+---
+
+
+
+<p>While I was browsing <a href="https://ryo-n7.github.io/">Ryo Nakagawara’s blog</a>—one
+of my favorite R bloggers, by the way—I
+was intrigued by his <a href="https://ryo-n7.github.io/visualizations/">“Visualizations” page</a>.
+The concept of creating an online “portfolio” is not novel <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, but
+I hadn’t thought to make one as a compilation of my own work (from blog posts). <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<p>With this idea in mind, I realized that it wouldn’t be hard to generate
+such a page by using <code>R</code> to navigate files in my local blog folder.
+The code that follows shows how I generated the
+<a href="/project/blog-gallery/">body of my visualization portfolio page</a>.</p>
+<p>A couple of caveats/notes for anyone looking to emulate my approach:</p>
+<ul>
+<li><p>I take advantage of the fact that I use the same prefix for (almost) all
+visualization that I generate with R—<code>viz_</code>—<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>, as well as the same file
+format—.png.</p></li>
+<li><p>At the time of writing, my website—a <a href="https://bookdown.org/yihui/blogdown/"><code>{blogdown}</code></a>-based
+website—uses <a href="https://gohugo.io/content-management/page-bundles/">Hugo’s page bundles</a>
+content organization system,
+combined with the ever popular <a href="https://sourcethemes.com/academic/">Academic theme for Hugo</a>.
+Thus, there’s no guarantee that the following code will work for you “as is”. <a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>
+(If it doesn’t work as is, I think modifying the code should be fairly straightforward.)</p></li>
+<li><p>I create headers and links from the titles of the blog posts
+(via something like <code>sprintf('## %s, [%s](%s)', ...)</code> and I order everything according
+to descending date and ascending line in the post.
+This may not be what you would like for your gallery format.</p></li>
+</ul>
+<div id="the-code" class="section level2">
+<h2>The Code</h2>
+<pre class="r"><code>library(tidyverse)
+
+paths_post_raw &lt;-
+  fs::dir_ls(
+    &#39;content/post/&#39;,
+    regexp = &#39;index[.]md$&#39;,
+    recurse = TRUE
+  ) %&gt;% 
+  # Ignore the &quot;_index.md&quot; at the base of the content/post directory.
+  # Would need to also ignore draft posts if there are draft posts.
+  str_subset(&#39;_index&#39;, negate = TRUE)
+paths_post_raw[1:10]</code></pre>
+<pre><code>##  [1] &quot;content/post/analysis-texas-high-school-academics-1-intro/index.md&quot;        
+##  [2] &quot;content/post/analysis-texas-high-school-academics-2-competitions/index.md&quot; 
+##  [3] &quot;content/post/analysis-texas-high-school-academics-3-individuals/index.md&quot;  
+##  [4] &quot;content/post/analysis-texas-high-school-academics-4-schools/index.md&quot;      
+##  [5] &quot;content/post/analysis-texas-high-school-academics-5-miscellaneous/index.md&quot;
+##  [6] &quot;content/post/cheat-sheet-rmarkdown/index.md&quot;                               
+##  [7] &quot;content/post/data-science-podcasts/index.md&quot;                               
+##  [8] &quot;content/post/dry-principle-make-a-package/index.md&quot;                        
+##  [9] &quot;content/post/gallery-visualizations/old/index.md&quot;                          
+## [10] &quot;content/post/interval-data-nycflights13/index.md&quot;</code></pre>
+<pre class="r"><code># Define some important regular expressions (or &quot;regex&quot;es).
+# These regexes are probably applicable to most Hugo/blogdown setups.
+rgx_replace &lt;- &#39;(content\\/post\\/)(.*)(\\/)(.*)([.]png$)&#39;
+rgx_title &lt;- &#39;^title[:]\\s+&#39;
+rgx_date &lt;- &#39;date[:]\\s+&#39;
+
+# This regex is particular to the way that I name and save my ggplots.
+rgx_viz &lt;- &#39;(^[!][\\[][\\]].*)(viz.*png)(.*$)&#39;</code></pre>
+<pre class="r"><code># Define a helper function for a common idiom that we will implement for extracting the ines of markdown that we 
+# want---those containing the title, data, and visualization---and  trimming them just to the text that we want
+# (i.e. removing &quot;title:&quot; and &quot;date:&quot; preceding the title and date in the YAML/TOML header, and
+# removing the &quot;![]&quot; preceding an image).
+str_pluck &lt;- function(x, pattern, replacement = &#39;&#39;) {
+  x %&gt;% 
+    str_subset(pattern) %&gt;% 
+    str_replace_all(pattern = pattern, replacement = replacement) %&gt;% 
+    str_trim()
+}
+str_pluck_title &lt;- purrr::partial(str_pluck, pattern = rgx_title)
+str_pluck_date &lt;- purrr::partial(str_pluck, pattern = rgx_date)
+str_pluck_viz &lt;- purrr::partial(str_pluck, pattern = rgx_viz, replacement = &#39;\\2&#39;)
+
+# Extract the title, date, and visualizations from each post.
+# Note that there should be only one title and date pers post, but there are likely more than one visualization per post.
+paths_post &lt;-
+  paths_post_raw %&gt;% 
+  as.character() %&gt;% 
+  tibble(path_post = .) %&gt;% 
+  mutate(
+    lines = path_post %&gt;% purrr::map(read_lines)
+  ) %&gt;% 
+  mutate_at(vars(path_post), ~str_remove_all(., &#39;content|\\/index[.]md&#39;)) %&gt;% 
+  mutate_at(
+    vars(lines),
+    list(
+      title = ~purrr::map_chr(., str_pluck_title),
+      date = ~purrr::map_chr(., str_pluck_date) %&gt;% lubridate::ymd(),
+      viz = ~purrr::map(., str_pluck_viz)
+    )
+  ) %&gt;% 
+  # viz` is a list item (because there may be more than one per post), so we need to `unnest()` it to return a &quot;tidy&quot; data frame.
+  unnest(viz) %&gt;% 
+  select(date, viz, title, path_post)
+paths_post</code></pre>
+<pre><code>## # A tibble: 71 x 4
+##    date       viz             title                   path_post            
+##    &lt;date&gt;     &lt;chr&gt;           &lt;chr&gt;                   &lt;chr&gt;                
+##  1 2018-05-20 viz_map_bycomp~ An Analysis of Texas H~ /post/analysis-texas~
+##  2 2018-05-20 viz_map_bycomp~ An Analysis of Texas H~ /post/analysis-texas~
+##  3 2018-05-20 viz_n_bycomplv~ An Analysis of Texas H~ /post/analysis-texas~
+##  4 2018-05-20 viz_n_bycomp-1~ An Analysis of Texas H~ /post/analysis-texas~
+##  5 2018-05-20 viz_n_bycompco~ An Analysis of Texas H~ /post/analysis-texas~
+##  6 2018-05-20 viz_n_bycompco~ An Analysis of Texas H~ /post/analysis-texas~
+##  7 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
+##  8 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
+##  9 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
+## 10 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
+## # ... with 61 more rows</code></pre>
+<pre class="r"><code># Create the markdown lines for images (visualizations) for our gallery markdown output.
+paths_post_md &lt;-
+  paths_post %&gt;% 
+  mutate(
+    label_md = sprintf(&#39;![%s](%s/%s)&#39;, viz, path_post, viz)
+  ) %&gt;% 
+  select(title, date, path_post, label_md)
+paths_post_md</code></pre>
+<pre><code>## # A tibble: 71 x 4
+##    title               date       path_post           label_md             
+##    &lt;chr&gt;               &lt;date&gt;     &lt;chr&gt;               &lt;chr&gt;                
+##  1 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_map_bycomplvl_~
+##  2 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_map_bycomplvl_~
+##  3 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycomplvl-1.~
+##  4 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycomp-1.png~
+##  5 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycompcomplv~
+##  6 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycompcomplv~
+##  7 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
+##  8 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
+##  9 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
+## 10 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
+## # ... with 61 more rows</code></pre>
+<pre class="r"><code># Create the &quot;main&quot; data frame with the titles and dates in columns alongside the image column.
+# In &quot;tidy data&quot; terminology, images are the &quot;observations&quot; *and `title` and `date` are separate variables).
+content_gallery_raw &lt;-
+  paths_post_md %&gt;%
+  group_by(title, date, path_post) %&gt;%
+  # Add a &quot;placeholder&quot; line for the title of the post.
+  do(add_row(., .before = 0)) %&gt;% 
+  ungroup() %&gt;% 
+  # In the first case, create the H2 markkdown heading line for the name of the post.
+  # In the second case, use the image markdown line created above.
+  mutate_at(
+    vars(label_md),
+    ~case_when(
+      is.na(.) ~ sprintf(&#39;## %s, [%s](%s)&#39;, dplyr::lead(date), dplyr::lead(title), dplyr::lead(path_post)),
+      TRUE ~ .
+    )
+  ) %&gt;% 
+  # Impute the `title` and `date` values to go with the image values.
+  fill(title, .direction = &#39;up&#39;) %&gt;% 
+  fill(date, .direction = &#39;up&#39;) %&gt;% 
+  arrange(date) %&gt;% 
+  # Number the posts in order of descending date.
+  mutate(idx_intragrp = dense_rank(sprintf(&#39;%s, %s&#39;, date, title))) %&gt;%
+  group_by(title, date) %&gt;% 
+  # Number the images within each post. (This isn&#39;t completely necessary. It&#39;s only used for sorting.)
+  mutate(idx_intergrp = row_number()) %&gt;% 
+  ungroup() %&gt;% 
+  select(idx_intragrp, idx_intergrp, date, label_md) %&gt;% 
+  arrange(desc(idx_intragrp), idx_intergrp)
+content_gallery_raw</code></pre>
+<pre><code>## # A tibble: 90 x 4
+##    idx_intragrp idx_intergrp date       label_md                           
+##           &lt;int&gt;        &lt;int&gt; &lt;date&gt;     &lt;chr&gt;                              
+##  1           19            1 2019-06-29 ## 2019-06-29, [Text Parsing and T~
+##  2           19            2 2019-06-29 ![viz_toc_n_1yr_tree.png](/post/te~
+##  3           19            3 2019-06-29 ![viz_content_section_n.png](/post~
+##  4           19            4 2019-06-29 ![viz_toc_content_n1.png](/post/te~
+##  5           19            5 2019-06-29 ![viz_sents_section_n.png](/post/t~
+##  6           19            6 2019-06-29 ![viz_sents_section_n_yr.png](/pos~
+##  7           19            7 2019-06-29 ![viz_sents_section_sim.png](/post~
+##  8           19            8 2019-06-29 ![viz_words_section_tfidf.png](/po~
+##  9           19            9 2019-06-29 ![viz_words_tfidf.png](/post/text-~
+## 10           18            1 2019-01-27 ## 2019-01-27, [Summarizing rstudi~
+## # ... with 80 more rows</code></pre>
+<pre class="r"><code># Create the final markdown output.
+content_gallery &lt;-
+  content_gallery_raw %&gt;% 
+  select(label_md) %&gt;% 
+  mutate(idx = row_number()) %&gt;% 
+  # Add a blank line between the end of one section&#39;s last image
+  # and the next sections H2 header.
+  group_by(idx) %&gt;% 
+  do(add_row(., label_md = &#39;&#39;, .before = 0)) %&gt;% 
+  ungroup()
+content_gallery</code></pre>
+<pre><code>## # A tibble: 180 x 2
+##    label_md                                                             idx
+##    &lt;chr&gt;                                                              &lt;int&gt;
+##  1 &quot;&quot;                                                                    NA
+##  2 ## 2019-06-29, [Text Parsing and Text Analysis of a Periodic Repo~     1
+##  3 &quot;&quot;                                                                    NA
+##  4 ![viz_toc_n_1yr_tree.png](/post/text-parsing-analysis-periodic-re~     2
+##  5 &quot;&quot;                                                                    NA
+##  6 ![viz_content_section_n.png](/post/text-parsing-analysis-periodic~     3
+##  7 &quot;&quot;                                                                    NA
+##  8 ![viz_toc_content_n1.png](/post/text-parsing-analysis-periodic-re~     4
+##  9 &quot;&quot;                                                                    NA
+## 10 ![viz_sents_section_n.png](/post/text-parsing-analysis-periodic-r~     5
+## # ... with 170 more rows</code></pre>
+<pre class="r"><code>content_copypaste &lt;- content_gallery %&gt;% pull(label_md)
+
+# Copy paste this to the markdown file for the gallery page.
+# It&#39;s probably possible to do this a bit more programmatically (i.e. without
+# &quot;manually&quot; copying into a markdown file, but oh well
+clipr::write_clip(content_copypaste)</code></pre>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>in fact, many people dedicate website’s exclusively to showing off work that they’ve done.<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>in fact, many people dedicate website’s exclusively to showing off work that they’ve done.<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>I apologize if I’ve offended English speakers/readers who use/prefer “s” to “z” (for “viz”). I’m American, and nearly all Americans use “z”!<a href="#fnref3" class="footnote-back">↩</a></p></li>
+<li id="fn4"><p>Because Hugo websites follow a standard structure, I really don’t think that the choice of theme shouldn’t be the reason why this wouldn’t work for someone else’s website, but I figured I would mention the theme.<a href="#fnref4" class="footnote-back">↩</a></p></li>
+</ol>
+</div>

@@ -1,10 +1,10 @@
 +++
 # Date this page was created.
 date = 2019-06-30T00:00:00
-draft = true
+draft = false
 
 # Project title.
-title = "Blog Gallery"
+title = "Gallery of Visualizations"
 
 # Project summary to display on homepage.
 summary = "A gallery of plots created for blog posts."
@@ -46,6 +46,7 @@ url_code = ""
 +++
 
 This page links to most (if not all) of the plots I've created for blog posts.
+(High quality resolution is not guaranteed :smile:.)
 
 ## 2019-06-29, [Text Parsing and Text Analysis of a Periodic Report (with R)](/post/text-parsing-analysis-periodic-report)
 
