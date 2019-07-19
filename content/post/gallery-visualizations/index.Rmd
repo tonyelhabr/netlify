@@ -21,7 +21,7 @@ While I was browsing [Ryo Nakagawara's blog](https://ryo-n7.github.io/)---one
 of my favorite R bloggers, by the way---I 
 was intrigued by his ["Visualizations" page](https://ryo-n7.github.io/visualizations/).
 The concept of creating an online "portfolio" is not novel [^1], but
-I hadn't thought to make one as a compilation of my own work (from blog posts). [^1]
+I hadn't thought to make one as a compilation of my own work (from blog posts). [^2]
 
 [^1]: in fact, many people dedicate website's exclusively to showing off work that they've done.
 
