@@ -1,8 +1,7 @@
-
 html {
   font-family: 'Roboto', sans-serif;
   font-size: 14px;
-  color: rgba(0,0,0,0.8);
+  color: rgba(0, 0, 0, 0.8);
   line-height: 1.65;
 }
 
@@ -19,7 +18,7 @@ html {
 
 table {
   width: 0%;
-  margin-left: auto; 
+  margin-left: auto;
   margin-right: auto;
 }
 
@@ -40,10 +39,9 @@ table > tbody > tr > td {
 }
 
 .media.stream-item .article-style {
-    margin-top: 2px;
-    font-size: 1rem;
+  margin-top: 2px;
+  font-size: 1rem;
 }
-
 
 /*
 Default highlight.js is dracula.
@@ -55,6 +53,7 @@ Colors described below (and in data/themes/custom.toml) are the colors used in t
 4: green: #50fa7b; rgb(80, 250, 123); hsl(135, 94%, 65%)
 5: yellow: #f1fa8c; rgb(241, 250, 140); hsl(65, 92%, 76%)
 6: dark blue: #6272a4; rgb(98, 114, 164); hsl(225, 27%, 51%)
+  dark blue: #6272a4; rgb(98, 114, 300); hsl(225, 27%, 51%)
 7: purple: #bd93f9; rgb(189, 147, 249); hsl(265, 89%, 78%)
 */
 
@@ -65,9 +64,13 @@ Colors described below (and in data/themes/custom.toml) are the colors used in t
   white-space: pre-wrap;
 }
 
-
-.hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta {
-  /*color: rgb(247, 100, 151)*/ /*pink*/
-  /*color: rgb(189, 147, 249);*/ /*purple*/
-  color: rgb(80, 250, 123); /*green*/
+.hljs-comment,
+.hljs-quote,
+.hljs-deletion,
+.hljs-meta {
+  color: rgb(247, 100, 151); /*3*/
+  /*color: rgb(189, 147, 249);*/ /*7*/
+  /*color: rgb(80, 250, 123);*/ /*4*/
+  /*color: rgb(98, 114, 164);*/ /*6*/
+  /*color: rgb(248, 248, 242);*/ /*3*/
 }

@@ -1,7 +1,6 @@
 ---
 title: Generating a Gallery of Visualizations for a Static Website (using R)
 date: "2019-07-20"
-draft: true
 categories:
   - r
 tags:
@@ -19,16 +18,20 @@ header:
 
 
 
-<p>While I was browsing <a href="https://ryo-n7.github.io/">Ryo Nakagawara’s blog</a>—one
-of my favorite R bloggers, by the way—I
+<p>While I was browsing <a href="https://ryo-n7.github.io/">the website of fellow <code>R</code> blogger Ryo Nakagawara</a><a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, I
 was intrigued by his <a href="https://ryo-n7.github.io/visualizations/">“Visualizations” page</a>.
-The concept of creating an online “portfolio” is not novel <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, but
-I hadn’t thought to make one as a compilation of my own work (from blog posts). <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
-<p>With this idea in mind, I realized that it wouldn’t be hard to generate
-such a page by using <code>R</code> to navigate files in my local blog folder.
-The code that follows shows how I generated the
-<a href="/project/blog-gallery/">body of my visualization portfolio page</a>.</p>
-<p>A couple of caveats/notes for anyone looking to emulate my approach:</p>
+The concept of creating an online “portfolio” is not novel <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, but
+I hadn’t thought to make one as a compilation of my own work (from blog posts)…
+until now :smile:.</p>
+<p>The code that follows shows how I generated the
+<a href="/project/blog-gallery/">body of my visualization portfolio page</a>.
+The task is achieved in a couple of steps.</p>
+<ol style="list-style-type: decimal">
+<li><p>Identify the file path of each blog post in my local blog folder</p></li>
+<li><p>For each post, extract the date and title of the blog post from the front matter, as well as the name and links to the image files.</p></li>
+<li><p>Combine the extracted information into a character vector that can be copy-pasted to a gallery page.</p></li>
+</ol>
+<p>I should state a couple of caveats/notes for anyone looking to emulate my approach.</p>
 <ul>
 <li><p>I take advantage of the fact that I use the same prefix for (almost) all
 visualization that I generate with R—<code>viz_</code>—<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>, as well as the same file
@@ -36,7 +39,7 @@ format—.png.</p></li>
 <li><p>At the time of writing, my website—a <a href="https://bookdown.org/yihui/blogdown/"><code>{blogdown}</code></a>-based
 website—uses <a href="https://gohugo.io/content-management/page-bundles/">Hugo’s page bundles</a>
 content organization system,
-combined with the ever popular <a href="https://sourcethemes.com/academic/">Academic theme for Hugo</a>.
+as well as the with the popular <a href="https://sourcethemes.com/academic/">Academic theme for Hugo</a>.
 Thus, there’s no guarantee that the following code will work for you “as is”. <a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>
 (If it doesn’t work as is, I think modifying the code should be fairly straightforward.)</p></li>
 <li><p>I create headers and links from the titles of the blog posts
@@ -227,8 +230,8 @@ clipr::write_clip(content_copypaste)</code></pre>
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p>in fact, many people dedicate website’s exclusively to showing off work that they’ve done.<a href="#fnref1" class="footnote-back">↩</a></p></li>
-<li id="fn2"><p>By the way, there is a great R gallery website out there literally called <a href="https://www.r-graph-gallery.com/">“The R Graph Gallery”</a>.<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn1"><p>one of my favorite <code>R</code> bloggers, by the way<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>in fact, many people dedicate website’s exclusively to showing off work that they’ve done.<a href="#fnref2" class="footnote-back">↩</a></p></li>
 <li id="fn3"><p>I apologize if I’ve offended English speakers/readers who use/prefer “s” to “z” (for “viz”). I’m American, and nearly all Americans use “z”!<a href="#fnref3" class="footnote-back">↩</a></p></li>
 <li id="fn4"><p>Because Hugo websites follow a standard structure, I really don’t think that the choice of theme shouldn’t be the reason why this wouldn’t work for someone else’s website, but I figured I would mention the theme.<a href="#fnref4" class="footnote-back">↩</a></p></li>
 </ol>

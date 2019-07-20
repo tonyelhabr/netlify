@@ -5,7 +5,7 @@
 #   Choose from `default`, `ocean`, `forest`, `dark`, `apogee`, `1950s`, `coffee`, `rose`, `strawberry`, `mr_robot`.
 color_theme = "custom" # "mr_robot" # "default"
 # Enable users to switch between day and night mode?
-day_night = true
+day_night = true # false # true
 
 # Font style.
 #   Choose from `default`, `classic`, `rose`, or `mr_robot`.
@@ -99,7 +99,7 @@ contact_links = [
 #   1: Google Maps
 #   2: OpenStreetMap (Mapnik)
 #   3: OpenStreetMap (Mapbox)
-map = 2 # 0 # 2
+map = 0 # 1 # 0 # 2
 map_api_key = ""
 latitude = "30.5083" # "37.4275"
 longitude = "97.6789" # "-122.1697"

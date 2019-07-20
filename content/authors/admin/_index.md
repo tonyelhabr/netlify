@@ -20,7 +20,6 @@ name: Tony ElHabr
 organizations:
 - name: ERCOT
   url: "http://www.ercot.com/"
-organization:
 - name: Georgia Institute of Technology
   url: "https://www.gatech.edu/"
 role: Operations Engineer (Grid Analysis), ERCOT; Student, Georgia Tech

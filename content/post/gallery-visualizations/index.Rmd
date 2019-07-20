@@ -1,7 +1,6 @@
 ---
 title: Generating a Gallery of Visualizations for a Static Website (using R)
 date: "2019-07-20"
-draft: true
 categories:
   - r
 tags:
@@ -17,22 +16,27 @@ header:
   image: "featured.jpg"
 ---
 
-While I was browsing [Ryo Nakagawara's blog](https://ryo-n7.github.io/)---one 
-of my favorite R bloggers, by the way---I 
+While I was browsing [the website of fellow `R` blogger Ryo Nakagawara](https://ryo-n7.github.io/)[^1], I 
 was intrigued by his ["Visualizations" page](https://ryo-n7.github.io/visualizations/).
-The concept of creating an online "portfolio" is not novel [^1], but
-I hadn't thought to make one as a compilation of my own work (from blog posts). [^2]
+The concept of creating an online "portfolio" is not novel [^2], but
+I hadn't thought to make one as a compilation of my own work (from blog posts)...
+until now :smile:.
 
-[^1]: in fact, many people dedicate website's exclusively to showing off work that they've done.
+[^1]: one of my favorite `R` bloggers, by the way
 
-[^2]: By the way, there is a great R gallery website out there literally called ["The R Graph Gallery"](https://www.r-graph-gallery.com/).
+[^2]: in fact, many people dedicate website's exclusively to showing off work that they've done.
 
-With this idea in mind, I realized that it wouldn't be hard to generate
-such a page by using `R` to navigate files in my local blog folder.
 The code that follows shows how I generated the 
 [body of my visualization portfolio page](/project/blog-gallery/).
+The task is achieved in a couple of steps.
 
-A couple of caveats/notes for anyone looking to emulate my approach:
+1. Identify the file path of each blog post in my local blog folder
+
+2. For each post, extract the date and title of the blog post from the front matter, as well as the name and links to the image files.
+
+3. Combine the extracted information into a character vector that can be copy-pasted to a gallery page.
+
+I should state a couple of caveats/notes for anyone looking to emulate my approach.
 
   + I take advantage of the fact that I use the same prefix for (almost) all
   visualization that I generate with R---`viz_`---[^3], as well as the same file
@@ -41,7 +45,7 @@ A couple of caveats/notes for anyone looking to emulate my approach:
   + At the time of writing, my website---a [`{blogdown}`](https://bookdown.org/yihui/blogdown/)-based 
   website---uses [Hugo's page bundles](https://gohugo.io/content-management/page-bundles/)
   content organization system,
-  combined with the ever popular [Academic theme for Hugo](https://sourcethemes.com/academic/).
+  as well as the with the popular [Academic theme for Hugo](https://sourcethemes.com/academic/).
   Thus, there's no guarantee that the following code will work for you "as is". [^4]
   (If it doesn't work as is, I think modifying the code should be fairly straightforward.)
   
