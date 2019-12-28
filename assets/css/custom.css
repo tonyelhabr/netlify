@@ -68,7 +68,7 @@ Colors described below (and in data/themes/custom.toml) are the colors used in t
 .hljs-quote,
 .hljs-deletion,
 .hljs-meta {
-  color: rgb(247, 100, 151); /*3*/
+  color: rgb(247, 100, 151); /*2*/
   /*color: rgb(189, 147, 249);*/ /*7*/
   /*color: rgb(80, 250, 123);*/ /*4*/
   /*color: rgb(98, 114, 164);*/ /*6*/
