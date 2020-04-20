@@ -1,13 +1,13 @@
 ---
 authors:
 - tony
-bio: Engineer and analyst passionate about energy and sports.
+bio: Data person passionate about energy and sports.
 education:
   courses:
-  - course: MS in Analytics
+  - course: M.S. in Analytics
     institution: Georgia Institute of Technology
     year: 2020
-  - course: BS in Electrical Engineering (Power Systems)
+  - course: B.S. in Electrical Engineering
     institution: The University of Texas at Austin
     year: 2012
 email: ""
@@ -17,12 +17,7 @@ interests:
 - Sports Analytics
 - Data Science and Analytics
 name: Tony ElHabr
-organizations:
-- name: ERCOT
-  url: "http://www.ercot.com/"
-- name: Georgia Institute of Technology
-  url: "https://www.gatech.edu/"
-role: Operations Engineer (Grid Analysis), ERCOT; Student, Georgia Tech
+role: Data person
 social:
 - icon: envelope
   icon_pack: fas
@@ -45,11 +40,4 @@ social:
 superuser: true
 ---
 
-I work full-time as an Operations Engineer (Grid Analysis) at
-[Electric Reliability Council of Texas (ERCOT)](http://www.ercot.com),
-the independent system operator (ISO) for the Texas Bulk Electric System (BES).
-I completed my undergraduate education 
-at the [University of Texas at Austin](http://www.utexas.edu) in May 2016, receiving a B.S. in Electrical Engineering.
-I am currently a part-time student in the
-[Georgia Tech Online Masters of Science in Analytics](https://pe.gatech.edu/master-science-degrees/online-master-science-analytics)
-(OMSA) degree program (Fall 2018 cohort).
+I work as an analyst in the power trading industry. I recieved my B.S. in Electrical Engineering at the [University of Texas at Austin](http://www.ece.utexas.edu/) in May 2016, and my M.S. in Analytics at [Georgia Tech](https://www.analytics.gatech.edu/) in May 2020.
