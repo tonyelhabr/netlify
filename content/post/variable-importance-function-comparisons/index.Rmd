@@ -1,0 +1,579 @@
+---
+draft: true
+title: Comparing Variable Importance Functions (For Modeling)
+date: '2020-07-20'
+categories:
+  - r
+tags:
+  - r
+  - variable importance
+  - machine learning
+  - interpretable
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: true
+header:
+  caption: ''
+  image: 'featured.png'
+---
+
+```{r setup, include=F, echo=F, cache=F}
+# .dir_proj <- here::here('content', 'post', 'bayesian-statistics-english-premier-league')
+# .dir_output <- file.path(.dir_proj, 'output')
+knitr::opts_knit$set(root.dir = .dir_proj)
+knitr::opts_chunk$set(
+  rows.print = 30,
+  include = FALSE,
+  echo = FALSE,
+  # cache = TRUE,
+  cache.lazy = FALSE,
+  fig.show = 'hide',
+  fig.align = 'center',
+  fig.width = 8,
+  # size = 'small',
+  # fig.height = 5,
+  # fig.width = 5,
+  # out.width = 5,
+  fig.asp = 0.75,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+I've been doing some machine learning recently, and one thing that keeps popping up is the need to explain the models. There are a variety of ways to go about explaining model features, but probably the most common approach is to use **[variable (or feature) importance](https://stats.stackexchange.com/questions/332960/what-is-variable-importance)** scores. But computing variable importance scores isn't as straightforward as one might hope---there are a variety of methodologies! So, inevitably, I asked myself "How similar are the variable importance scores calculated using different methodologies?" [^1]
+
+[^1]: After all, I want to make sure my results aren't sensitive to some kind of bias (unintentional in this case).
+
+This post is intended to be a deep-dive into model interpretability or variable importance, but some concepts should be highlighted before attempting to answer this question. Generally, variable importance can be categorized as either being ["model-specific"](https://topepo.github.io/caret/variable-importance.html) or ["model-agnostic"](https://christophm.github.io/interpretable-ml-book/agnostic.html). Both depend upon some kind of loss function, e.g. [root mean squared error (RMSE)](https://en.wikipedia.org/wiki/Root-mean-square_deviation), [classification error](https://en.wikipedia.org/wiki/Confusion_matrix), etc. The loss function for a model-specific approach will generally be determined by the package that is used [^2]. Finally, within model-agnostic approaches, there are different methods such as [permutation](https://christophm.github.io/interpretable-ml-book/feature-importance.html) and [SHAP (SHapley Additive exPlanations)](https://christophm.github.io/interpretable-ml-book/shap.html). 
+
+[^2]: For example, for linear regression models using `lm` from the `{stats}` package, variable importance is based upon the absolute value of the t-statistics for each feature.
+
+So, to summarize, variable importance "methodologies" can be broken down in several ways:
+
+1. model-specific vs. model-agnostic approach
+2. loss function
+3. model agnostic method (given a model agnostic approach)
+
+I'm going to attempt to address (1) and (3) above, as well as the question regarding different packages. I'm leaving (2) out because I think the results won't differ too much when using different loss functions (although I haven't verified this assumption). [^3]
+
+[^3]: Also, this isn't an academic paper, so I don't feel the need to exhaust all possibilities!
+
+I also want to evaluate how variable importance scores differ across model types---e.g. regression, decision trees, etc.---as well for different types of target variables---i.e. continuous or discrete. While evaluating the sensitivity of variable importance scores to  different methodologies is the focus of this analysis, I think it's important to test how the findings hold up when varying model types and target variables. This should help us highlight any kind of bias in the results due to choice of model type and type of target variable. Put another way, it should help us quantify the robustness the conclusions that are drawn, i.e. If we find that the scores are similar under variation, then we can be more confident that the findings can be generalized.
+
+Additionally, I'm going to use more than one package for computing variable importance scores. Like with varying model types and outcome variables, the purpose is to highlight and quantify possible bias due to choices in this analysis---in this case, the choice of package. (For example, For example, are the results of a permutation-based variable importance calculation the same when using different packages.)
+
+Specifically, I'll be using the `{vip}` and `{DALEX}` package. The `{vip}` package is my favorite package to compute variable importance scores using R is  because it is capable of doing both types of calculations (model-specific and model-agnostic) for a variety of model types. But other packages are also great! `{DALEX}` package specializes in model-agnostic model interpretability and can do a lot more than just variable importance calculations.
+
+# Setup
+
+For the data, I'm going to be using a sampled[^2] fraction of the `diamonds` data set that comes with `{ggplot2}`. [^1] I've excluded two of the categorical features---`clarity` and `color`, both of which are categorical with a handful of levels---to reduce the number of variables involved and to speed up computation. (This is just an example after all!) To test how variable importance scores differ for a continuous target variable, I'll be defining models that predict `price` as a function of all other variables. I say "for a continuous target variable" because I'll also be testing how variable importance scores differ for binary [classification](https://en.wikipedia.org/wiki/Statistical_classification). To this end, I've added a binary variable `grp`, which is equal to `'1. Good'` when `cut %in% c('Idea', 'Premium')` and `2. Bad'` otherwise. [^1]
+
+[^1]: to speed up computation
+[^1]: I've chosen to use a rather bland data set since data is not the focus here.
+[^1]: It just so happens that the `grp` is relatively evenly balanced between the two levels, so there should not be any bias in the results due to class imbalance.
+
+For variable importance scores, I'm going to use the following packages and functions. [^1]
+
+1. `{vip}`'s model-specific scores with (`vip::vip(method = 'model')`)
+2. `{vip}`'s permutation-based scores (with `vip::vip(method = 'permute')`)
+3. `{vip}`'s SHAP-based values (with `vip::vip(method = 'shap')`)
+4.  [`{DALEX}`'s permutation-based scores](https://pbiecek.github.io/ema/featureImportance.html) (with `DALEX::variable_importance()`)
+
+(1) vs. (2)-(4) above addresses the model-specific vs. model-agnostic concern. I've decided to be consistent with the loss function--minimization of RMSE for a continuous target variable and maximization of accuracy for a discrete target variable.
+
+For model types, I'm going to trial are as follows:
+
++ linear regression with `stats::lm()` (only for a continuous outcome variable)
++ logistic regression with `stats::glm()` (only for classification)
++ generalized linear model using the `{glmnet}` package
++ bagged tree using the `{ranger}` package
++ boosted tree using the `{xgboost}` package
+
+For `glmnet::glmnet()`, I'm not going to use a penalty, so it should **theoretically** be the same as `lm()`/`glm()`.
+
+Also, I should say that I'm using the `{tidymodels}` package to assist with all of this. It really shows off its flexibility here, allowing me to switch between models only having to change-out one line of code!
+
+# Code
+
+See the Appendix.
+
+# Results
+
+
+```{r appendix-setup}
+library(tidyverse)
+```
+
+```{r appendix-diamonds_modified}
+.seed <- 42L # Also using this immediately before data set splitting with `{rsample}`.
+set.seed(.seed)
+diamonds_modified <- 
+  ggplot2::diamonds %>% 
+  sample_frac(0.05) %>% 
+  mutate(
+    color = 
+      case_when(
+        color %in% c('D', 'E') ~ 'DE', 
+        color %in% c('F', 'G') ~ 'FG',
+        TRUE ~ 'HIJ'
+      ) %>% as.factor()
+  ) %>% 
+  mutate(
+    grp = 
+      case_when(
+        cut %in% c('Idea', 'Premium') ~ '1. Best', 
+        TRUE ~ '2. Worst'
+      ) %>% as.factor()
+  ) %>% 
+  select(-cut, -clarity)
+diamonds_modified
+# diamonds_modified %>% count(color)
+```
+
+
+```{r appendix-func-glmnet}
+explain.glmnet <-
+  function (object,
+            feature_names = NULL,
+            X,
+            nsim = 1,
+            pred_wrapper,
+            newdata = NULL,
+            exact = FALSE,
+            ...) {
+    
+    if (isTRUE(exact)) {
+      if (is.null(X) && is.null(newdata)) {
+        stop('Must supply `X` or `newdata` argument (but not both).', call. = FALSE)
+      }
+      X <- if (is.null(X)) 
+        newdata
+      else X
+      # browser()
+      res_init <- stats::predict(object, newx = X, s = 0, type = 'coefficients', ...)
+      
+      # https://stackoverflow.com/questions/37963904/what-does-predict-glm-type-terms-actually-do
+      beta <- object %>% coef(s = 0) %>% as.matrix() %>% t()
+      avx <- colMeans(X)
+      X1 <- sweep(X, 2L, avx)
+      res <- t(beta[-1] * t(X1)) %>% as_tibble() %>% mutate_all(~coalesce(., 0))
+      attr(res, which = 'baseline') <- beta[[1]]
+      class(res) <- c(class(res), 'explain')
+      res
+    } else {
+      fastshap:::explain.default(
+        object,
+        feature_names = feature_names,
+        X = X,
+        nsim = nsim,
+        pred_wrapper = pred_wrapper,
+        newdata = newdata,
+        ...
+      )
+    }
+  }
+```
+
+
+```{r appendix-funcs-nonmain}
+vip_wrapper <- function(method, ...) {
+  res <-
+    vip::vip(
+      method = method,
+      ...
+    ) %>% 
+    pluck('data') %>% 
+    # Will get a "Sign" solumn when using the default `method = 'model'`.
+    rename(var = Variable, imp = Importance)
+  
+  if(any(names(res) == 'Sign')) {
+    res <-
+      res %>% 
+      mutate(dir = ifelse(Sign == 'POS', +1L, -1L)) %>% 
+      mutate(imp = dir * imp)
+  }
+  res
+}
+
+# 'glm' gets converted to 'lm' for regression in my code
+.engines_valid <- c('glm', 'glmnet', 'xgboost', 'ranger')
+.modes_valid <- c('regression', 'classification')
+choose_f_fit <- function(engine = .engines_valid, mode = .modes_valid) {
+  engine <- match.arg(engine)
+  mode <- match.arg(mode)
+  f_glm <- list(parsnip::linear_reg, parsnip::logistic_reg) %>% set_names(.modes_valid)
+  fs <-
+    list(
+      'xgboost' = rep(list(parsnip::boost_tree), 2) %>% set_names(.modes_valid),
+      'ranger' = rep(list(parsnip::rand_forest), 2) %>% set_names(.modes_valid),
+      'glm' = f_glm,
+      'glmnet' = f_glm
+    )
+  res <- fs[[engine]][[mode]]
+  # browser()
+  res
+}
+
+choose_f_predict <- function(engine = .engines_valid) {
+  engine <- match.arg(engine)
+  f_generic <- function(object, newdata) predict(object, newdata = newdata)
+  fs <-
+    list(
+      'xgboost' = f_generic,
+      'ranger' = function(object, newdata) predict(object, data = newdata)$predictions,
+      'glm' = f_generic,
+      # Arbitrarily choosing no penalty.
+      'glmnet' = function(object, newdata) predict(object, newx = newdata, s = 0)
+    )
+  fs[[engine]]
+}
+
+is_binary <- function(x) {
+  n <- unique(x)
+  length(n) - sum(is.na(n)) == 2L
+}
+
+is_discrete <- function(x) {
+  is.factor(x) | is.character(x)
+}
+```
+
+```{r appendix-func-main}
+compare_and_rank_vip <-
+  function(data,
+           col_y,
+           engine = .engines_valid,
+           mode = NULL,
+           ...) {
+
+    engine <- match.arg(engine)
+    
+    if(!is.null(mode)) {
+      mode <- match.arg(mode, .modes_valid)
+    } else {
+      y <- data[[col_y]]
+      y_is_discrete <- is_discrete(y)
+      y_is_binary <- is_binary(y)
+      
+      mode <-
+        case_when(
+          y_is_discrete | y_is_binary ~ 'classification',
+          TRUE ~ 'regression'
+        )
+    }
+    
+    mode_is_class <- mode == 'classification'
+    parsnip_engine <- 
+      case_when(
+        engine == 'glm' & !mode_is_class ~ 'lm', 
+        TRUE ~ engine
+      )
+
+    f_fit <- choose_f_fit(engine = engine, mode = mode)
+    fmla <- formula(sprintf('%s ~ .', col_y))
+    set.seed(.seed)
+    splits <- data %>% rsample::initial_split(strata = col_y)
+    
+    data_trn <- splits %>% rsample::training()
+    data_tst <- splits %>% rsample::testing()
+    
+    rec <- 
+      recipes::recipe(fmla, data = data_trn) %>% 
+      # Note that one-hot encoding caused rank deficiencies with `glm()` and `{DALEX}`.
+      recipes::step_dummy(recipes::all_nominal(), -recipes::all_outcomes(), one_hot = FALSE)
+    
+    # Unfortunately, couldn't get `parsnip::set_engine()` to work with some ellipsis logic.
+    # dots <- ifelse(engine == 'ranger', rlang::list2(importance = 'permutation'), rlang::list2())
+    
+    is_ranger <- engine == 'ranger'
+    f_engine <- if(is_ranger) {
+      partial(parsnip::set_engine, engine = parsnip_engine, importance = 'permutation')
+    } else {
+      partial(parsnip::set_engine, engine = parsnip_engine)
+    }
+    
+    spec <- 
+      f_fit() %>%
+      f_engine() %>% 
+      parsnip::set_mode(mode)
+    
+    wf <-
+      workflows::workflow() %>%
+      workflows::add_recipe(rec) %>%
+      workflows::add_model(spec)
+    
+    fit <- wf %>% parsnip::fit(data_trn)
+    fit_wf <- fit %>% workflows::pull_workflow_fit()
+    
+    data_trn_jui <-
+      rec %>% 
+      recipes::prep(training = data_trn) %>% 
+      recipes::juice()
+    
+    x_trn_jui <-  data_trn_jui[, setdiff(names(data_trn_jui), col_y)] %>% as.matrix()
+    y_trn_jui <- data_trn_jui[[col_y]]
+
+    y_trn_jui <- 
+      if(mode_is_class) {
+        as.integer(y_trn_jui) - 1L
+      } else {
+        y_trn_jui
+      }
+    
+    vip_wrapper_partial <-
+      partial(
+        vip_wrapper, 
+        object = fit_wf$fit, 
+        num_features = x_trn_jui %>% ncol(), 
+        ... = 
+      )
+
+    # Returns POS/NEG for glm/glmnet disc
+    vi_vip_model <- vip_wrapper_partial(method = 'model')
+    
+    # I believe these are the defaults chosen by `{vip}` (although its actual default is `metric = 'auto'`).
+    metric <- ifelse(mode_is_class, 'sse', 'rmse')
+    
+    # vip_wrapper_partial_permute <-
+    #   partial(
+    #     vip_wrapper_partial, 
+    #     method = 'permute',
+    #     metric = metric,
+    #     train = x_trn_jui,
+    #     target = y_trn_jui,
+    #     ... = 
+    #   )
+
+    f_predict <- choose_f_predict(engine = engine)
+    
+    vip_wrapper_partial_permute <-
+      partial(
+        vip_wrapper_partial,
+        method = 'permute',
+        metric = metric,
+        pred_wrapper = f_predict,
+        ... = 
+      )
+
+    # # lm method for regression won't work with the general case.
+    # vi_vip_permute <-
+    #   if(engine == 'glm') {
+    #     vip_wrapper_partial_permute(
+    #       train = data_trn_jui,
+    #       target = col_y
+    #     )
+    #   } else {
+    #     vip_wrapper_partial_permute(
+    #       train = x_trn_jui %>% as.data.frame(),
+    #       target = y_trn_jui
+    #     )
+    #   }
+    
+    set.seed(.seed)
+    vi_vip_permute <-
+      vip_wrapper_partial_permute(
+        train = x_trn_jui, #  %>% as.data.frame(),
+        target = y_trn_jui
+      )
+    
+    # Note that `vip:::vi_shap.default()` uses `{fastshap}` package.
+    set.seed(.seed)
+    vip_wrapper_partial_shap <-
+      partial(
+        vip_wrapper_partial, 
+        method = 'shap',
+        train = x_trn_jui,
+        ... = 
+      )
+    
+    vi_vip_shap <-
+      if(is_ranger) {
+        vip_wrapper_partial_shap(pred_wrapper = f_predict)
+      } else {
+        vip_wrapper_partial_shap(exact = TRUE)
+      }
+
+    # # Removed this part since it's basically redundant with the `{vip}` SHAP method (which I checked).
+    # fastshap_partial <-
+    #   partial(
+    #     fastshap::explain,
+    #     object = fit_wf$fit,
+    #     X = x_trn_jui,
+    #     ... = 
+    #   )
+    # 
+    # expl_fastshap <-
+    #   if(is_ranger) {
+    #     fastshap_partial(pred_wrapper = f_predict)
+    #   } else {
+    #     fastshap_partial(exact = TRUE)
+    #   }
+    # 
+    # # Need to remove the non-diamonds_modified class in order to use {dplyr} functions.
+    # class(expl_fastshap) <- c('tbl_df', 'tbl', 'data.frame')
+    # 
+    # vi_fastshap <-
+    #   expl_fastshap %>%
+    #   summarize_all(~mean(abs(.))) %>% 
+    #   # This is actually already `imp_abs`, but it won't matter in the end.
+    #   pivot_longer(matches('.'), names_to = 'var', values_to = 'imp')
+
+    # idk why, but I can use `ifelse()` here and return a function that won't have unexpected output (i.e. a list instead of a dataframe).
+    # This is not true for the other `if...else` statements
+    f_coerce <- ifelse(engine == 'xgboost', function(x) { x }, as.data.frame)
+    expl_dal <- DALEX::explain(fit_wf$fit, data = f_coerce(x_trn_jui), y = y_trn_jui, verbose = FALSE)
+    
+    # DALEX::loss_root_mean_square == vip::metric_rmse
+    # DALEX::DALEX::loss_sum_of_squares == vip::metric_sse
+    f_loss <- ifelse(mode_is_class, DALEX::loss_sum_of_squares, DALEX::loss_root_mean_square)
+    set.seed(.seed)
+    vi_dalex_init <- 
+      expl_dal %>% 
+      DALEX::variable_importance(
+        type = 'difference',
+        loss_function = f_loss, 
+        n_sample = NULL
+      )
+    vi_dalex_init
+
+    # Regarding why `permutation == 0`, see `ingredients:::feature_importance.default()`, which is called by `ingredients:::feature_importance.explainer()`, which is called by `DALEX::variable_importance`
+    # Specifically, this line: `res <- data.frame(variable = c("_full_model_", names(res),  "_baseline_"), permutation = 0, dropout_loss = c(res_full, res, res_baseline), label = label, row.names = NULL)`
+    vi_dalex <-
+      vi_dalex_init %>% 
+      as_tibble() %>% 
+      filter(permutation == 0) %>% 
+      mutate(
+        imp = abs(dropout_loss) / max(abs(dropout_loss))
+      ) %>% 
+      select(var = variable, imp) %>%
+      filter(!(var %in% c('_baseline_', '_full_model_'))) %>% 
+      arrange(desc(imp))
+
+    vi_rnks <-
+      list(
+        vip_model = vi_vip_model,
+        vip_permute = vi_vip_permute,
+        vip_shap = vi_vip_shap,
+        # fastshap = vi_fastshap,
+        dalex = vi_dalex
+      ) %>% 
+      map_dfr(bind_rows, .id = 'src') %>% 
+      group_by(src) %>% 
+      mutate(imp_abs = abs(imp)) %>% 
+      mutate(imp_abs_norm = imp_abs / sum(imp_abs)) %>% 
+      select(var, imp, imp_abs, imp_abs_norm) %>% 
+      mutate(rnk = row_number(desc(imp_abs))) %>% 
+      ungroup()
+    vi_rnks
+  }
+
+compare_and_rank_vip_q <- quietly(compare_and_rank_vip)
+
+engines_named <- .engines_valid %>% setNames(., .)
+```
+
+```{r appendix-func-viz}
+# sysfonts::font_add_google('')
+# font_add_google('Roboto Condensed', 'rc')
+font_add_google('Roboto', 'r')
+plot_rnks <- function(df_rnks, option = 'D') {
+  # df_rnks %>% mutate(lab = sprintf('%2d (%s)', rnk, scales::percent(imp_abs_norm, width = 2, justify = 'right')))
+  viz <-
+    df_rnks %>% 
+    group_by(var) %>% 
+    mutate(rnk_mean = rnk %>% mean(na.rm = TRUE)) %>% 
+    ungroup() %>% 
+    mutate_at(vars(var), ~forcats::fct_reorder(., -rnk_mean)) %>% 
+    ungroup() %>% 
+    mutate_at(vars(engine), ~sprintf('{%s}', engine)) %>% 
+    # mutate_at(
+    #   vars(src),
+    #   ~case_when(
+    #     . == 'dalex' ~ '`DALEX::variable_importance()`',
+    #     . == 'vip_model' ~ '`vip::vi_model()`',
+    #     . == 'vip_permute' ~ '`vip::vi_permute()`',
+    #     . == 'vip_shap' ~ '`vip::vi_shap()`'
+    #   )
+    # ) %>% 
+    mutate(lab = sprintf('%2d (%s)', rnk, scales::percent(imp_abs_norm, width = 2, justify = 'right'))) %>% 
+    ggplot() +
+    aes(x = src, y = var) +
+    geom_tile(aes(fill = rnk), alpha = 0.5, show.legend = F) +
+    geom_text(aes(label = lab)) + # , fontface = 'bold') +
+    scale_fill_viridis_c(direction = -1, option = option, na.value = 'white') +
+    theme_minimal(base_family = '') +
+    facet_wrap(~engine) +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    labs(x = NULL, y = NULL)
+  viz
+}
+```
+
+```{r appendix-main-c}
+df_c_rnks <-
+  engines_named %>%
+  map_dfr( 
+    ~compare_and_rank_vip_q(
+      diamonds_modified %>% select(-grp),
+      col_y = 'price', 
+      engine = .x
+    ) %>% 
+      pluck('result'),
+    .id = 'engine'
+)
+df_c_rnks
+```
+
+```{r appendix-viz-c}
+lab_title <- 'Variable Importance Ranking'
+lab_subtitle <- 'Continuous Target Variable for Model Prediction of `diamonds` Data'
+viz_c_rnks <- 
+  df_c_rnks %>% 
+  plot_rnks(option = 'A') +
+  labs(
+    title = lab_title,
+    subtitle = lab_subtitle
+  )
+viz_c_rnks
+# ggsave('C:/users/aelhabr/desktop/ex.png', width = 8, height = 8, dpi = 96)
+```
+
+```{r appendix-main-d}
+df_d_rnks <-
+  engines_named %>% 
+  map_dfr(
+    ~compare_and_rank_vip_q(
+      diamonds_modified %>% select(-price),
+      col_y = 'grp', 
+      engine = .x,
+    ) %>% 
+      pluck('result'),
+    .id = 'engine'
+  )
+df_d_rnks
+```
+
+```{r appendix-viz}
+viz_d_rnks <- df_d_rnks %>% plot_rnks(option = 'E')
+viz_d_rnks
+```
+
+
+
+# Caveats
+
+The differences between VI methods and functions could be more (or less) extreme on a different data set. For example, I would guess that there would be bigger differences on a data set with lots of categorical variables (and lots of levels for each).
+
+# Appendix
+
+## Code
+
+See all relevant R code below.
+
+```{r fin-0, ref.label=stringr::str_subset(knitr::all_labels(), 'appendix'), echo=T, include=T, eval=F}
+```
+

@@ -51,7 +51,7 @@ knitr::opts_chunk$set(
 # options(tibble.print_min = 30)
 ```
 
-As [I mentioned back in July](/post/cheat-sheet-rmarkdown), I haven't had as much time (since summer of 2018) to write due to taking classes in pursuit of a degree from  [Georgia Tech's Online Master of Science in Analytics (OMSA)](https://pe.gatech.edu/degrees/analytics) program. On the other hand, the classes have given me some ideas for future content. And, in the case of the [Bayesian Statistics](https://en.wikipedia.org/wiki/Bayesian_statistics) class that I took this past fall, there's content that translates well to a blog post directly. What follows is a lightly edited version of the report that I submitted at the end of the semster for this class.
+As [I mentioned back in July](/post/cheat-sheet-rmarkdown), I haven't had as much time (since summer of 2018) to write due to taking classes in pursuit of a degree from  [Georgia Tech's Online Master of Science in Analytics (OMSA)](https://pe.gatech.edu/degrees/analytics) program. On the other hand, the classes have given me some ideas for future content. And, in the case of the [Bayesian Statistics](https://en.wikipedia.org/wiki/Bayesian_statistics) class that I took this past fall, there's content that translates well to a blog post directly. What follows is a lightly edited version of the report that I submitted at the end of the semester for this class.
 
 ```{r setup-appendix}
 library(tidyverse)
