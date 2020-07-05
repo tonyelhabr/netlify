@@ -19,7 +19,7 @@ header:
 ---
 
 ```{r setup, include=F, echo=F, cache=F}
-# .dir_proj <- here::here('content', 'post', 'bayesian-statistics-english-premier-league')
+.dir_proj <- here::here('content', 'post', 'variable-importance-compare')
 # .dir_output <- file.path(.dir_proj, 'output')
 knitr::opts_knit$set(root.dir = .dir_proj)
 knitr::opts_chunk$set(
@@ -129,8 +129,18 @@ diamonds_modified <-
   select(-cut, -clarity)
 diamonds_modified
 # diamonds_modified %>% count(color)
-```
 
+mpg_modified <- 
+  ggplot2::mpg %>%
+  mutate(
+    grp = 
+      case_when(
+        class %in% c('2seater', 'compact', 'subcompact', 'midsize') ~ '1. Small',
+        TRUE ~ '2. Big')
+  ) %>% 
+  select(-class, -model, -manufacturer, -trans, -fl)
+mpg_modified
+```
 
 ```{r appendix-func-glmnet}
 explain.glmnet <-
@@ -198,6 +208,7 @@ vip_wrapper <- function(method, ...) {
 
 # 'glm' gets converted to 'lm' for regression in my code
 .engines_valid <- c('glm', 'glmnet', 'xgboost', 'ranger')
+engines_named <- .engines_valid %>% setNames(., .)
 .modes_valid <- c('regression', 'classification')
 choose_f_fit <- function(engine = .engines_valid, mode = .modes_valid) {
   engine <- match.arg(engine)
@@ -246,7 +257,7 @@ compare_and_rank_vip <-
            engine = .engines_valid,
            mode = NULL,
            ...) {
-
+    message(engine)
     engine <- match.arg(engine)
     
     if(!is.null(mode)) {
@@ -370,10 +381,11 @@ compare_and_rank_vip <-
     #     )
     #   }
     
+    f_coerce_permute <- ifelse(engine != 'glm', function(x) { x }, as.data.frame)
     set.seed(.seed)
     vi_vip_permute <-
       vip_wrapper_partial_permute(
-        train = x_trn_jui, #  %>% as.data.frame(),
+        train = x_trn_jui %>% f_coerce_permute(),
         target = y_trn_jui
       )
     
@@ -421,15 +433,21 @@ compare_and_rank_vip <-
 
     # idk why, but I can use `ifelse()` here and return a function that won't have unexpected output (i.e. a list instead of a dataframe).
     # This is not true for the other `if...else` statements
-    f_coerce <- ifelse(engine == 'xgboost', function(x) { x }, as.data.frame)
-    expl_dal <- DALEX::explain(fit_wf$fit, data = f_coerce(x_trn_jui), y = y_trn_jui, verbose = FALSE)
+    f_coerce_dalex <- ifelse(engine == 'xgboost', function(x) { x }, as.data.frame)
+    expl_dalex <- 
+      DALEX::explain(
+        fit_wf$fit, 
+        data = x_trn_jui %>% f_coerce_dalex(),
+        y = y_trn_jui, 
+        verbose = FALSE
+      )
     
     # DALEX::loss_root_mean_square == vip::metric_rmse
     # DALEX::DALEX::loss_sum_of_squares == vip::metric_sse
     f_loss <- ifelse(mode_is_class, DALEX::loss_sum_of_squares, DALEX::loss_root_mean_square)
     set.seed(.seed)
     vi_dalex_init <- 
-      expl_dal %>% 
+      expl_dalex %>% 
       DALEX::variable_importance(
         type = 'difference',
         loss_function = f_loss, 
@@ -469,14 +487,21 @@ compare_and_rank_vip <-
   }
 
 compare_and_rank_vip_q <- quietly(compare_and_rank_vip)
-
-engines_named <- .engines_valid %>% setNames(., .)
 ```
 
 ```{r appendix-func-viz}
 # sysfonts::font_add_google('')
 # font_add_google('Roboto Condensed', 'rc')
-font_add_google('Roboto', 'r')
+# sysfonts::font_add_google('IBM Plex Sans', 'ips')
+
+prettify_engine_col <- function(data) {
+  res <- data %>% mutate_at(vars(engine), ~sprintf('{%s}', engine))
+}
+
+factor_src <- function(x) {
+  ordered(x, levels = c('vip_model', 'vip_shap', 'vip_permute', 'dalex'))
+}
+
 plot_rnks <- function(df_rnks, option = 'D') {
   # df_rnks %>% mutate(lab = sprintf('%2d (%s)', rnk, scales::percent(imp_abs_norm, width = 2, justify = 'right')))
   viz <-
@@ -486,7 +511,7 @@ plot_rnks <- function(df_rnks, option = 'D') {
     ungroup() %>% 
     mutate_at(vars(var), ~forcats::fct_reorder(., -rnk_mean)) %>% 
     ungroup() %>% 
-    mutate_at(vars(engine), ~sprintf('{%s}', engine)) %>% 
+    prettify_engine_col() %>% 
     # mutate_at(
     #   vars(src),
     #   ~case_when(
@@ -496,7 +521,8 @@ plot_rnks <- function(df_rnks, option = 'D') {
     #     . == 'vip_shap' ~ '`vip::vi_shap()`'
     #   )
     # ) %>% 
-    mutate(lab = sprintf('%2d (%s)', rnk, scales::percent(imp_abs_norm, width = 2, justify = 'right'))) %>% 
+    mutate_at(vars(src), ~ordered(., levels = c('vip_model', 'vip_shap', 'vip_permute', 'dalex'))) %>% 
+    mutate(lab = sprintf('%2d (%s)', rnk, scales::percent(imp_abs_norm, accuracy = 1, width = 2, justify = 'right'))) %>% 
     ggplot() +
     aes(x = src, y = var) +
     geom_tile(aes(fill = rnk), alpha = 0.5, show.legend = F) +
@@ -505,16 +531,32 @@ plot_rnks <- function(df_rnks, option = 'D') {
     theme_minimal(base_family = '') +
     facet_wrap(~engine) +
     theme(
+      plot.title.position = 'plot',
       panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank()
+      panel.grid.minor = element_blank(),
+      plot.title = element_text(face = 'bold'),
+      plot.subtitle = ggtext::element_markdown(),
     ) +
     labs(x = NULL, y = NULL)
   viz
 }
+
+# .dir_png <- here::here()
+.dir_png <- .dir_proj
+export_png <- function(x, dir = .dir_proj, file = deparse(substitute(x)), width = 8, height = 8, ...) {
+  path <- file.path(dir, sprintf('%s.png', file))
+  res <- ggsave(plot = x, filename = path, width = width, height = height, ...)
+}
+```
+
+```{r colors}
+colors <- ggthemes::tableau_color_pal(palette = 'Tableau 10')(10)
+colors
+scales::show_col(colors)
 ```
 
 ```{r appendix-main-c}
-df_c_rnks <-
+diamonds_c_rnks <-
   engines_named %>%
   map_dfr( 
     ~compare_and_rank_vip_q(
@@ -525,25 +567,34 @@ df_c_rnks <-
       pluck('result'),
     .id = 'engine'
 )
-df_c_rnks
+diamonds_c_rnks
 ```
 
-```{r appendix-viz-c}
+```{r appendix-viz-c-diamonds}
 lab_title <- 'Variable Importance Ranking'
-lab_subtitle <- 'Continuous Target Variable for Model Prediction of `diamonds` Data'
-viz_c_rnks <- 
-  df_c_rnks %>% 
+lab_subtitle_diamonds_c <- '<span style = "color:#4E79A7"><b>Continuous</b></span> Target Variable for Model Prediction of <span style = "color:#E15759"><b>diamonds</b></span> Data'
+
+# require(ggtext)
+viz_diamonds_c_rnks <- 
+  diamonds_c_rnks %>% 
   plot_rnks(option = 'A') +
   labs(
     title = lab_title,
-    subtitle = lab_subtitle
+    subtitle = lab_subtitle_diamonds_c
   )
-viz_c_rnks
-# ggsave('C:/users/aelhabr/desktop/ex.png', width = 8, height = 8, dpi = 96)
+viz_diamonds_c_rnks
 ```
 
-```{r appendix-main-d}
-df_d_rnks <-
+```{r appendix-viz-c-diamonds-export}
+export_png(viz_diamonds_c_rnks)
+```
+
+```{r viz_diamonds_c_rnks-show, include=T, fig.show='asis'}
+viz_diamonds_c_rnks
+```
+
+```{r appendix-main-d-diamonds}
+diamonds_d_rnks <-
   engines_named %>% 
   map_dfr(
     ~compare_and_rank_vip_q(
@@ -554,14 +605,165 @@ df_d_rnks <-
       pluck('result'),
     .id = 'engine'
   )
-df_d_rnks
+diamonds_d_rnks
 ```
 
-```{r appendix-viz}
-viz_d_rnks <- df_d_rnks %>% plot_rnks(option = 'E')
-viz_d_rnks
+```{r appendix-viz-d-mpg}
+lab_subtitle_diamonds_d <- lab_subtitle_diamonds_c %>% str_replace('^.*\\sTarget', '<span style = "color:#F28E2B;"><b>Discrete</b></span> Target')
+viz_diamonds_d_rnks <- 
+  diamonds_d_rnks %>% 
+  plot_rnks(option = 'B') +
+  labs(
+    title = lab_title,
+    subtitle = lab_subtitle_diamonds_d
+  )
+viz_diamonds_d_rnks
 ```
 
+```{r appendix-viz-d-mpg-export}
+export_png(viz_diamonds_d_rnks)
+```
+
+```{r viz_diamonds_d_rnks-show, include=T, fig.show='asis'}
+viz_diamonds_d_rnks
+```
+
+```{r appendix-viz-c-mpg}
+mpg_c_rnks <-
+  engines_named %>%
+  map_dfr( 
+    ~compare_and_rank_vip_q(
+      mpg_modified %>% select(-grp),
+      col_y = 'displ', 
+      engine = .x
+    ) %>% 
+      pluck('result'),
+    .id = 'engine'
+)
+mpg_c_rnks
+```
+
+```{r appendix-viz-c-mpg}
+lab_subtitle_mpg_c <- lab_subtitle_diamonds_c %>% str_replace('of.*Data', 'of <span style = "color:#B07AA1"><b>mpg</b></span> Data')
+viz_mpg_c_rnks <- 
+  diamonds_c_rnks %>% 
+  plot_rnks(option = 'C') +
+  labs(
+    title = lab_title,
+    subtitle = lab_subtitle_mpg_c
+  )
+viz_mpg_c_rnks
+```
+
+```{r appendix-viz-c-mpg-export}
+export_png(viz_mpg_c_rnks)
+```
+
+```{r viz_mpg_c_rnks-show, include=T, fig.show='asis'}
+viz_mpg_c_rnks
+```
+
+```{r appendix-main-d-mpg}
+mpg_d_rnks <-
+  engines_named %>% 
+  map_dfr(
+    ~compare_and_rank_vip_q(
+      mpg_modified,
+      col_y = 'grp', 
+      engine = .x,
+    ) %>% 
+      pluck('result'),
+    .id = 'engine'
+  )
+mpg_d_rnks
+```
+
+```{r appendix-viz-d-mpg}
+lab_subtitle_mpg_d <- lab_subtitle_mpg_c %>% str_replace('^.*\\sTarget', '<span style = "color:#F28E2B;"><b>Discrete</b></span> Target')
+viz_mpg_d_rnks <- 
+  mpg_d_rnks %>% 
+  plot_rnks(option = 'D') +
+  labs(
+    title = lab_title,
+    subtitle = lab_subtitle_mpg_d
+  )
+viz_mpg_d_rnks
+```
+
+```{r appendix-viz-d-mpg-export}
+export_png(viz_mpg_d_rnks)
+```
+
+```{r viz_mpg_d_rnks-show, include=T, fig.show='asis'}
+viz_mpg_d_rnks
+```
+
+```{r appendix-cor_by_engine}
+cor_by_set_engine <-
+  list(
+    diamonds_c = diamonds_c_rnks,
+    diamonds_d = diamonds_d_rnks,
+    mpg_c = mpg_c_rnks,
+    mpg_d = mpg_d_rnks
+  ) %>% 
+  map_dfr(bind_rows, .id = 'set') %>% 
+  group_by(set, engine) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  mutate(
+    data = 
+      map(data, ~widyr::pairwise_cor(.x, item = src, feature = var, value = rnk))
+  ) %>% 
+  unnest(data) %>% 
+  rename(cor = correlation)
+cor_by_set_engine
+
+cor_by_engine <-
+  cor_by_set_engine %>% 
+  group_by(engine, item1, item2) %>% 
+  summarize_at(vars(cor), mean) %>% 
+  ungroup()
+cor_by_engine
+```
+
+```{r appendix-viz_cor_by_engine}
+viz_cor_by_engine <-
+  cor_by_engine %>% 
+  prettify_engine_col() %>% 
+  mutate_at(vars(item1, item2), factor_src) %>% 
+  mutate(lab = scales::percent(cor, accuracy = 1, width = 3, justify = 'right')) %>% 
+  filter(item1 < item2) %>% 
+  ggplot() +
+  aes(x = item1, y = item2) +
+  geom_tile(aes(fill = cor), alpha = 0.5, show.legend = FALSE) +
+  geom_text(aes(label = lab)) +
+  scale_fill_viridis_c(option = 'E', na.value = 'white') +
+  theme_minimal(base_family = '') +
+  facet_wrap(~engine) +
+  theme(
+    plot.title.position = 'plot',
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = 'bold'),
+    plot.subtitle = ggtext::element_markdown(),
+  ) +
+  labs(
+    title = 'Variable Importance Rank Pairwise Correlations',
+    subtitle = 'Averaged Over <span style = "color:#E15759"><b>diamonds</b></span> and <span style = "color:#B07AA1"><b>mpg</b></span> Data',
+    x = NULL, 
+    y = NULL
+  )
+viz_cor_by_engine
+```
+
+```{r appendix-viz-d-mpg-export}
+export_png(viz_cor_by_engine)
+```
+
+```{r viz_cor_by_engine-show, include=T, fig.show='asis'}
+viz_cor_by_engine
+
+```
 
 
 # Caveats
