@@ -19,51 +19,10 @@ header:
   image: 'featured.png'
 ---
 
----
-title: A Bayesian Approach to Ranking English Premier League Teams (using R)
-date: '2019-12-29'
-categories:
-  - r
-tags:
-  - r
-  - bayes
-  - statistics
-  - poisson
-  - soccer
-  - epl
-image:
-  caption: ''
-  focal_point: ''
-  preview_only: true
-header:
-  caption: ''
-  image: 'featured.png'
----
-
----
-title: A Bayesian Approach to Ranking English Premier League Teams (using R)
-date: '2019-12-29'
-categories:
-  - r
-tags:
-  - r
-  - bayes
-  - statistics
-  - poisson
-  - soccer
-  - epl
-image:
-  caption: ''
-  focal_point: ''
-  preview_only: true
-header:
-  caption: ''
-  image: 'featured.png'
----
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
-
-<p>As <a href="/post/cheat-sheet-rmarkdown">I mentioned back in July</a>, I haven’t had as much time (since summer of 2018) to write due to taking classes in pursuit of a degree from <a href="https://pe.gatech.edu/degrees/analytics">Georgia Tech’s Online Master of Science in Analytics (OMSA)</a> program. On the other hand, the classes have given me some ideas for future content. And, in the case of the <a href="https://en.wikipedia.org/wiki/Bayesian_statistics">Bayesian Statistics</a> class that I took this past fall, there’s content that translates well to a blog post directly. What follows is a lightly edited version of the report that I submitted at the end of the semster for this class.</p>
+<p>As <a href="/post/cheat-sheet-rmarkdown">I mentioned back in July</a>, I haven’t had as much time (since summer of 2018) to write due to taking classes in pursuit of a degree from <a href="https://pe.gatech.edu/degrees/analytics">Georgia Tech’s Online Master of Science in Analytics (OMSA)</a> program. On the other hand, the classes have given me some ideas for future content. And, in the case of the <a href="https://en.wikipedia.org/wiki/Bayesian_statistics">Bayesian Statistics</a> class that I took this past fall, there’s content that translates well to a blog post directly. What follows is a lightly edited version of the report that I submitted at the end of the semester for this class.</p>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>I model and predict <a href="https://en.wikipedia.org/wiki/Premier_League">English Premier League</a> (EPL) game outcomes using Bayesian methods. Specifically, I estimated goals scored by each team in a given game as independent Poisson processes, taking the difference of the estimated points scored on each side to determine game winners. More broadly, one may call this a hierarchical Bayesian Poisson model.</p>
@@ -128,34 +87,34 @@ z_{\text{all}} \sim \mathcal{N}(0, 2^2) \\
 <p>Finally, the above visual shows the predicted outcomes (inferred from the prior graph of predicted modes).</p>
 <p>To better understand how the model works on a team-level basis, let’s look at how well it predicts for each team.</p>
 <pre><code>## # A tibble: 26 x 4
-##    tm_h           is_correct     n pct  
-##    &lt;chr&gt;          &lt;lgl&gt;      &lt;int&gt; &lt;chr&gt;
-##  1 Arsenal        TRUE          46 81%  
-##  2 Man City       TRUE          45 79%  
-##  3 Tottenham      TRUE          43 75%  
-##  4 Liverpool      TRUE          41 72%  
-##  5 Chelsea        TRUE          39 68%  
-##  6 Cardiff        TRUE          12 63%  
-##  7 Everton        TRUE          36 63%  
-##  8 Fulham         TRUE          12 63%  
-##  9 Man United     TRUE          35 61%  
-## 10 Huddersfield   TRUE          23 61%  
-## 11 Burnley        TRUE          34 60%  
-## 12 Stoke          TRUE          22 58%  
-## 13 Bournemouth    TRUE          30 53%  
-## 14 Crystal Palace TRUE          30 53%  
-## 15 Sunderland     TRUE          10 53%  
-## 16 Swansea        TRUE          20 53%  
-## 17 West Ham       TRUE          30 53%  
-## 18 Watford        TRUE          29 51%  
-## 19 Newcastle      TRUE          19 50%  
-## 20 Leicester      TRUE          28 49%  
-## 21 Middlesbrough  TRUE           9 47%  
-## 22 West Brom      TRUE          18 47%  
-## 23 Wolves         TRUE           9 47%  
-## 24 Brighton       TRUE          15 39%  
-## 25 Southampton    TRUE          22 39%  
-## 26 Hull           TRUE           6 32%</code></pre>
+##    tm_h           is_correct     n pct   
+##    &lt;chr&gt;          &lt;lgl&gt;      &lt;int&gt; &lt;chr&gt; 
+##  1 Arsenal        TRUE          46 80.70%
+##  2 Man City       TRUE          45 78.95%
+##  3 Tottenham      TRUE          43 75.44%
+##  4 Liverpool      TRUE          41 71.93%
+##  5 Chelsea        TRUE          39 68.42%
+##  6 Cardiff        TRUE          12 63.16%
+##  7 Everton        TRUE          36 63.16%
+##  8 Fulham         TRUE          12 63.16%
+##  9 Man United     TRUE          35 61.40%
+## 10 Huddersfield   TRUE          23 60.53%
+## 11 Burnley        TRUE          34 59.65%
+## 12 Stoke          TRUE          22 57.89%
+## 13 Bournemouth    TRUE          30 52.63%
+## 14 Crystal Palace TRUE          30 52.63%
+## 15 Sunderland     TRUE          10 52.63%
+## 16 Swansea        TRUE          20 52.63%
+## 17 West Ham       TRUE          30 52.63%
+## 18 Watford        TRUE          29 50.88%
+## 19 Newcastle      TRUE          19 50.00%
+## 20 Leicester      TRUE          28 49.12%
+## 21 Middlesbrough  TRUE           9 47.37%
+## 22 West Brom      TRUE          18 47.37%
+## 23 Wolves         TRUE           9 47.37%
+## 24 Brighton       TRUE          15 39.47%
+## 25 Southampton    TRUE          22 38.60%
+## 26 Hull           TRUE           6 31.58%</code></pre>
 <p>In most cases, the model predicts the outcome correctly (see <code>is_correct</code>) with greater than 50% accuracy, although there are also teams for which its accuracy is less than 50%.</p>
 </div>
 </div>
@@ -648,14 +607,14 @@ preds_by_tm &lt;-
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p>This is arguably a “bad” assumption. <a href="http://article.sapub.org/10.5923.s.sports.201401.08.html">Research</a> has shown that goal rate per minute increases in the last 15 minutes of a game.<a href="#fnref1" class="footnote-back">↩</a></p></li>
-<li id="fn2"><p>This may also be perceived to be a questionable assumption. One may argue that a matchup of “styles”—e.g. an aggressive team against another aggressive team—may distort the results from what would otherwise be expected.<a href="#fnref2" class="footnote-back">↩</a></p></li>
-<li id="fn3"><p>This approach is arguably too “simplistic”, but it is certainly a valid approach.<a href="#fnref3" class="footnote-back">↩</a></p></li>
-<li id="fn4"><p>See this <a href="https://www.pinnacle.com/en/betting-articles/Soccer/how-to-calculate-poisson-distribution/MD62MLXUMKMXZ6A8">Pinnacle blog post</a> for a discussion of the topic. (Undoubtedly there are many more articles and papers that explore a similar notion.)<a href="#fnref4" class="footnote-back">↩</a></p></li>
-<li id="fn5"><p>There are several notable differences with my work compared to that of Bååth: (1) I use the <a href="http://www.openbugs.net/w/FrontPage">OpenBUGS</a> software (and the <a href="https://cran.r-project.org/web/packages/R2OpenBUGS/index.html"><code>{R2OpenBUGS}</code> package</a>) instead of JAGS; (2) I evaluate EPL teams instead of La Liga teams, and over a different time period; (3) I use a “tidy” approach (in terms of packages, plotting, coding style, etc.) instead of a more traditional “base R” approach; (4) I implement a modified version of the second of Bååth’s three proposed models (notably, using different priors).<a href="#fnref5" class="footnote-back">↩</a></p></li>
-<li id="fn6"><p>Bååth’s work is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons license</a>, which allows for others to adapt the work of another.<a href="#fnref6" class="footnote-back">↩</a></p></li>
-<li id="fn7"><p>There are certainly also changes in team strength within seasons, which are even more difficult to model.<a href="#fnref7" class="footnote-back">↩</a></p></li>
-<li id="fn8"><p>There are certainly also changes in team strength within seasons, which are even more difficult to model.<a href="#fnref8" class="footnote-back">↩</a></p></li>
-<li id="fn9"><p>This explains why there are more than 20 teams in thee data set even though there are only 20 teams in the EPL in a given season.<a href="#fnref9" class="footnote-back">↩</a></p></li>
+<li id="fn1"><p>This is arguably a “bad” assumption. <a href="http://article.sapub.org/10.5923.s.sports.201401.08.html">Research</a> has shown that goal rate per minute increases in the last 15 minutes of a game.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>This may also be perceived to be a questionable assumption. One may argue that a matchup of “styles”—e.g. an aggressive team against another aggressive team—may distort the results from what would otherwise be expected.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>This approach is arguably too “simplistic”, but it is certainly a valid approach.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>See this <a href="https://www.pinnacle.com/en/betting-articles/Soccer/how-to-calculate-poisson-distribution/MD62MLXUMKMXZ6A8">Pinnacle blog post</a> for a discussion of the topic. (Undoubtedly there are many more articles and papers that explore a similar notion.)<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>There are several notable differences with my work compared to that of Bååth: (1) I use the <a href="http://www.openbugs.net/w/FrontPage">OpenBUGS</a> software (and the <a href="https://cran.r-project.org/web/packages/R2OpenBUGS/index.html"><code>{R2OpenBUGS}</code> package</a>) instead of JAGS; (2) I evaluate EPL teams instead of La Liga teams, and over a different time period; (3) I use a “tidy” approach (in terms of packages, plotting, coding style, etc.) instead of a more traditional “base R” approach; (4) I implement a modified version of the second of Bååth’s three proposed models (notably, using different priors).<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>Bååth’s work is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons license</a>, which allows for others to adapt the work of another.<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>There are certainly also changes in team strength within seasons, which are even more difficult to model.<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn8"><p>There are certainly also changes in team strength within seasons, which are even more difficult to model.<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+<li id="fn9"><p>This explains why there are more than 20 teams in thee data set even though there are only 20 teams in the EPL in a given season.<a href="#fnref9" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>

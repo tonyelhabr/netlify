@@ -16,42 +16,7 @@ header:
   image: "featured.jpg"
 ---
 
----
-title: Generating a Gallery of Visualizations for a Static Website (using R)
-date: "2019-07-20"
-categories:
-  - r
-tags:
-  - r
-  - blogdown
-  - portfolio
-image:
-  caption: ""
-  focal_point: ""
-  preview_only: true
-header:
-  caption: ""
-  image: "featured.jpg"
----
-
----
-title: Generating a Gallery of Visualizations for a Static Website (using R)
-date: "2019-07-20"
-categories:
-  - r
-tags:
-  - r
-  - blogdown
-  - portfolio
-image:
-  caption: ""
-  focal_point: ""
-  preview_only: true
-header:
-  caption: ""
-  image: "featured.jpg"
----
-
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
 <p>While I was browsing <a href="https://ryo-n7.github.io/">the website of fellow <code>R</code> blogger Ryo Nakagawara</a><a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, I
@@ -152,18 +117,18 @@ paths_post &lt;-
   select(date, viz, title, path_post)
 paths_post</code></pre>
 <pre><code>## # A tibble: 71 x 4
-##    date       viz             title                   path_post            
-##    &lt;date&gt;     &lt;chr&gt;           &lt;chr&gt;                   &lt;chr&gt;                
-##  1 2018-05-20 viz_map_bycomp~ An Analysis of Texas H~ /post/analysis-texas~
-##  2 2018-05-20 viz_map_bycomp~ An Analysis of Texas H~ /post/analysis-texas~
-##  3 2018-05-20 viz_n_bycomplv~ An Analysis of Texas H~ /post/analysis-texas~
-##  4 2018-05-20 viz_n_bycomp-1~ An Analysis of Texas H~ /post/analysis-texas~
-##  5 2018-05-20 viz_n_bycompco~ An Analysis of Texas H~ /post/analysis-texas~
-##  6 2018-05-20 viz_n_bycompco~ An Analysis of Texas H~ /post/analysis-texas~
-##  7 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
-##  8 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
-##  9 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
-## 10 2018-05-20 viz_persons_st~ An Analysis of Texas H~ /post/analysis-texas~
+##    date       viz              title                      path_post             
+##    &lt;date&gt;     &lt;chr&gt;            &lt;chr&gt;                      &lt;chr&gt;                 
+##  1 2018-05-20 viz_map_bycompl~ An Analysis of Texas High~ /post/analysis-texas-~
+##  2 2018-05-20 viz_map_bycompl~ An Analysis of Texas High~ /post/analysis-texas-~
+##  3 2018-05-20 viz_n_bycomplvl~ An Analysis of Texas High~ /post/analysis-texas-~
+##  4 2018-05-20 viz_n_bycomp-1.~ An Analysis of Texas High~ /post/analysis-texas-~
+##  5 2018-05-20 viz_n_bycompcom~ An Analysis of Texas High~ /post/analysis-texas-~
+##  6 2018-05-20 viz_n_bycompcom~ An Analysis of Texas High~ /post/analysis-texas-~
+##  7 2018-05-20 viz_persons_sta~ An Analysis of Texas High~ /post/analysis-texas-~
+##  8 2018-05-20 viz_persons_sta~ An Analysis of Texas High~ /post/analysis-texas-~
+##  9 2018-05-20 viz_persons_sta~ An Analysis of Texas High~ /post/analysis-texas-~
+## 10 2018-05-20 viz_persons_sta~ An Analysis of Texas High~ /post/analysis-texas-~
 ## # ... with 61 more rows</code></pre>
 <pre class="r"><code># Create the markdown lines for images (visualizations) for our gallery markdown output.
 paths_post_md &lt;-
@@ -174,18 +139,18 @@ paths_post_md &lt;-
   select(title, date, path_post, label_md)
 paths_post_md</code></pre>
 <pre><code>## # A tibble: 71 x 4
-##    title               date       path_post           label_md             
-##    &lt;chr&gt;               &lt;date&gt;     &lt;chr&gt;               &lt;chr&gt;                
-##  1 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_map_bycomplvl_~
-##  2 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_map_bycomplvl_~
-##  3 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycomplvl-1.~
-##  4 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycomp-1.png~
-##  5 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycompcomplv~
-##  6 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_n_bycompcomplv~
-##  7 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
-##  8 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
-##  9 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
-## 10 An Analysis of Tex~ 2018-05-20 /post/analysis-tex~ ![viz_persons_stats_~
+##    title                 date       path_post            label_md               
+##    &lt;chr&gt;                 &lt;date&gt;     &lt;chr&gt;                &lt;chr&gt;                  
+##  1 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_map_bycomplvl_gr~
+##  2 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_map_bycomplvl_gr~
+##  3 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_n_bycomplvl-1.pn~
+##  4 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_n_bycomp-1.png](~
+##  5 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_n_bycompcomplvl-~
+##  6 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_n_bycompcomplvlc~
+##  7 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_persons_stats_by~
+##  8 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_persons_stats_by~
+##  9 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_persons_stats_by~
+## 10 An Analysis of Texas~ 2018-05-20 /post/analysis-texa~ ![viz_persons_stats_by~
 ## # ... with 61 more rows</code></pre>
 <pre class="r"><code># Create the &quot;main&quot; data frame with the titles and dates in columns alongside the image column.
 # In &quot;tidy data&quot; terminology, images are the &quot;observations&quot; *and `title` and `date` are separate variables).
@@ -218,18 +183,18 @@ content_gallery_raw &lt;-
   arrange(desc(idx_intragrp), idx_intergrp)
 content_gallery_raw</code></pre>
 <pre><code>## # A tibble: 90 x 4
-##    idx_intragrp idx_intergrp date       label_md                           
-##           &lt;int&gt;        &lt;int&gt; &lt;date&gt;     &lt;chr&gt;                              
-##  1           19            1 2019-06-29 ## 2019-06-29, [Text Parsing and T~
-##  2           19            2 2019-06-29 ![viz_toc_n_1yr_tree.png](/post/te~
-##  3           19            3 2019-06-29 ![viz_content_section_n.png](/post~
-##  4           19            4 2019-06-29 ![viz_toc_content_n1.png](/post/te~
-##  5           19            5 2019-06-29 ![viz_sents_section_n.png](/post/t~
-##  6           19            6 2019-06-29 ![viz_sents_section_n_yr.png](/pos~
-##  7           19            7 2019-06-29 ![viz_sents_section_sim.png](/post~
-##  8           19            8 2019-06-29 ![viz_words_section_tfidf.png](/po~
-##  9           19            9 2019-06-29 ![viz_words_tfidf.png](/post/text-~
-## 10           18            1 2019-01-27 ## 2019-01-27, [Summarizing rstudi~
+##    idx_intragrp idx_intergrp date       label_md                                
+##           &lt;int&gt;        &lt;int&gt; &lt;date&gt;     &lt;chr&gt;                                   
+##  1           19            1 2019-06-29 ## 2019-06-29, [Text Parsing and Text A~
+##  2           19            2 2019-06-29 ![viz_toc_n_1yr_tree.png](/post/text-pa~
+##  3           19            3 2019-06-29 ![viz_content_section_n.png](/post/text~
+##  4           19            4 2019-06-29 ![viz_toc_content_n1.png](/post/text-pa~
+##  5           19            5 2019-06-29 ![viz_sents_section_n.png](/post/text-p~
+##  6           19            6 2019-06-29 ![viz_sents_section_n_yr.png](/post/tex~
+##  7           19            7 2019-06-29 ![viz_sents_section_sim.png](/post/text~
+##  8           19            8 2019-06-29 ![viz_words_section_tfidf.png](/post/te~
+##  9           19            9 2019-06-29 ![viz_words_tfidf.png](/post/text-parsi~
+## 10           18            1 2019-01-27 ## 2019-01-27, [Summarizing rstudio::co~
 ## # ... with 80 more rows</code></pre>
 <pre class="r"><code># Create the final markdown output.
 content_gallery &lt;-
@@ -243,18 +208,18 @@ content_gallery &lt;-
   ungroup()
 content_gallery</code></pre>
 <pre><code>## # A tibble: 180 x 2
-##    label_md                                                             idx
-##    &lt;chr&gt;                                                              &lt;int&gt;
-##  1 &quot;&quot;                                                                    NA
-##  2 ## 2019-06-29, [Text Parsing and Text Analysis of a Periodic Repo~     1
-##  3 &quot;&quot;                                                                    NA
-##  4 ![viz_toc_n_1yr_tree.png](/post/text-parsing-analysis-periodic-re~     2
-##  5 &quot;&quot;                                                                    NA
-##  6 ![viz_content_section_n.png](/post/text-parsing-analysis-periodic~     3
-##  7 &quot;&quot;                                                                    NA
-##  8 ![viz_toc_content_n1.png](/post/text-parsing-analysis-periodic-re~     4
-##  9 &quot;&quot;                                                                    NA
-## 10 ![viz_sents_section_n.png](/post/text-parsing-analysis-periodic-r~     5
+##    label_md                                                                  idx
+##    &lt;chr&gt;                                                                   &lt;int&gt;
+##  1 &quot;&quot;                                                                         NA
+##  2 &quot;## 2019-06-29, [Text Parsing and Text Analysis of a Periodic Report (~     1
+##  3 &quot;&quot;                                                                         NA
+##  4 &quot;![viz_toc_n_1yr_tree.png](/post/text-parsing-analysis-periodic-report~     2
+##  5 &quot;&quot;                                                                         NA
+##  6 &quot;![viz_content_section_n.png](/post/text-parsing-analysis-periodic-rep~     3
+##  7 &quot;&quot;                                                                         NA
+##  8 &quot;![viz_toc_content_n1.png](/post/text-parsing-analysis-periodic-report~     4
+##  9 &quot;&quot;                                                                         NA
+## 10 &quot;![viz_sents_section_n.png](/post/text-parsing-analysis-periodic-repor~     5
 ## # ... with 170 more rows</code></pre>
 <pre class="r"><code>content_copypaste &lt;- content_gallery %&gt;% pull(label_md)
 
@@ -266,9 +231,9 @@ clipr::write_clip(content_copypaste)</code></pre>
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p>one of my favorite <code>R</code> bloggers, by the way<a href="#fnref1" class="footnote-back">↩</a></p></li>
-<li id="fn2"><p>in fact, many people dedicate website’s exclusively to showing off work that they’ve done.<a href="#fnref2" class="footnote-back">↩</a></p></li>
-<li id="fn3"><p>I apologize if I’ve offended English speakers/readers who use/prefer “s” to “z” (for “viz”). I’m American, and nearly all Americans use “z”!<a href="#fnref3" class="footnote-back">↩</a></p></li>
-<li id="fn4"><p>Because Hugo websites follow a standard structure, I really don’t think that the choice of theme shouldn’t be the reason why this wouldn’t work for someone else’s website, but I figured I would mention the theme.<a href="#fnref4" class="footnote-back">↩</a></p></li>
+<li id="fn1"><p>one of my favorite <code>R</code> bloggers, by the way<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>in fact, many people dedicate website’s exclusively to showing off work that they’ve done.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>I apologize if I’ve offended English speakers/readers who use/prefer “s” to “z” (for “viz”). I’m American, and nearly all Americans use “z”!<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>Because Hugo websites follow a standard structure, I really don’t think that the choice of theme shouldn’t be the reason why this wouldn’t work for someone else’s website, but I figured I would mention the theme.<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
