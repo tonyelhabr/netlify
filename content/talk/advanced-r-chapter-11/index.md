@@ -1,6 +1,6 @@
 +++
-title = "Tidyverse Basics"
-date = 2017-01-01T00:00:00  # Schedule page publish date.
+title = "Advanced R Chapter 11: Function operators"
+date = 2020-06-12T00:00:00  # Schedule page publish date.
 draft = false
 
 # Talk start and end times.
@@ -13,7 +13,7 @@ authors = ["Tony ElHabr"]
 
 # Abstract and optional shortened version.
 abstract = ""
-abstract_short = "Advanced R Chapter 3: Vectors"
+abstract_short = "Advanced R Chapter 11: Function operators"
 
 # Name of event and optional event URL.
 event = "R4DS Advanced R Book Club"
