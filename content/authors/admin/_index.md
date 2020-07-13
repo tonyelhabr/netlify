@@ -40,4 +40,4 @@ social:
 superuser: true
 ---
 
-I work as an analyst in the power trading industry. I recieved my B.S. in Electrical Engineering at the [University of Texas at Austin](http://www.ece.utexas.edu/) in May 2016, and my M.S. in Analytics at [Georgia Tech](https://www.analytics.gatech.edu/) in May 2020.
+I work as an analyst in the power trading industry.

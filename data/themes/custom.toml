@@ -11,6 +11,7 @@ light = false
 # primary = "hsl(339, 90%, 68%)"
 # primary_light = "hsl(339, 90%, 78%)"
 # primary_dark = "hsl(339, 90%, 58%)"
+# primary = "hsl(339, 90%, 58%)"
 primary = "hsl(265, 89%, 78%)" # purple
 # primary = "hsl(135, 94%, 65%)" # green
 
