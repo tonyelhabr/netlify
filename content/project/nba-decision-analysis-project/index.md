@@ -1,6 +1,6 @@
 +++
 # Date this page was created.
-date = 2018-02-24T00:00:00
+date = 2099-02-24T00:00:00
 
 # Project title.
 title = "NBA Decision Analysis"

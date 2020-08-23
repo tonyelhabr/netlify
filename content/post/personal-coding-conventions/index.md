@@ -1,7 +1,7 @@
 ---
 title: Personal Coding Conventions
 # slug: personal-coding-conventions
-date: "2018-02-10"
+date: "2099-12-12" # "2018-02-10"
 categories:
   - r
 image:

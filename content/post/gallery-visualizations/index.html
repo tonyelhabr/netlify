@@ -16,6 +16,24 @@ header:
   image: "featured.jpg"
 ---
 
+---
+title: Generating a Gallery of Visualizations for a Static Website (using R)
+date: "2019-07-20"
+categories:
+  - r
+tags:
+  - r
+  - blogdown
+  - portfolio
+image:
+  caption: ""
+  focal_point: ""
+  preview_only: true
+header:
+  caption: ""
+  image: "featured.jpg"
+---
+
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
@@ -55,7 +73,7 @@ This may not be what you would like for your gallery format.</p></li>
 paths_post_raw &lt;-
   fs::dir_ls(
     &#39;content/post/&#39;,
-    regexp = &#39;index[.]md$&#39;,
+    regexp = &#39;index[.]R?md$&#39;,
     recurse = TRUE
   ) %&gt;% 
   # Ignore the &quot;_index.md&quot; at the base of the content/post directory.
@@ -67,11 +85,11 @@ paths_post_raw[1:10]</code></pre>
 ##  [3] &quot;content/post/analysis-texas-high-school-academics-3-individuals/index.md&quot;  
 ##  [4] &quot;content/post/analysis-texas-high-school-academics-4-schools/index.md&quot;      
 ##  [5] &quot;content/post/analysis-texas-high-school-academics-5-miscellaneous/index.md&quot;
-##  [6] &quot;content/post/cheat-sheet-rmarkdown/index.md&quot;                               
-##  [7] &quot;content/post/data-science-podcasts/index.md&quot;                               
-##  [8] &quot;content/post/dry-principle-make-a-package/index.md&quot;                        
-##  [9] &quot;content/post/gallery-visualizations/old/index.md&quot;                          
-## [10] &quot;content/post/interval-data-nycflights13/index.md&quot;</code></pre>
+##  [6] &quot;content/post/bayesian-statistics-english-premier-league/index.Rmd&quot;         
+##  [7] &quot;content/post/cheat-sheet-rmarkdown/index.md&quot;                               
+##  [8] &quot;content/post/data-science-podcasts/index.md&quot;                               
+##  [9] &quot;content/post/dry-principle-make-a-package/index.md&quot;                        
+## [10] &quot;content/post/gallery-visualizations/index.Rmd&quot;</code></pre>
 <pre class="r"><code># Define some important regular expressions (or &quot;regex&quot;es).
 # These regexes are probably applicable to most Hugo/blogdown setups.
 rgx_replace &lt;- &#39;(content\\/post\\/)(.*)(\\/)(.*)([.]png$)&#39;

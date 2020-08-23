@@ -77,7 +77,7 @@ library(tidyverse)
 paths_post_raw <-
   fs::dir_ls(
     'content/post/',
-    regexp = 'index[.]md$',
+    regexp = 'index[.]R?md$',
     recurse = TRUE
   ) %>% 
   # Ignore the "_index.md" at the base of the content/post directory.

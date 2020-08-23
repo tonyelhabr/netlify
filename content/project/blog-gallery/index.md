@@ -1,7 +1,7 @@
 +++
 # Date this page was created.
-date = 2019-06-30T00:00:00
-draft = false
+date = 2099-01-01T00:00:00
+draft = true
 
 # Project title.
 title = "Gallery of Visualizations"

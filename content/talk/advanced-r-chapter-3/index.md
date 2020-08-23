@@ -1,6 +1,6 @@
 +++
 title = "Advanced R Chapter 3: Vectors"
-date = 2020-04-17T00:00:00  # Schedule page publish date.
+date = 2020-04-17T19:00:00  # Schedule page publish date.
 draft = false
 
 # Talk start and end times.
@@ -46,7 +46,7 @@ tags = ["r"]
 slides = ""
 
 # Links (optional).
-url_pdf = "https://github.com/r4ds/bookclub-Advanced_R/blob/master/Presentations/Week03/Chap3slides.pdf"
+url_pdf = "https://github.com/r4ds/bookclub-Advanced_R/blob/master/Presentations/Week03/Cohort1/Chap3slides.pdf"
 url_slides = ""
 url_video = "https://www.youtube.com/watch?v=pQ-xDAPEQaw"
 url_code = ""

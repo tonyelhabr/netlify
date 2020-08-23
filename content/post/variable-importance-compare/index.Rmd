@@ -398,6 +398,17 @@ compare_and_rank_vip <-
       } else {
         vip_wrapper_partial_shap(exact = TRUE)
       }
+    
+    z <-
+      vip::vi_shap(
+        # method = 'shap',
+        object = fit_wf$fit,
+        # metric = 'rmse',
+        pred_wrapper = f_predict,
+        # num_features = x_trn_jui %>% ncol(),
+        train = x_trn_jui
+      )
+    z
 
     # # Removed this part since it's basically redundant with the `{vip}` SHAP method (which I checked).
     # fastshap_partial <-

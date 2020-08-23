@@ -23,78 +23,17 @@ output:
 always_allow_html: true
 ---
 
-```{r setup, include=F, echo=F, cache=F}
-.dir_proj <- here::here('content', 'post', 'bayesian-statistics-english-premier-league')
-.dir_output <- file.path(.dir_proj, 'output')
-# rmarkdown::render(file.path(.dir_proj, 'index.Rmd'), output_file = file.path(.dir_proj, 'index.md'))
-knitr::opts_knit$set(root.dir = .dir_proj)
-knitr::opts_chunk$set(
-  rows.print = 30,
-  include = FALSE,
-  echo = FALSE,
-  # cache = TRUE,
-  cache.lazy = FALSE,
-  fig.show = 'hide',
-  fig.align = 'center',
-  fig.width = 8,
-  # size = 'small',
-  # fig.height = 5,
-  # fig.width = 5,
-  # out.width = 5,
-  fig.asp = 0.75,
-  warning = FALSE,
-  message = FALSE
-)
-```
 
-```{r postprocess, cache=F}
-# .path_sans_ext <- file.path('project')
-# .path_rmd <- paste0(.path_sans_ext, '.Rmd')
-# spelling::spell_check_files(.path_rmd)
-# options(width = 200)
-# opt_old <- getOption('tibble.print_min')
-# options(tibble.print_min = 30)
-```
+
+
 
 As [I mentioned back in July](/post/cheat-sheet-rmarkdown), I haven't had as much time (since summer of 2018) to write due to taking classes in pursuit of a degree from  [Georgia Tech's Online Master of Science in Analytics (OMSA)](https://pe.gatech.edu/degrees/analytics) program. On the other hand, the classes have given me some ideas for future content. And, in the case of the [Bayesian Statistics](https://en.wikipedia.org/wiki/Bayesian_statistics) class that I took this past fall, there's content that translates well to a blog post directly. What follows is a lightly edited version of the report that I submitted at the end of the semester for this class.
 
-```{r setup-appendix}
-library(tidyverse)
-```
 
-```{r setup-funcs}
-file_path <- partial(file.path, fsep = '/', ... = )
-file_path_proj <- partial(file_path, .dir_proj, ... = )
-file_path_out <- partial(file_path, .dir_proj, 'output', ... = )
-```
 
-```{r setup-unused}
-create_kable <-
-  function (data,
-            n_show = 30L,
-            show_footnote = ifelse(nrow(data) > n_show, TRUE, FALSE),
-            n_footnote = nrow(data),
-            format = 'html',
-            ...,
-            full_width = FALSE,
-            position = 'center') {
-    stopifnot(is.data.frame(data))
-    res <- data
-    if (show_footnote & (n_show < nrow(data))) {
-      res <- res[1:n_show,]
-    }
-    res <- knitr::kable(res, format = format, escape = FALSE)
-    if (format == 'html') {
-      res <- kableExtra::kable_styling(res, full_width = full_width,
-                                       position = position)
-      if (show_footnote) {
-        res <-
-          kableExtra::add_footnote(res, c(sprintf( '# of total rows: %s', scales::comma(n_footnote))), notation = 'number')
-      }
-    }
-    res
-  }
-```
+
+
+
 
 # Introduction
 
@@ -121,17 +60,240 @@ Using Poisson distributions to model soccer scores is certainly not a novel conc
 
 For this project I retrieved game scores and outcomes for the previous three seasons of EPL games (i.e. from the 2016-17 season through the 2018-2019 season).
 
-```{r scrape-prep}
-path_epl_data <- file_path_proj('data', 'epl.csv')
-eval_scrape <- !fs::file_exists(path_epl_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Before impementing some models, I need to "wrangle" the raw data a bit in order to put it in a more workable format for OpenBUGs. (Specifically, I need to put it into a list.)
+
+
+
+# Modeling
+
+My model is formally defined as follows.
+
+$$
+\begin{array}{c}
+g_h \sim \mathcal{Pois}(\lambda_{h,i,j}) \\
+g_a \sim \mathcal{Pois}(\lambda_{a,i,j}) \\
+\log(\lambda_{h,i,j}) = \text{baseline}_h + (z_i - z_j) \\
+\log(\lambda_{a,i,j}) = \text{baseline}_a + (z_j - z_i). \\
+\end{array}
+$$
+
+This model estimates the goals scored by the home team, $g_h$, and the goals scored by the away team, $g_a$, in a given game between home team, $\text{tm}_h$, and away team, $\text{tm}_a$, as random variables coming from independent Poisson processes, $\mathcal{Pois}(\lambda_{h,i,j})$ and $\mathcal{Pois}(\lambda_{a,i,j})$. The log of the rate of goals scored by the home team, $\lambda_{h,i,j}$, in a game between $\text{tm}_i$ and $\text{tm}_j$ is modeled as the sum of a "baseline" average of goals scored by any given team playing at home, $\text{baseline}_h$, and the difference between the team "strength" $z$ of teams $i$ and $j$ in a given game. I define the log of the goal rate by the away team, $\lambda_{a,i,j}$, in a similar fashion. [^8] It is important to distinguish the baseline levels for home and away so as to account for ["home field advantage"](https://en.wikipedia.org/wiki/Home_advantage). (One should expect to find that $\text{baseline}_h > \text{baseline}_a$ in the posterior estimates.)
+
+[^8]: Note that I substitute the baseline home average goal rate with a baseline for away teams, $\text{baseline}_a$, and I swap the order of the $z_j$ and $z_i$ teams since the relationship is not bi-directional. Also, note that I am careful to distinguish between subscript pair $_h$ and $_a$ for home and away and pair $_i$ and $_j$ for team $i$ and team $j$. The latter pair is independent of the notion of home or away.
+
+Since I am employing a Bayesian approach, I need to model priors as well. I define them as follows.
+
+$$
+\begin{array}{c}
+\text{baseline}_h \sim \mathcal{N}(0, 2^2) \\
+\text{baseline}_a \sim \mathcal{N}(0, 2^2) \\
+z_{i} \sim \mathcal{N}(z_{\text{all}} , \sigma^2_{\text{all}}) \quad \text{tm}_i > 1 \\
+z_{\text{all}} \sim \mathcal{N}(0, 2^2) \\
+\sigma_{\text{all}} \sim \mathcal{U}(0, 2).
+\end{array}
+$$
+
+There are a couple of things to note about these priors. First, I must "zero"-anchor the strength estimate $z$ of one team. (This is manifested by $\text{tm}_i > 1$.) Here, I choose the first team alphabetically---Arsenal. Second, the priors are intentionally defined to be relatively vague (although not too vauge) so as to allow the posterior estimates to be heavily defined by the data rather than the priors. Note that the standard deviation of the overall team strength parameter $z_{\text{all}}$, defined as $2$ on a log scale, corresponds to an interval of $\left[e^{-2}, e^2\right] = \left[0.13, 7.40\right]$ on an unstransformed scale, i.e. goals scored per game.
+
+
+I leverage the [`{R2OpenBUGs}` package](https://cran.r-project.org/web/packages/R2OpenBUGS/index.html) to create this model with R on the "frontend" and generate the results using the OpenBUGS engine on the "backend". Regarding the implementation itself, note that I run 100,000 simulations (`n.iter`), minus 1,000 "burn-in" runs (`n.burn`).
+
+
+
+
+
+
+
+
+
+
+
+
+
+The raw results are as follows. (As a quick "validation" of these results, note that $\text{baseline}_h > \text{baseline}_a$, as hypothesized.)
+
+
+
+
+
+
+
+
+
+# Interpretation & Discussion
+
+Next, I correspond the strength estimates $z$ to teams. Notably, I must "re-add" the zero-anchored team---Arsenal (whose $z$ is assigned a dummy value of 1). To do this, I impute its credible set quantiles using the values of the overall strength term $z_{\text{all}}$.
+
+
+
+
+
+
+
+
+
+
+
+<img src="index_files/figure-html/viz_summ_1_z-show-1.png" style="display: block; margin: auto;" />
+
+It's not surprising to see that the strength ($z$) corresponding to all but three teams---Liverpool, Man City, and Tottenham---is negative. These three teams, followed closely by Arsenal have been regarded as the best teams for the past two or three EPL seasons. So, relative to Arsenal, all other teams (aside from the top three) are viewed as "worse" by the model.
+
+Note that the $z$ estimates above should not be interpreted as goals scored by the teams because they are relative to the strength of Arsenal. To facilitate such an interpretation, I need to translate $z$ to goals scored per game. To do this, for each $z$, I (1) subtract the average value of all $z$'s, (2) add the posterior mean of $\text{baseline}_{h}$, and (3) exponentiate.
+
+The plot below shows the results of this transformation.
+
+
+
+
+
+
+
+
+
+<img src="index_files/figure-html/viz_summ_1_z_adj-show-1.png" style="display: block; margin: auto;" />
+
+
+## Predictions
+
+I can make predictions of game results for the historical data, given the model. <hide>(Since the model estimates were calculated using this data, I'm really predicting on the "training" set here.)</hide> Specifically, I simulate the score for both teams in each matchup (1,140 in all) 1,000 times, choosing the result inferred by the mode of each side's simulated score. (For example, if the mode of the 1,000 simulated scores for the away team  is 1 and that of the home team is 2, then the predicted outcome is a win for the home team.) A breakdown of the predicted and actual outcomes is shown below.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<img src="index_files/figure-html/viz_conf_mat-show-1.png" style="display: block; margin: auto;" />
+
+I make a couple of observations:
+
++ The most common outcome  is an actual win by the home team and a predicted win by the home team.
++ The model never predicts a tie. (This may seem "unreasonable", but Bååth also found this to be true for his final model.) 
++ The model predicts the outcome correctly in 447 + 216 = 663 of 1,140 games (i.e., 58%).
+
+
+The next couple of visuals provide more details regarding the simulated outcomes.
+
+
+
+
+
+
+
+<img src="index_files/figure-html/viz_g_mode-show-1.png" style="display: block; margin: auto;" />
+
+From the above graph of the mode of goals scored by both sides, it's apparent that a 2-1 scores in favor of the home side is the most common outcome.
+
+
+
+
+
+
+
+<img src="index_files/figure-html/viz_g_mean-show-1.png" style="display: block; margin: auto;" />
+
+The above histogram illustrating the mean (instead of the mode) of the simulated goals provides a bit more nuance to our understanding of modes shown before.
+
+
+
+
+
+
+
+<img src="index_files/figure-html/viz_result_mode-show-1.png" style="display: block; margin: auto;" />
+
+Finally, the above visual shows the predicted outcomes (inferred from the prior graph of predicted modes).
+
+To better understand how the model works on a team-level basis, let's look at how well it predicts for each team.
+
+
+
+
+
+
+```
+## # A tibble: 26 x 4
+##    tm_h           is_correct     n pct   
+##    <chr>          <lgl>      <int> <chr> 
+##  1 Arsenal        TRUE          46 80.70%
+##  2 Man City       TRUE          45 78.95%
+##  3 Tottenham      TRUE          43 75.44%
+##  4 Liverpool      TRUE          41 71.93%
+##  5 Chelsea        TRUE          39 68.42%
+##  6 Cardiff        TRUE          12 63.16%
+##  7 Everton        TRUE          36 63.16%
+##  8 Fulham         TRUE          12 63.16%
+##  9 Man United     TRUE          35 61.40%
+## 10 Huddersfield   TRUE          23 60.53%
+## 11 Burnley        TRUE          34 59.65%
+## 12 Stoke          TRUE          22 57.89%
+## 13 Bournemouth    TRUE          30 52.63%
+## 14 Crystal Palace TRUE          30 52.63%
+## 15 Sunderland     TRUE          10 52.63%
+## 16 Swansea        TRUE          20 52.63%
+## 17 West Ham       TRUE          30 52.63%
+## 18 Watford        TRUE          29 50.88%
+## 19 Newcastle      TRUE          19 50.00%
+## 20 Leicester      TRUE          28 49.12%
+## 21 Middlesbrough  TRUE           9 47.37%
+## 22 West Brom      TRUE          18 47.37%
+## 23 Wolves         TRUE           9 47.37%
+## 24 Brighton       TRUE          15 39.47%
+## 25 Southampton    TRUE          22 38.60%
+## 26 Hull           TRUE           6 31.58%
 ```
 
-```{r scrape-appendix-1}
+
+
+In most cases, the model predicts the outcome correctly (see `is_correct`) with greater than 50% accuracy, although there are also teams for which its accuracy is less than 50%.
+
+# Conclusion
+
+In summary, I have created a hierarchical Poisson model to predict scores---and, consequently, game outcomes---for EPL games for the three seasons starting in 2016 and ending in 2018. The model has an training set prediction accuracy of 663. [Bååth](http://www.sumsar.net/blog/2013/07/modeling-match-results-in-la-liga-part-one/), whose work inspired mine, achieved an accuracy of 56% with his final model.
+
+## Future Work
+
+My model can certainly be improved. One major flaw of the model is that it does not account for temporal effects, i.e. differences in team strength across seasons. [^9] The consequences of this flaw are compounded by the fact that the pool of teams in each EPL season changes. At the end of each season, the three "worst" EPL teams (by win-loss-tie record) are "relegated" to a secondary league, and, in turn, three secondary league teams are "promoted" to the EPL in their place. [^10] Consequently, one might say that the estimates of the teams that do not appear in all seasons are exaggerated.
+
+[^9]: There are certainly also changes in team strength within seasons, which are even more difficult to model.
+
+[^10]: This explains why there are more than 20 teams in thee data set even though there are only 20 teams in the EPL in a given season.
+
+# Appendix
+
+## Code
+
+See all relevant R code below.
+
+
+```r
+library(tidyverse)
 # Data Collection
 seasons <- 2016L:2018L
-```
-
-```{r scrape-appendix-2, eval=eval_scrape}
 # Reference: https://github.com/jalapic/engsoccerdata/blob/master/R/england_current.R
 scrape_epl_data <- function(season = lubridate::year(Sys.Date()) - 1L) {
   s1 <- season %>% str_sub(3, 4) %>% as.integer()
@@ -172,27 +334,6 @@ data <-
   tibble(season = seasons) %>% 
   mutate(data = map(season, scrape_epl_data)) %>% 
   unnest(data)
-```
-
-```{r scrape-post, eval=eval_scrape}
-write_csv(data, path_epl_data)
-```
-
-```{r scrape-2}
-data <- read_csv(path_epl_data)
-```
-
-```{r scrape-show, include=F}
-data
-```
-
-```{r eda-1, eval=F}
-data %>% summarise_at(vars(g_h, g_a), list(mean = mean, sd = sd))
-```
-
-Before impementing some models, I need to "wrangle" the raw data a bit in order to put it in a more workable format for OpenBUGs. (Specifically, I need to put it into a list.)
-
-```{r data_list-appendix}
 pull_distinctly <- function (data, var = -1, ..., decreasing = FALSE) {
   var <- tidyselect::vars_pull(names(data), !!rlang::enquo(var))
   sort(unique(data[[var]]), decreasing = decreasing, ...)
@@ -222,48 +363,6 @@ data_list <-
     n_season = n_season
   )
 data_list
-```
-
-# Modeling
-
-My model is formally defined as follows.
-
-$$
-\begin{array}{c}
-g_h \sim \mathcal{Pois}(\lambda_{h,i,j}) \\
-g_a \sim \mathcal{Pois}(\lambda_{a,i,j}) \\
-\log(\lambda_{h,i,j}) = \text{baseline}_h + (z_i - z_j) \\
-\log(\lambda_{a,i,j}) = \text{baseline}_a + (z_j - z_i). \\
-\end{array}
-$$
-
-This model estimates the goals scored by the home team, $g_h$, and the goals scored by the away team, $g_a$, in a given game between home team, $\text{tm}_h$, and away team, $\text{tm}_a$, as random variables coming from independent Poisson processes, $\mathcal{Pois}(\lambda_{h,i,j})$ and $\mathcal{Pois}(\lambda_{a,i,j})$. The log of the rate of goals scored by the home team, $\lambda_{h,i,j}$, in a game between $\text{tm}_i$ and $\text{tm}_j$ is modeled as the sum of a "baseline" average of goals scored by any given team playing at home, $\text{baseline}_h$, and the difference between the team "strength" $z$ of teams $i$ and $j$ in a given game. I define the log of the goal rate by the away team, $\lambda_{a,i,j}$, in a similar fashion. [^8] It is important to distinguish the baseline levels for home and away so as to account for ["home field advantage"](https://en.wikipedia.org/wiki/Home_advantage). (One should expect to find that $\text{baseline}_h > \text{baseline}_a$ in the posterior estimates.)
-
-[^8]: Note that I substitute the baseline home average goal rate with a baseline for away teams, $\text{baseline}_a$, and I swap the order of the $z_j$ and $z_i$ teams since the relationship is not bi-directional. Also, note that I am careful to distinguish between subscript pair $_h$ and $_a$ for home and away and pair $_i$ and $_j$ for team $i$ and team $j$. The latter pair is independent of the notion of home or away.
-
-Since I am employing a Bayesian approach, I need to model priors as well. I define them as follows.
-
-$$
-\begin{array}{c}
-\text{baseline}_h \sim \mathcal{N}(0, 2^2) \\
-\text{baseline}_a \sim \mathcal{N}(0, 2^2) \\
-z_{i} \sim \mathcal{N}(z_{\text{all}} , \sigma^2_{\text{all}}) \quad \text{tm}_i > 1 \\
-z_{\text{all}} \sim \mathcal{N}(0, 2^2) \\
-\sigma_{\text{all}} \sim \mathcal{U}(0, 2).
-\end{array}
-$$
-
-There are a couple of things to note about these priors. First, I must "zero"-anchor the strength estimate $z$ of one team. (This is manifested by $\text{tm}_i > 1$.) Here, I choose the first team alphabetically---`r tms[1]`. Second, the priors are intentionally defined to be relatively vague (although not too vauge) so as to allow the posterior estimates to be heavily defined by the data rather than the priors. Note that the standard deviation of the overall team strength parameter $z_{\text{all}}$, defined as $2$ on a log scale, corresponds to an interval of $\left[e^{-2}, e^2\right] = \left[0.13, 7.40\right]$ on an unstransformed scale, i.e. goals scored per game.
-
-
-I leverage the [`{R2OpenBUGs}` package](https://cran.r-project.org/web/packages/R2OpenBUGS/index.html) to create this model with R on the "frontend" and generate the results using the OpenBUGS engine on the "backend". Regarding the implementation itself, note that I run 100,000 simulations (`n.iter`), minus 1,000 "burn-in" runs (`n.burn`).
-
-```{r model_1-prep}
-path_res_sim_1 <- file_path_out('res_sim_1.rds')
-eval_model_1 <- !fs::file_exists(path_res_sim_1)
-```
-
-```{r model_1-appendix, echo=F}
 model_1 <- glue::glue_collapse('model {
   for(g in 1:n_gm) {
     g_h[g] ~ dpois(lambda_h[tm_h[g], tm_a[g]])
@@ -291,13 +390,6 @@ model_1 <- glue::glue_collapse('model {
 
 path_model_1 <- 'model_1.txt'
 write_lines(model_1, path_model_1)
-```
-
-```{r model_1-show, include=F}
-model_1
-```
-
-```{r res_sim_1-show-appendix, eval=eval_model_1}
 if(eval_model_1) {
   # inits_1 <- list(n_tm = data_list$n_tm)
   inits_1 <- NULL
@@ -321,45 +413,6 @@ if(eval_model_1) {
       n.burnin = 1000
     )
 }
-```
-
-```{r res_sim_1_export, eval=eval_model_1}
-if(eval_model_1) {
-  write_rds(res_sim_1, path_res_sim_1)
-}
-```
-
-```{r res_sim_1_import}
-res_sim_1 <- read_rds(path_res_sim_1)
-```
-
-The raw results are as follows. (As a quick "validation" of these results, note that $\text{baseline}_h > \text{baseline}_a$, as hypothesized.)
-
-```{r res_summ_1}
-res_summ_1 <-
-  res_sim_1$summary %>% 
-  as_tibble()
-res_summ_1
-```
-
-```{r res_summ_1-show-pre}
-.opt_old <- getOption('tibble.print_min')
-options(tibble.print_min = 30)
-```
-
-```{r res_summ_1-show, echo=T}
-res_summ_1
-```
-
-```{r res_summ_1-show-post}
-options(tibble.print_min = .opt_old)
-```
-
-# Interpretation & Discussion
-
-Next, I correspond the strength estimates $z$ to teams. Notably, I must "re-add" the zero-anchored team---`r tms[1]` (whose $z$ is assigned a dummy value of 1). To do this, I impute its credible set quantiles using the values of the overall strength term $z_{\text{all}}$.
-
-```{r res_sim_summ_1-appendix}
 # Model 1 Interpretation
 z_var_lvls <- sprintf('z[%d]', 2:n_tm)
 var_lvls <- c(paste0('baseline', c('_a', '_h')), 'sigma_all', z_var_lvls, 'z_all')
@@ -424,9 +477,6 @@ res_sim_summ_1_z <-
   select(tm, everything()) %>% 
   arrange(tm)
 res_sim_summ_1_z
-```
-
-```{r viz-funcs-appendix}
 theme_custom <- function(...) {
   theme_light(base_size = 12) +
     theme(
@@ -493,83 +543,9 @@ export_png <-
       ...
     )
   }
-```
-
-```{r path_viz_summ_1_z}
-path_viz_summ_1_z <- file_path_out('viz_summ_1_z.png')
-eval_viz_summ_1_z <- !fs::file_exists(path_viz_summ_1_z)
-```
-
-```{r viz_summ_1_z}
-viz_summ_1_z <-
-  res_sim_summ_1_z %>% 
-  visualize_res_sim_summ_z()
-viz_summ_1_z
-```
-
-```{r viz_summ_1_z_export, eval=eval_viz_summ_1_z}
-export_png(
-  viz_summ_1_z,
-  path = path_viz_summ_1_z,
-)
-```
-
-```{r viz_summ_1_z-show, include=T, fig.show='asis'}
-viz_summ_1_z
-```
-
-It's not surprising to see that the strength ($z$) corresponding to all but three teams---`r tms[13]`, `r tms[14]`, and `r tms[22]`---is negative. These three teams, followed closely by `r tms[1]` have been regarded as the best teams for the past two or three EPL seasons. So, relative to `r tms[1]`, all other teams (aside from the top three) are viewed as "worse" by the model.
-
-Note that the $z$ estimates above should not be interpreted as goals scored by the teams because they are relative to the strength of `r tms[1]`. To facilitate such an interpretation, I need to translate $z$ to goals scored per game. To do this, for each $z$, I (1) subtract the average value of all $z$'s, (2) add the posterior mean of $\text{baseline}_{h}$, and (3) exponentiate.
-
-The plot below shows the results of this transformation.
-
-```{r res_sim_summ_1_z_adj}
-baseline_mean <- res_sim_summ_1 %>% filter(var == 'baseline_h') %>% pull(mean)
-z_mean <- res_sim_summ_1_z %>% summarise_at(vars(mean), mean) %>% pull(mean)
-z_mean
-res_sim_summ_1_z_adj <-
-  res_sim_summ_1_z %>% 
-  mutate_at(vars(-tm, -var, -sd), ~exp(. - z_mean + baseline_mean))
-res_sim_summ_1_z_adj
-```
-
-```{r path_viz_summ_1_z_adj}
-path_viz_summ_1_z_adj <- file_path_out('viz_summ_1_z_adj.png')
-eval_viz_summ_1_z_adj <- !fs::file_exists(path_viz_summ_1_z_adj)
-```
-
-```{r viz_summ_1_z_adj}
-viz_summ_1_z_adj <-
-  res_sim_summ_1_z_adj %>% 
-  visualize_res_sim_summ_z_adj()
-viz_summ_1_z_adj
-```
-
-```{r viz_summ_1_z_adj_export, eval=eval_viz_summ_1_z_adj}
-export_png(
-  viz_summ_1_z_adj,
-  path = path_viz_summ_1_z_adj,
-)
-```
-
-```{r viz_summ_1_z_adj-show, include=T, fig.show='asis'}
-viz_summ_1_z_adj
-```
-
-```{r do_predict-appendix-1}
 n_sim <- 1000
-```
-## Predictions
-
-I can make predictions of game results for the historical data, given the model. <hide>(Since the model estimates were calculated using this data, I'm really predicting on the "training" set here.)</hide> Specifically, I simulate the score for both teams in each matchup (`r scales::comma(n_gm)` in all) `r scales::comma(n_sim)` times, choosing the result inferred by the mode of each side's simulated score. (For example, if the mode of the `r scales::comma(n_sim)` simulated scores for the away team  is 1 and that of the home team is 2, then the predicted outcome is a win for the home team.) A breakdown of the predicted and actual outcomes is shown below.
-
-```{r path_preds-appendix}
 path_preds <- file_path_out('preds_1.rds')
 eval_preds <- !fs::file_exists(path_preds)
-```
-
-```{r do_predict-appendix-2}
 if(eval_preds) {
   .baseline_h <- res_sim_summ_1 %>% filter(var == 'baseline_h') %>% pull(mean)
   .baseline_a <- res_sim_summ_1 %>% filter(var == 'baseline_a') %>% pull(mean)
@@ -605,19 +581,6 @@ if(eval_preds) {
     unnest(res)
   preds
 }
-```
-
-```{r preds_export, eval=eval_preds}
-if(eval_preds) {
-  write_rds(preds, path_preds)
-}
-```
-
-```{r preds_import}
-preds <- read_rds(path_preds)
-```
-
-```{r preds_aug-appendix}
 preds_tidy <- 
   preds %>% 
   gather(key = 'key', value = 'value', -idx) %>% 
@@ -657,14 +620,6 @@ preds_aug <-
       . == 0 ~ 't'
     )
   )
-```
-
-```{r path_viz_conf_mat}
-path_viz_conf_mat <- file_path_out('viz_conf_mat.png')
-eval_viz_conf_mat <- !fs::file_exists(path_viz_conf_mat)
-```
-
-```{r viz_conf_mat-appendix}
 conf_mat_tidy <-
   preds_aug %>% 
   count(result_mode, result)
@@ -716,35 +671,6 @@ viz_conf_mat <-
     y = 'Actual Result'
   )
 viz_conf_mat
-```
-
-```{r viz_conf_mat_export, eval=eval_viz_conf_mat}
-export_png(
-  viz_conf_mat,
-  path = path_viz_conf_mat,
-)
-```
-
-```{r viz_conf_mat-show, include=T, fig.show='asis', fig.width=8, fig.height=4}
-viz_conf_mat
-```
-
-I make a couple of observations:
-
-+ The most common outcome  is an actual win by the home team and a predicted win by the home team.
-+ The model never predicts a tie. (This may seem "unreasonable", but Bååth also found this to be true for his final model.) 
-+ The model predicts the outcome correctly in `r scales::comma(conf_mat_correct_h$n)` + `r scales::comma(conf_mat_correct_a$n)` = `r scales::comma(conf_mat_correct_summ_yes$n)` of `r scales::comma(n_gm)` games (i.e., `r scales::percent(conf_mat_correct_summ_yes$frac)`).
-
-
-The next couple of visuals provide more details regarding the simulated outcomes.
-
-```{r path_viz_g_mode}
-path_viz_g_mode <- file_path_out('viz_g_mode.png')
-eval_viz_g_mode <- !fs::file_exists(path_viz_g_mode)
-.lab_caption_n_gm <- glue::glue('Total games: {n_gm}.')
-```
-
-```{r viz_g_mode-appendix}
 viz_g_mode <-
   preds_tidy_aug %>% 
   filter(key %>% str_detect('^g.*mode$')) %>% 
@@ -764,27 +690,6 @@ viz_g_mode <-
     y = 'Count of Games'
   )
 viz_g_mode
-```
-
-```{r viz_g_mode_export, eval=eval_viz_g_mode}
-export_png(
-  viz_g_mode,
-  path = path_viz_g_mode,
-)
-```
-
-```{r viz_g_mode-show, include=T, fig.show='asis'}
-viz_g_mode
-```
-
-From the above graph of the mode of goals scored by both sides, it's apparent that a 2-1 scores in favor of the home side is the most common outcome.
-
-```{r path_viz_g_mean}
-path_viz_g_mean <- file_path_out('viz_g_mean.png')
-eval_viz_g_mean <- !fs::file_exists(path_viz_g_mean)
-```
-
-```{r viz_g_mean-appendix}
 viz_g_mean <-
   preds_tidy_aug %>% 
   # This is done so that the `aes()` can be defined before data is actually passed into the whole ggplot pipeline.
@@ -806,27 +711,6 @@ viz_g_mean <-
     y = 'Count of Games'
   )
 viz_g_mean
-```
-
-```{r viz_g_mean_export, eval=eval_viz_g_mean}
-export_png(
-  viz_g_mean,
-  path = path_viz_g_mean,
-)
-```
-
-```{r viz_g_mean-show, include=T, fig.show='asis'}
-viz_g_mean
-```
-
-The above histogram illustrating the mean (instead of the mode) of the simulated goals provides a bit more nuance to our understanding of modes shown before.
-
-```{r path_viz_result_mode}
-path_viz_result_mode <- file_path_out('viz_result_mode.png')
-eval_viz_result_mode <- !fs::file_exists(path_viz_result_mode)
-```
-
-```{r viz_result_mode-appendix}
 preds_tidy_res <-
   preds_tidy %>% 
   filter(key == 'res_mode') %>% 
@@ -868,24 +752,6 @@ viz_result_mode <-
     y = 'Count of Games'
   )
 viz_result_mode
-```
-
-```{r viz_result_mode_export, eval=eval_viz_result_mode}
-export_png(
-  viz_result_mode,
-  path = path_viz_result_mode,
-)
-```
-
-```{r viz_result_mode-show, include=T, fig.show='asis', fig.width=8, fig.height=4}
-viz_result_mode
-```
-
-Finally, the above visual shows the predicted outcomes (inferred from the prior graph of predicted modes).
-
-To better understand how the model works on a team-level basis, let's look at how well it predicts for each team.
-
-```{r preds_eda-appendix-1}
 preds_by_tm <-
   preds_aug %>% 
   group_by(tm_h) %>% 
@@ -896,41 +762,5 @@ preds_by_tm <-
   arrange(-frac) %>% 
   mutate(pct = scales::percent(frac)) %>% 
   select(-frac)
-```
-
-```{r preds_eda-show-1-pre}
-.opt_old <- getOption('tibble.print_min')
-options(tibble.print_min = Inf)
-```
-
-```{r preds_eda-show-1, include=T}
-preds_by_tm
-```
-
-```{r preds_eda-show-1-post}
-options(tibble.print_min = .opt_old)
-```
-
-In most cases, the model predicts the outcome correctly (see `is_correct`) with greater than 50% accuracy, although there are also teams for which its accuracy is less than 50%.
-
-# Conclusion
-
-In summary, I have created a hierarchical Poisson model to predict scores---and, consequently, game outcomes---for EPL games for the three seasons starting in 2016 and ending in 2018. The model has an training set prediction accuracy of `r scales::comma(conf_mat_correct_summ_yes$n)`. [Bååth](http://www.sumsar.net/blog/2013/07/modeling-match-results-in-la-liga-part-one/), whose work inspired mine, achieved an accuracy of 56% with his final model.
-
-## Future Work
-
-My model can certainly be improved. One major flaw of the model is that it does not account for temporal effects, i.e. differences in team strength across seasons. [^9] The consequences of this flaw are compounded by the fact that the pool of teams in each EPL season changes. At the end of each season, the three "worst" EPL teams (by win-loss-tie record) are "relegated" to a secondary league, and, in turn, three secondary league teams are "promoted" to the EPL in their place. [^10] Consequently, one might say that the estimates of the teams that do not appear in all seasons are exaggerated.
-
-[^9]: There are certainly also changes in team strength within seasons, which are even more difficult to model.
-
-[^10]: This explains why there are more than 20 teams in thee data set even though there are only 20 teams in the EPL in a given season.
-
-# Appendix
-
-## Code
-
-See all relevant R code below.
-
-```{r fin-0, ref.label=stringr::str_subset(knitr::all_labels(), 'appendix'), echo=T, include=T, eval=F}
 ```
 

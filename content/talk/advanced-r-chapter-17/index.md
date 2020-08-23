@@ -1,11 +1,11 @@
 +++
-title = "Advanced R Chapter 11: Function operators"
-date = 2020-06-12T19:00:00  # Schedule page publish date.
+title = "Advanced R Chapter 17: Metaprogramming, Big Picture"
+date = 2020-07-14T19:00:00  # Schedule page publish date.
 draft = false
 
 # Talk start and end times.
 #   End time can optionally be hidden by prefixing the line with `#`.
-time_start = 2020-06-11T19:00:00
+time_start = 2020-07-14T19:00:00
 # time_end = 2030-06-01T15:00:00
 
 # Authors. Comma separated list, e.g. `["Bob Smith", "David Jones"]`.
@@ -13,7 +13,7 @@ authors = ["Tony ElHabr"]
 
 # Abstract and optional shortened version.
 abstract = ""
-abstract_short = "Advanced R Chapter 11: Function operators"
+abstract_short = "Advanced R Chapter 17: Metaprogramming, Big Picture"
 
 # Name of event and optional event URL.
 event = "R4DS Advanced R Book Club"
@@ -46,9 +46,9 @@ tags = ["r"]
 slides = ""
 
 # Links (optional).
-url_pdf = "https://github.com/r4ds/bookclub-Advanced_R/blob/master/Presentations/Week11/Cohort1/Chapter11.pdf"
+url_pdf = "https://github.com/r4ds/bookclub-Advanced_R/blob/master/Presentations/Week16/Cohort1/Chapter17.pdf"
 url_slides = ""
-url_video = "https://www.youtube.com/watch?v=zzUY03gt_pA"
+url_video = "https://www.youtube.com/watch?v=10gRbFMoh7g"
 url_code = ""
 
 # Does the content use math formatting?
@@ -65,6 +65,6 @@ math = true
   focal_point = "Right"
 +++
 
-I gave a presentation for the [R4DS](https://www.rfordatasci.com/) Advanced R Book Club summarizing [Chapter 11](https://adv-r.hadley.nz/function-operators.html) of the book.
+I gave a presentation for the [R4DS](https://www.rfordatasci.com/) Advanced R Book Club summarizing [Chapter 17](https://adv-r.hadley.nz/meta-big-picture.html) of the book.
 
 

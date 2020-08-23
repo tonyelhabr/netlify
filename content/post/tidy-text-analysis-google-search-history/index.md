@@ -1,7 +1,7 @@
 ---
 title: A Tidy Text Analysis of My Google Search History
 # slug: tidy-text-analysis-google-search-history
-date: "2018-02-16"
+date: "2099-01-01" # "2018-02-16"
 categories:
   - r
 tags:
