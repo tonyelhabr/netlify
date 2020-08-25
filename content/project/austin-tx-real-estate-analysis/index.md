@@ -14,7 +14,7 @@ summary = "Zillow Home Value Index (ZHVI) is a metric that quantifies the market
 tags = ["r", "zillow", "real estate"]
 
 # Optional external URL for project (replaces project detail page).
-external_link = "https://public.tableau.com/profile/tony1476#!/vizhome/AustinTXRealEstateAnalysis_15801246721540/Dashboard"
+external_link = ""
 
 # Slides (optional).
 #   Associate this project with Markdown slides.
