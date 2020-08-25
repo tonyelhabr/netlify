@@ -1,7 +1,7 @@
 +++
 # Date this page was created.
 date = 2018-02-24T00:00:00
-draft = true
+draft = false
 
 # Project title.
 title = "NBA Regularized Adjusted Plus Minus (RAPM)"
@@ -14,7 +14,7 @@ summary = 'Quantifying individual NBA player skill with an advanced "all-in-one"
 tags = ["r", "nba"]
 
 # Optional external URL for project (replaces project detail page).
-external_link = ""
+external_link = "https://github.com/tonyelhabr/nba-rapm"
 
 # Slides (optional).
 #   Associate this project with Markdown slides.
@@ -53,5 +53,4 @@ url_code = ""
     (e.g. creating a command line interface without compromising 
     "normal" interactive R usage).
 + __Deliverable(s):__
-    + A blog post.
-    + A second blog post.
+    + https://github.com/tonyelhabr/nba-rapm

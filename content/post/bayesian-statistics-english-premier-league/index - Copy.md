@@ -294,38 +294,147 @@ To better understand how the model works on a team-level basis, let's look at ho
 
 
 
-
-```
-#> # A tibble: 26 x 3
-#>    Team           `# of Wins` `Win %`
-#>    <chr>                <int> <chr>  
-#>  1 Arsenal                 46 80.70% 
-#>  2 Man City                45 78.95% 
-#>  3 Tottenham               43 75.44% 
-#>  4 Liverpool               41 71.93% 
-#>  5 Chelsea                 39 68.42% 
-#>  6 Cardiff                 12 63.16% 
-#>  7 Everton                 36 63.16% 
-#>  8 Fulham                  12 63.16% 
-#>  9 Man United              35 61.40% 
-#> 10 Huddersfield            23 60.53% 
-#> 11 Burnley                 34 59.65% 
-#> 12 Stoke                   22 57.89% 
-#> 13 Bournemouth             30 52.63% 
-#> 14 Crystal Palace          30 52.63% 
-#> 15 Sunderland              10 52.63% 
-#> 16 Swansea                 20 52.63% 
-#> 17 West Ham                30 52.63% 
-#> 18 Watford                 29 50.88% 
-#> 19 Newcastle               19 50.00% 
-#> 20 Leicester               28 49.12% 
-#> 21 Middlesbrough            9 47.37% 
-#> 22 West Brom               18 47.37% 
-#> 23 Wolves                   9 47.37% 
-#> 24 Brighton                15 39.47% 
-#> 25 Southampton             22 38.60% 
-#> 26 Hull                     6 31.58%
-```
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Team </th>
+   <th style="text-align:right;"> # of Wins </th>
+   <th style="text-align:left;"> Win % </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Arsenal </td>
+   <td style="text-align:right;"> 46 </td>
+   <td style="text-align:left;"> 80.70% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Man City </td>
+   <td style="text-align:right;"> 45 </td>
+   <td style="text-align:left;"> 78.95% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Tottenham </td>
+   <td style="text-align:right;"> 43 </td>
+   <td style="text-align:left;"> 75.44% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Liverpool </td>
+   <td style="text-align:right;"> 41 </td>
+   <td style="text-align:left;"> 71.93% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chelsea </td>
+   <td style="text-align:right;"> 39 </td>
+   <td style="text-align:left;"> 68.42% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cardiff </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:left;"> 63.16% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Everton </td>
+   <td style="text-align:right;"> 36 </td>
+   <td style="text-align:left;"> 63.16% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Fulham </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:left;"> 63.16% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Man United </td>
+   <td style="text-align:right;"> 35 </td>
+   <td style="text-align:left;"> 61.40% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Huddersfield </td>
+   <td style="text-align:right;"> 23 </td>
+   <td style="text-align:left;"> 60.53% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Burnley </td>
+   <td style="text-align:right;"> 34 </td>
+   <td style="text-align:left;"> 59.65% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Stoke </td>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:left;"> 57.89% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bournemouth </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:left;"> 52.63% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Crystal Palace </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:left;"> 52.63% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Sunderland </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:left;"> 52.63% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Swansea </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:left;"> 52.63% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> West Ham </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:left;"> 52.63% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Watford </td>
+   <td style="text-align:right;"> 29 </td>
+   <td style="text-align:left;"> 50.88% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Newcastle </td>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:left;"> 50.00% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Leicester </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:left;"> 49.12% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Middlesbrough </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:left;"> 47.37% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> West Brom </td>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:left;"> 47.37% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Wolves </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:left;"> 47.37% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Brighton </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:left;"> 39.47% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Southampton </td>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:left;"> 38.60% </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Hull </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:left;"> 31.58% </td>
+  </tr>
+</tbody>
+</table>
 
 
 
@@ -333,7 +442,7 @@ In most cases, the model predicts the outcome correctly (see `is_correct`) with 
 
 # Conclusion
 
-In summary, I have created a hierarchical Poisson model to predict scores---and, consequently, game outcomes---for EPL games for the three seasons starting in 2016 and ending in 2018. The model has an training set prediction accuracy of 58%. [Bååth](http://www.sumsar.net/blog/2013/07/modeling-match-results-in-la-liga-part-one/), whose work inspired mine, achieved an accuracy of 56% with his final model.
+In summary, I have created a hierarchical Poisson model to predict scores---and, consequently, game outcomes---for EPL games for the three seasons starting in 2016 and ending in 2018. The model has an training set prediction accuracy of 663. [Bååth](http://www.sumsar.net/blog/2013/07/modeling-match-results-in-la-liga-part-one/), whose work inspired mine, achieved an accuracy of 56% with his final model.
 
 ## Future Work
 

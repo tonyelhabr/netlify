@@ -1,6 +1,7 @@
 ---
 title: A Bayesian Approach to Ranking English Premier League Teams (using R)
 date: '2019-12-29'
+draft: true
 categories:
   - r
 tags:
@@ -25,7 +26,7 @@ always_allow_html: true
 
 ```{r setup, include=F, echo=F, cache=F}
 .dir_proj <- here::here('content', 'post', 'bayesian-statistics-english-premier-league')
-.dir_output <- file.path(.dir_proj, 'output')
+# .dir_proj <- here::here()
 # rmarkdown::render(file.path(.dir_proj, 'index.Rmd'), output_file = file.path(.dir_proj, 'index.md'))
 knitr::opts_knit$set(root.dir = .dir_proj)
 knitr::opts_chunk$set(
@@ -63,9 +64,11 @@ library(tidyverse)
 ```
 
 ```{r setup-funcs}
-file_path <- partial(file.path, fsep = '/', ... = )
+# file_path_proj <- partial(here::here, ... =)
+# file_path_out <- partial(here::here, 'output', ... = )
+file_path <- partial(file.path, ... = )
 file_path_proj <- partial(file_path, .dir_proj, ... = )
-file_path_out <- partial(file_path, .dir_proj, 'output', ... = )
+file_path_out <- partial(file_path_proj, 'output', ... = )
 ```
 
 ```{r setup-unused}
@@ -122,7 +125,7 @@ Using Poisson distributions to model soccer scores is certainly not a novel conc
 For this project I retrieved game scores and outcomes for the previous three seasons of EPL games (i.e. from the 2016-17 season through the 2018-2019 season).
 
 ```{r scrape-prep}
-path_epl_data <- file_path_proj('data', 'epl.csv')
+path_epl_data <- file_path_proj('data', 'epl.xlsx')
 eval_scrape <- !fs::file_exists(path_epl_data)
 ```
 
@@ -131,7 +134,7 @@ eval_scrape <- !fs::file_exists(path_epl_data)
 seasons <- 2016L:2018L
 ```
 
-```{r scrape-appendix-2, eval=eval_scrape}
+```{r scrape-appendix-2, eval=eval_scrape, include=T, echo=T}
 # Reference: https://github.com/jalapic/engsoccerdata/blob/master/R/england_current.R
 scrape_epl_data <- function(season = lubridate::year(Sys.Date()) - 1L) {
   s1 <- season %>% str_sub(3, 4) %>% as.integer()
@@ -172,17 +175,18 @@ data <-
   tibble(season = seasons) %>% 
   mutate(data = map(season, scrape_epl_data)) %>% 
   unnest(data)
+data
 ```
 
 ```{r scrape-post, eval=eval_scrape}
-write_csv(data, path_epl_data)
+writexl::write_xlsx(data, path_epl_data, format_headers = FALSE)
 ```
 
 ```{r scrape-2}
-data <- read_csv(path_epl_data)
+data <- readxl::read_excel(path_epl_data)
 ```
 
-```{r scrape-show, include=F}
+```{r scrape-show, include=T}
 data
 ```
 
@@ -190,14 +194,9 @@ data
 data %>% summarise_at(vars(g_h, g_a), list(mean = mean, sd = sd))
 ```
 
-Before impementing some models, I need to "wrangle" the raw data a bit in order to put it in a more workable format for OpenBUGs. (Specifically, I need to put it into a list.)
+<!-- Before implementing some models, I need to "wrangle" the raw data a bit in order to put it in a more workable format for OpenBUGs. (Specifically, I need to put it into a list.) -->
 
-```{r data_list-appendix}
-pull_distinctly <- function (data, var = -1, ..., decreasing = FALSE) {
-  var <- tidyselect::vars_pull(names(data), !!rlang::enquo(var))
-  sort(unique(data[[var]]), decreasing = decreasing, ...)
-}
-
+```{r data_list-appendix, echo=T}
 pull2 <- function(data, ...) {
   data %>%
     pull(...) %>% 
@@ -221,7 +220,7 @@ data_list <-
     n_gm = n_gm,
     n_season = n_season
   )
-data_list
+str(data_list)
 ```
 
 # Modeling
@@ -377,30 +376,6 @@ tms_info <-
   tibble(tm = tms) %>% 
   mutate(tm_idx = row_number())
 tms_info
-
-# tms_colors <- 
-#   teamcolors::teamcolors %>% 
-#   as_tibble() %>% 
-#   filter(league == 'epl') %>% 
-#   select(tm = name, color_1 = primary) %>% 
-#   mutate_at(
-#     vars(tm),
-#     ~case_when(
-#       str_detect(., 'Bournemouth') ~ 'Bournemouth',
-#       str_detect(., 'Brighton') ~ 'Brighton',
-#       str_detect(., 'Leicester') ~ 'Leicester',
-#       str_detect(., 'Manchester C') ~ 'Man City',
-#       str_detect(., 'Manchester U') ~ 'Man United',
-#       str_detect(., 'Stoke') ~ 'Stoke',
-#       str_detect(., 'Swansea') ~ 'Swansea',
-#       str_detect(., 'Tottenham') ~ 'Tottenham',
-#       str_detect(., 'West Brom') ~ 'West Brom',
-#       str_detect(., 'West Ham') ~ 'West Ham',
-#       TRUE ~ .
-#     )
-#   )
-# tms_colors
-# tms_info %>% anti_join(tms_colors)
 
 res_sim_summ_1_z <-
   bind_rows(
@@ -681,7 +656,7 @@ conf_mat_correct_summ <-
 conf_mat_correct
 
 conf_mat_correct_h <- conf_mat_correct %>% filter(is_correct, result == 'h')
-conf_mat_correct_t <- conf_mat_correct %>% filter(is_correct, result == 't')
+# conf_mat_correct_t <- conf_mat_correct %>% filter(is_correct, result == 't')
 conf_mat_correct_a <- conf_mat_correct %>% filter(is_correct, result == 'a')
 conf_mat_correct_summ_yes <- conf_mat_correct_summ %>% filter(is_correct)
 
@@ -691,11 +666,11 @@ viz_conf_mat <-
   mutate(n_lab = sprintf('%s (%s)', scales::comma(n), scales::percent(frac))) %>% 
   mutate_at(
     vars(matches('result')), 
-    ~forcats::fct_relevel(., c('h', 't', 'a'))
+    ~forcats::fct_relevel(., c('h', 'a')) # c('h', 't', 'a'))
   ) %>% 
   mutate_at(
     vars(matches('result')), 
-    ~forcats::fct_recode(., Home = 'h', Away = 'a', Tie = 't')
+    ~forcats::fct_recode(., Home = 'h', Away = 'a') # , Tie = 't')
   ) %>% 
   ggplot() +
   aes(x = result_mode, y = result) +
@@ -904,7 +879,13 @@ options(tibble.print_min = Inf)
 ```
 
 ```{r preds_eda-show-1, include=T}
-preds_by_tm
+preds_by_tm %>% 
+  select(
+    `Team` = tm_h,
+    `# of Wins` = n,
+    `Win %` = pct
+  ) # %>% 
+  # create_kable()
 ```
 
 ```{r preds_eda-show-1-post}
@@ -915,7 +896,7 @@ In most cases, the model predicts the outcome correctly (see `is_correct`) with 
 
 # Conclusion
 
-In summary, I have created a hierarchical Poisson model to predict scores---and, consequently, game outcomes---for EPL games for the three seasons starting in 2016 and ending in 2018. The model has an training set prediction accuracy of `r scales::comma(conf_mat_correct_summ_yes$n)`. [Bååth](http://www.sumsar.net/blog/2013/07/modeling-match-results-in-la-liga-part-one/), whose work inspired mine, achieved an accuracy of 56% with his final model.
+In summary, I have created a hierarchical Poisson model to predict scores---and, consequently, game outcomes---for EPL games for the three seasons starting in 2016 and ending in 2018. The model has an training set prediction accuracy of `r scales::percent(conf_mat_correct_summ_yes$frac)`. [Bååth](http://www.sumsar.net/blog/2013/07/modeling-match-results-in-la-liga-part-one/), whose work inspired mine, achieved an accuracy of 56% with his final model.
 
 ## Future Work
 

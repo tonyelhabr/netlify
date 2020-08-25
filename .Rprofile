@@ -7,7 +7,7 @@ if(file.exists(path_r_profile)) {
 }
 rm("path_r_profile")
 
-
+options(readr.num_columns = 0)
 # options(servr.daemon = TRUE)
 options(servr.daemon = FALSE)
 library("blogdown")

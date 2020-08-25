@@ -38,13 +38,13 @@ anyone can find something interesting on this matter.
 So, let's start with something easy--which siblings competed together
 the most?
 
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto; color: #ffffff;">
 <thead>
 <tr>
-<th>rnk</th>
-<th>name_last</th>
-<th>name_first_pair</th>
-<th>n</th>
+<th>Rank</th>
+<th>Last Name</th>
+<th>First Names</th>
+<th>Count</th>
 </tr>
 </thead>
 <tbody>
@@ -142,17 +142,17 @@ performance? Let's use the same metric used elsewhere for ranking
 performance--percent rank of scores summed across all records
 (`prnk_sum`)--and see which sibling pairs show up among the top.
 
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto; color: #ffffff;">
 <thead>
 <tr>
-<th>rnk</th>
-<th>name_last</th>
-<th>name_first_pair</th>
-<th>n_bycomp</th>
-<th>n_defeat</th>
-<th>n_state</th>
-<th>prnk</th>
-<th>rnk_max</th>
+<th>Rank</th>
+<th>Last Name</th>
+<th>First Names</th>
+<th>Count, Competition</th>
+<th>Defeated</th>
+<th>Count, State</th>
+<th>Total Percent Rank</th>
+<th>Best Rank</th>
 </tr>
 </thead>
 <tbody>
@@ -287,17 +287,17 @@ other individuals that have gone to my school. Perhaps it is a bit
 egotistical, but I am interested in knowing how I compare with others
 that have attended my school (either before, with, or after me).
 
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto; color: #ffffff;">
 <thead>
 <tr>
-<th>rnk</th>
-<th>name</th>
-<th>n</th>
-<th>prnk_sum</th>
-<th>prnk_mean</th>
-<th>n_defeat_sum</th>
-<th>n_defeat_mean</th>
-<th>n_advanced_sum</th>
+<th>Rank</th>
+<th>Name</th>
+<th>Count</th>
+<th>Sum of Percent Rank</th>
+<th>Avg. of Percent Rank</th>
+<th>Sum of Defeated</th>
+<th>Avg. of Defeated</th>
+<th>Sum of Advanced</th>
 </tr>
 </thead>
 <tbody>

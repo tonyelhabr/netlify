@@ -16,24 +16,6 @@ header:
   image: "featured.jpg"
 ---
 
----
-title: Generating a Gallery of Visualizations for a Static Website (using R)
-date: "2019-07-20"
-categories:
-  - r
-tags:
-  - r
-  - blogdown
-  - portfolio
-image:
-  caption: ""
-  focal_point: ""
-  preview_only: true
-header:
-  caption: ""
-  image: "featured.jpg"
----
-
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
@@ -85,11 +67,11 @@ paths_post_raw[1:10]</code></pre>
 ##  [3] &quot;content/post/analysis-texas-high-school-academics-3-individuals/index.md&quot;  
 ##  [4] &quot;content/post/analysis-texas-high-school-academics-4-schools/index.md&quot;      
 ##  [5] &quot;content/post/analysis-texas-high-school-academics-5-miscellaneous/index.md&quot;
-##  [6] &quot;content/post/bayesian-statistics-english-premier-league/index.Rmd&quot;         
-##  [7] &quot;content/post/cheat-sheet-rmarkdown/index.md&quot;                               
-##  [8] &quot;content/post/data-science-podcasts/index.md&quot;                               
-##  [9] &quot;content/post/dry-principle-make-a-package/index.md&quot;                        
-## [10] &quot;content/post/gallery-visualizations/index.Rmd&quot;</code></pre>
+##  [6] &quot;content/post/bayesian-statistics-english-premier-league/index.md&quot;          
+##  [7] &quot;content/post/bayesian-statistics-english-premier-league/index.Rmd&quot;         
+##  [8] &quot;content/post/cheat-sheet-rmarkdown/index.md&quot;                               
+##  [9] &quot;content/post/data-science-podcasts/index.md&quot;                               
+## [10] &quot;content/post/dry-principle-make-a-package/index.md&quot;</code></pre>
 <pre class="r"><code># Define some important regular expressions (or &quot;regex&quot;es).
 # These regexes are probably applicable to most Hugo/blogdown setups.
 rgx_replace &lt;- &#39;(content\\/post\\/)(.*)(\\/)(.*)([.]png$)&#39;
@@ -126,10 +108,13 @@ paths_post &lt;-
     vars(lines),
     list(
       title = ~purrr::map_chr(., str_pluck_title),
-      date = ~purrr::map_chr(., str_pluck_date) %&gt;% lubridate::ymd(),
+      date = ~purrr::map_chr(., str_pluck_date),
       viz = ~purrr::map(., str_pluck_viz)
     )
   ) %&gt;% 
+  # `date` is NA for old tidy-text-analysis-google post.
+  filter(!is.na(date)) %&gt;% 
+  mutate(date = date %&gt;% lubridate::ymd()) %&gt;% 
   # viz` is a list item (because there may be more than one per post), so we need to `unnest()` it to return a &quot;tidy&quot; data frame.
   unnest(viz) %&gt;% 
   select(date, viz, title, path_post)

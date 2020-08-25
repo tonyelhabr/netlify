@@ -1,7 +1,7 @@
 ---
 title: (Yet Another) Migration to Blogdown Post
 # slug: yet-another-migration-to-blogdown-post
-date: "2099-01-01" # "2017-11-25"
+date: "2000-01-01" # "2017-11-25"
 categories:
   - r
 tags:

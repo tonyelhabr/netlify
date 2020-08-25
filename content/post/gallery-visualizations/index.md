@@ -60,18 +60,10 @@ I should state a couple of caveats/notes for anyone looking to emulate my approa
 
 ## The Code
 
-```{r setup-1, include=F, echo=F, eval=T, results='hide'}
-knitr::opts_knit$set(root.dir = here::here())
-knitr::opts_chunk$set(
-  echo = TRUE,
-  cache = FALSE,
-  include = TRUE,
-  warning = FALSE,
-  message = FALSE
-)
-```
 
-```{r paths_post_raw-1, results='hide'}
+
+
+```r
 library(tidyverse)
 
 paths_post_raw <-
@@ -86,20 +78,24 @@ paths_post_raw <-
 paths_post_raw[1:10]
 ```
 
-```{r paths_post_raw-2, include=F, echo=F, eval=T}
- # Ignore "draft" posts.
-rgx_ignore <- 'nba-rapm'
-paths_post_raw <-
-  paths_post_raw %>% 
-  str_subset('nba-rapm', negate = TRUE)
-paths_post_raw
+
+
+
+```
+##  [1] "content/post/analysis-texas-high-school-academics-1-intro/index.md"        
+##  [2] "content/post/analysis-texas-high-school-academics-2-competitions/index.md" 
+##  [3] "content/post/analysis-texas-high-school-academics-3-individuals/index.md"  
+##  [4] "content/post/analysis-texas-high-school-academics-4-schools/index.md"      
+##  [5] "content/post/analysis-texas-high-school-academics-5-miscellaneous/index.md"
+##  [6] "content/post/bayesian-statistics-english-premier-league/index.md"          
+##  [7] "content/post/bayesian-statistics-english-premier-league/index.Rmd"         
+##  [8] "content/post/cheat-sheet-rmarkdown/index.md"                               
+##  [9] "content/post/data-science-podcasts/index.md"                               
+## [10] "content/post/dry-principle-make-a-package/index.md"
 ```
 
-```{r paths_post_raw-3, include=T, echo=F, eval=T}
-paths_post_raw[1:10]
-```
 
-```{r rgx-1}
+```r
 # Define some important regular expressions (or "regex"es).
 # These regexes are probably applicable to most Hugo/blogdown setups.
 rgx_replace <- '(content\\/post\\/)(.*)(\\/)(.*)([.]png$)'
@@ -110,20 +106,10 @@ rgx_date <- 'date[:]\\s+'
 rgx_viz <- '(^[!][\\[][\\]].*)(viz.*png)(.*$)'
 ```
 
-```{r debug1-1, include=F, echo=F, eval=F}
-# Debug one post.
-path_post <- 'content/post/analysis-texas-high-school-academics-1-intro/index.md'
-# path_post <- 'content/post/nba-rapm-project-r-intro/index.md'
-lines <- path_post %>% read_lines()
-line_title <- lines %>% str_subset(rgx_title)
-line_title %>% str_replace_all(rgx_title, '') %>% str_trim()
-line_date <- lines %>% str_subset(rgx_date)
-line_date %>% str_replace_all(rgx_date, '') %>% str_trim()
-lines_viz <- lines %>% str_subset(rgx_viz)
-lines_viz
-```
 
-```{r main-1}
+
+
+```r
 # Define a helper function for a common idiom that we will implement for extracting the ines of markdown that we 
 # want---those containing the title, data, and visualization---and  trimming them just to the text that we want
 # (i.e. removing "title:" and "date:" preceding the title and date in the YAML/TOML header, and
@@ -163,7 +149,26 @@ paths_post <-
   unnest(viz) %>% 
   select(date, viz, title, path_post)
 paths_post
+```
 
+```
+## # A tibble: 71 x 4
+##    date       viz            title              path_post          
+##    <date>     <chr>          <chr>              <chr>              
+##  1 2018-05-20 viz_map_bycom~ An Analysis of Te~ /post/analysis-tex~
+##  2 2018-05-20 viz_map_bycom~ An Analysis of Te~ /post/analysis-tex~
+##  3 2018-05-20 viz_n_bycompl~ An Analysis of Te~ /post/analysis-tex~
+##  4 2018-05-20 viz_n_bycomp-~ An Analysis of Te~ /post/analysis-tex~
+##  5 2018-05-20 viz_n_bycompc~ An Analysis of Te~ /post/analysis-tex~
+##  6 2018-05-20 viz_n_bycompc~ An Analysis of Te~ /post/analysis-tex~
+##  7 2018-05-20 viz_persons_s~ An Analysis of Te~ /post/analysis-tex~
+##  8 2018-05-20 viz_persons_s~ An Analysis of Te~ /post/analysis-tex~
+##  9 2018-05-20 viz_persons_s~ An Analysis of Te~ /post/analysis-tex~
+## 10 2018-05-20 viz_persons_s~ An Analysis of Te~ /post/analysis-tex~
+## # ... with 61 more rows
+```
+
+```r
 # Create the markdown lines for images (visualizations) for our gallery markdown output.
 paths_post_md <-
   paths_post %>% 
@@ -172,7 +177,26 @@ paths_post_md <-
   ) %>% 
   select(title, date, path_post, label_md)
 paths_post_md
+```
 
+```
+## # A tibble: 71 x 4
+##    title            date       path_post          label_md         
+##    <chr>            <date>     <chr>              <chr>            
+##  1 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_map_bycomp~
+##  2 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_map_bycomp~
+##  3 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_n_bycomplv~
+##  4 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_n_bycomp-1~
+##  5 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_n_bycompco~
+##  6 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_n_bycompco~
+##  7 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_persons_st~
+##  8 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_persons_st~
+##  9 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_persons_st~
+## 10 An Analysis of ~ 2018-05-20 /post/analysis-te~ ![viz_persons_st~
+## # ... with 61 more rows
+```
+
+```r
 # Create the "main" data frame with the titles and dates in columns alongside the image column.
 # In "tidy data" terminology, images are the "observations" *and `title` and `date` are separate variables).
 content_gallery_raw <-
@@ -203,7 +227,26 @@ content_gallery_raw <-
   select(idx_intragrp, idx_intergrp, date, label_md) %>% 
   arrange(desc(idx_intragrp), idx_intergrp)
 content_gallery_raw
+```
 
+```
+## # A tibble: 90 x 4
+##    idx_intragrp idx_intergrp date       label_md                   
+##           <int>        <int> <date>     <chr>                      
+##  1           19            1 2019-06-29 ## 2019-06-29, [Text Parsi~
+##  2           19            2 2019-06-29 ![viz_toc_n_1yr_tree.png](~
+##  3           19            3 2019-06-29 ![viz_content_section_n.pn~
+##  4           19            4 2019-06-29 ![viz_toc_content_n1.png](~
+##  5           19            5 2019-06-29 ![viz_sents_section_n.png]~
+##  6           19            6 2019-06-29 ![viz_sents_section_n_yr.p~
+##  7           19            7 2019-06-29 ![viz_sents_section_sim.pn~
+##  8           19            8 2019-06-29 ![viz_words_section_tfidf.~
+##  9           19            9 2019-06-29 ![viz_words_tfidf.png](/po~
+## 10           18            1 2019-01-27 ## 2019-01-27, [Summarizin~
+## # ... with 80 more rows
+```
+
+```r
 # Create the final markdown output.
 content_gallery <-
   content_gallery_raw %>% 
@@ -217,7 +260,25 @@ content_gallery <-
 content_gallery
 ```
 
-```{r content_copypaste-1, include=T, echo=T, eval=F}
+```
+## # A tibble: 180 x 2
+##    label_md                                                     idx
+##    <chr>                                                      <int>
+##  1 ""                                                            NA
+##  2 "## 2019-06-29, [Text Parsing and Text Analysis of a Peri~     1
+##  3 ""                                                            NA
+##  4 "![viz_toc_n_1yr_tree.png](/post/text-parsing-analysis-pe~     2
+##  5 ""                                                            NA
+##  6 "![viz_content_section_n.png](/post/text-parsing-analysis~     3
+##  7 ""                                                            NA
+##  8 "![viz_toc_content_n1.png](/post/text-parsing-analysis-pe~     4
+##  9 ""                                                            NA
+## 10 "![viz_sents_section_n.png](/post/text-parsing-analysis-p~     5
+## # ... with 170 more rows
+```
+
+
+```r
 content_copypaste <- content_gallery %>% pull(label_md)
 
 # Copy paste this to the markdown file for the gallery page.
