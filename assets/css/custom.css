@@ -79,8 +79,9 @@ Colors described below (and in data/themes/custom.toml) are the colors used in t
 
 @import url('https://fonts.googleapis.com/css2?family=Lato');
 @import url('https://fonts.googleapis.com/css2?family=Karla');
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code');
-@import url('https://fonts.googleapis.com/css2?family=Fira+Mono&display=swap');
+/*@import url(https://unpkg.com/firacode/distr/fira_code.css);*/
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300&display=swap');
+/*@import url('https://fonts.googleapis.com/css2?family=Fira+Mono&display=swap');*/
 /*@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300&display=swap');*/
 
 html {
@@ -102,6 +103,10 @@ h5 {
 
 .dark code {
   /*font-weight: lighter;*/
-  /*  font-family: 'Fira Code', sans-serif;*/
-  font-size: 11px;
+  font-family: 'Fira Code', sans-serif;
+  font-size: .8rem;
+}
+
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-title, .hljs-section, .hljs-doctag, .hljs-type, .hljs-name, .hljs-strong {
+   font-weight: normal;
 }

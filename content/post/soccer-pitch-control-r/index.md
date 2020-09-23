@@ -65,7 +65,6 @@ class player(object):
         self.tti = reaction_time + np.linalg.norm(final_positon - reaction_position)/vmax
 
     def p_intercept(self,t):
-        # `tti_sigma` is the standard deviation of the sigmoid function that quantifies the uncertainty in player arrival time
         tti_sigma = 0.45
         den = 1 + np.exp(-np.pi/np.sqrt(3.0)/tti_sigma * (t-self.tti)))
         return 1 / den
