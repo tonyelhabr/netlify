@@ -1,6 +1,5 @@
 ---
 title: S3 Classes and {vctrs} to Create a Soccer Pitch Control Model
-draft: true
 date: '2020-09-23'
 categories:
   - r
@@ -40,832 +39,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r utils, include=F, echo=F, eval=F}
-extrafont::loadfonts(device = 'win', quiet = TRUE)
-library(tidyverse)
-
-.time_it <- function(f, ..., .name = NULL, .verbose = .get_verbose()) {
-  
-  if(is.null(.name)) {
-    .name <- as.character(sys.call())
-  }
-  
-  function(...) {
-    time_1 <- Sys.time()
-    .display_info('Starting {cli::bg_black(.name)} at {cli::bg_black(time_1)}.', .verbose = .verbose)
-    res <- f(...)
-    time_2 <- Sys.time()
-    dur <- (time_2 - time_1) %>% lubridate::as.duration()
-    dur_s <- dur %>% as.numeric('seconds') %>% scales::comma(accuracy = 0.1)
-    dur_m <- dur %>% as.numeric('minutes') %>% scales::comma(accuracy = 0.1)
-    parenth <- 
-      ifelse(
-        as.numeric(dur, 'seconds') >= 31L, 
-        glue::glue(' (~{cli::bg_black(dur_m)} minutes)') %>% as.character(), 
-        ''
-      )
-    .display_info('Finished {cli::bg_black(.name)} at {cli::bg_black(time_2)}. It took {cli::bg_black(dur_s)} seconds{parenth} to complete.', .verbose = .verbose)
-    invisible(res)
-  }
-}
-
-.get_dims_opta <- function() {
-  c(100, 100)
-}
-
-.get_valid_sides <- function() {
-  c('away', 'home')
-}
-
-.validate_side <- function(x = .get_valid_sides()) {
-  match.arg(x)
-}
-
-.get_default_pc_params <- function(time_to_control_veto = 3) {
-  params <-
-    list(
-      max_player_accel = 7,
-      max_player_speed = 5,
-      reaction_time = 0.7,
-      tti_sigma = 0.45,
-      kappa_def = 1,
-      lambda_att = 4.3,
-      average_ball_speed = 15,
-      int_dt = 0.04,
-      max_int_time = 10,
-      iter_min = 5L,
-      model_converge_tol = 0.01
-    )
-  params$lambda_def = 4.3 * params[['kappa_def']]
-  params$lambda_gk = 3.0 * params[['lambda_def']]
-  params$time_to_control_att = time_to_control_veto * log(10) * sqrt(3) * params[['tti_sigma']] * pi * (1 / params[['lambda_att']])
-  params$time_to_control_def = time_to_control_veto * log(10) * sqrt(3) * params[['tti_sigma']] * pi * (1 / params[['lambda_def']])
-  params
-}
-
-save_plot <-
-  function(viz,
-           file = deparse(substitute(viz)),
-           ext = 'png',
-           dir = here::here('output', 'figs'),
-           path = fs::path(dir, sprintf('%s.%s', file, ext)),
-           width = 8,
-           height = 8,
-           ...) {
-    ggsave(plot = viz, filename = path, width = width, height = height, type = 'cairo', ...)
-  }
-```
-
-```{r io, include=F, echo=F, eval=F}
-# This may be useful outside of just being used in the `player` helper function.
-pull_gk_ids <- memoise::memoise({
-  function(tracking) {
-    res <-
-      tracking %>% 
-      group_by(side) %>% 
-      filter(frame == min(frame)) %>% 
-      filter(abs(x) == max(abs(x), na.rm = TRUE)) %>% 
-      ungroup() %>% 
-      # This returns the player numbers as characters! Don't want that.
-      pull(player_id, side)
-    nms <- res %>% names()
-    vals <- res %>% as.integer()
-    res <- setNames(vals, nms)
-    res
-  }
-})
-```
-
-```{r viz, include=F, echo=F, eval=F}
-.get_pitch <- function(pitch_fill = 'white', pitch_color = 'black', limits = FALSE) {
-  ggsoccer::annotate_pitch(
-    fill = pitch_fill, 
-    colour = pitch_color,
-    limits = limits,
-    dimension = ggsoccer::pitch_opta
-  )
-}
-
-.pitch_gg <- function(pitch = .get_pitch(), ...) {
-  res <-
-    list(
-      ...,
-      pitch,
-      ggsoccer::theme_pitch(),
-      theme(legend.position = 'none')
-    )
-  res
-}
-```
-
-```{r player-class, include=F, echo=F, eval=F}
-new_player <-
-  function(player_id = integer(),
-           is_gk = logical(),
-           side = character(),
-           is_attack = logical(),
-           tti = double(),
-           in_frame = logical(),
-           x = double(),
-           y = double(),
-           x_v = double(),
-           y_v = double(),
-           vmax = double(),
-           reaction_time = double(),
-           tti_sigma = double(),
-           lambda_att = double(),
-           lambda_def = double()) {
-    
-    # I like using quotes for the names of list elements because they technically don't exist in the list before hand. Quotes implicitly imply that we are creating something new.
-    player <-
-      vctrs::new_rcrd(
-        list(
-          'player_id' = player_id,
-          'is_gk' = is_gk,
-          'side' = side,
-          'is_attack' = is_attack,
-          'tti' = tti,
-          'in_frame' = in_frame,
-          'name' = sprintf('%s_%s', side, player_id),
-          'x' = x,
-          'y' = y,
-          'x_v' = x_v,
-          'y_v' = y_v,
-          'vmax' = vmax,
-          'reaction_time' = reaction_time,
-          'tti_sigma' = tti_sigma,
-          'lambda_att' = lambda_att,
-          'lambda_def' = lambda_def,
-          'ppcf' = 0
-        ),
-        class = 'player'
-      )
-    player
-  }
-
-validate_player <- function(player) {
-  
-  vctrs::vec_assert(vctrs::field(player, 'player_id'), integer())
-  side <- vctrs::field(player, 'side')
-  vctrs::vec_assert(side, character())
-  .validate_side(side)
-  vctrs::vec_assert(vctrs::field(player, 'is_attack'), logical())
-  vctrs::vec_assert(vctrs::field(player, 'tti'), double())
-  vctrs::vec_assert(vctrs::field(player, 'in_frame'), logical())
-  vctrs::vec_assert(vctrs::field(player, 'x'), double())
-  vctrs::vec_assert(vctrs::field(player, 'y'), double())
-  vctrs::vec_assert(vctrs::field(player, 'x_v'), double())
-  vctrs::vec_assert(vctrs::field(player, 'y_v'), double())
-  vctrs::vec_assert(vctrs::field(player, 'vmax'), double())
-  vctrs::vec_assert(vctrs::field(player, 'reaction_time'), double())
-  vctrs::vec_assert(vctrs::field(player, 'tti_sigma'), double())
-  vctrs::vec_assert(vctrs::field(player, 'lambda_att'), double())
-  vctrs::vec_assert(vctrs::field(player, 'lambda_def'), double())
-  player
-}
-
-player <- 
-  function(player_id,
-           frame,
-           events,
-           tracking,
-           params = .get_default_pc_params(),
-           gk_ids = pull_gk_ids(tracking)) {
-    
-    
-    player_id <- as.integer(player_id)
-    frame <- as.integer(frame)
-    
-    vctrs::vec_assert(params, list())
-    nms_req <- c('max_player_speed', 'reaction_time', 'tti_sigma', 'lambda_att', 'lambda_def')
-    assertthat::assert_that(all(nms_req %in% names(params)))
-    # TODO: Implement checks for the data types of the columns. (Even though stronger checking is done in `new_player()`, the user may pass in a "malformed" params that has the required names but whose key-value pairs don't have the correct types.
-    
-    assertthat::assert_that(is.data.frame(events))
-    nms_req <- c('start_frame', 'side')
-    assertthat::assert_that(all(nms_req %in% names(events)))
-    
-    event_filt <- events %>% filter(start_frame == !!frame)
-    assertthat::assert_that(nrow(event_filt) == 1L)
-    
-    assertthat::assert_that(is.data.frame(tracking))
-    nms_req <- c('frame', 'player_id', 'side', 'x', 'y', 'x_v', 'y_v')
-    assertthat::assert_that(all(nms_req %in% names(tracking)))
-    
-    tracking_filt <- tracking %>% filter(frame == !!frame, player_id == !!player_id)
-    assertthat::assert_that(nrow(tracking_filt) == 1L)
-    
-    side <- tracking_filt[['side']]
-    
-    assertthat::assert_that(
-      length(gk_ids) == 2, 
-      identical(sort(names(gk_ids)), c('away', 'home'))
-    )
-    is_gk <- any(player_id %in% gk_ids)
-    
-    x <- tracking_filt[['x']]
-    y <- tracking_filt[['y']]
-    player <-
-      new_player(
-        player_id = player_id,
-        is_gk = is_gk,
-        is_attack = side == event_filt[['side']],
-        tti = -1,
-        in_frame = !is.na(x) & !is.na(y),
-        side = side,
-        x = x,
-        y = y,
-        x_v = tracking_filt[['x_v']],
-        y_v = tracking_filt[['y_v']],
-        vmax = params[['max_player_speed']],
-        reaction_time = params[['reaction_time']],
-        tti_sigma = params[['tti_sigma']],
-        lambda_att = params[['lambda_att']],
-        lambda_def = params[['lambda_def']]
-      )
-    player <- validate_player(player)
-    player
-  }
-```
-
-```{r player-print, include=F, echo=F, eval=F}
-format.player <- function(player, ...) {
-  if(vctrs::field(player, 'in_frame')) {
-    suffix <- sprintf('with `position = (%.2f, %.2f)` and `velocity = <%.1f, %.1f>`', vctrs::field(player, 'player_id'), vctrs::field(player, 'y'), vctrs::field(player, 'x_v'), vctrs::field(player, 'y_v'))
-  } else {
-    suffix <- 'is not on the pitch'
-  }
-  prefix <- sprintf('`player_id = %s` ', vctrs::field(player, 'player_id'))
-  msg <- sprintf('%s%s', prefix, suffix)
-  paste(msg, sep = '\n')
-}
-
-obj_print_data.player <- function(player) {
-  cat(format(player), sep = '\n')
-}
-```
-
-```{r tti-real, include=F, echo=F, eval=F}
-# .norm <- function(x1, x2, y1, y2) {
-#   res <- sqrt((x2 - x1)^2 + (y2 - y1)^2)
-#   res <- matrix(c(x1, y1, x2, y2), nrow = 2, byrow = TRUE)
-#   res
-# }
-.norm <- function(x1, x2, y1, y2) {
-  m <- matrix(c(x1, y1)) - matrix(c(x2, y2))
-  res <- sqrt(sum(m^2))
-  res
-}
-
-.get_tti.player <- function(player, x2, y2, ...) {
-  ri <- vctrs::field(player, 'reaction_time')
-  x1 <- vctrs::field(player, 'x') + vctrs::field(player, 'x_v') * ri
-  y1 <- vctrs::field(player, 'y') + vctrs::field(player, 'y_v') * ri
-  res <- ri + .norm(x1, x2, y1, y2) / vctrs::field(player, 'vmax')
-  res
-}
-
-.msg_cls_err <- function(player, f) {
-  cls <- class(player)[1]
-  sprintf('`%s()` doesn\'t know how to handle class `%s`!', f, cls) 
-}
-
-.get_tti.default <- function(player, ...) {
-  stop(.msg_cls_err(player, '.get_tti'), call. = FALSE)
-}
-
-.get_tti <- function(player, ...) {
-  UseMethod('.get_tti')
-}
-
-`.set_tti<-.player` <- function(player, value) {
-  vctrs::field(player, 'tti') <- value
-  player
-}
-
-`.set_tti<-.default` <- function(player, ...) {
-  stop(.msg_cls_err(player, '.set_tti'), call. = FALSE)
-}
-
-`.set_tti<-` <- function(player, ...) {
-  UseMethod('.set_tti<-')
-}
-```
-
-```{r p_intercept-real-hide}
-.get_p_intercept.player <- function(player, t, ...) {
-  den <- 1 + (-pi / sqrt(3) / vctrs::field(player, 'tti_sigma')) * (t - vctrs::field(player, 'tti'))
-  res <- 1 / den
-  # assertthat::assert_that(res > 0, msg = sprintf('Probability to intercept (`%.2f`) cannot be < 0.', res))
-  res
-}
-```
-
-```{r p_intercept-real, include=F, echo=F, eval=F}
-.get_p_intercept.default <- function(player, ...) {
-  stop(.msg_cls_err(player, '.get_p_intercept'), call. = FALSE)
-}
-
-.get_p_intercept <- function(player, ...) {
-  UseMethod('.get_p_intercept')
-}
-
-`.set_ppcf<-.player` <- function(player, value) {
-  vctrs::field(player, 'p_intercept') <- value
-  player
-}
-
-`.set_p_intercept<-.default` <- function(player, ...) {
-  stop(.msg_cls_err(player, '.set_p_intercept'), call. = FALSE)
-}
-
-`.set_p_intercept<-` <- function(player, ...) {
-  UseMethod('.set_p_intercept<-')
-}
-```
-
-```{r ppcf-real, include=F, echo=F, eval=F}
-`.set_ppcf<-.player` <- function(player, value) {
-  vctrs::field(player, 'ppcf') <- value
-  player
-}
-
-`.set_ppcf<-.default` <- function(player, ...) {
-  stop(.msg_cls_err(player, '.set_ppcf'), call. = FALSE)
-}
-
-`.set_ppcf<-` <- function(player, ...) {
-  UseMethod('.set_ppcf<-')
-}
-```
-
-```{r player-calcs, include=F, echo=F, eval=F}
-.assert_dppcf_dt <- function(dppcf_dt, i, is_attack = TRUE) {
-  cnd <- dppcf_dt >= 0
-  if(cnd) {
-    return(invisible())
-  }
-  prefix <- ifelse(is_attack, 'attack', 'defend')
-  msg <- sprintf('Incremental %sing player probability (`dppcf_dt = %.3f` at `i = %d`) must be >= 0', prefix, dppcf_dt, i)
-  warning(msg, call. = FALSE)
-}
-
-.assert_ppcf <- function(ppcf, i, is_attack = TRUE) {
-  cnd <- ppcf >= 0 & ppcf <= 1
-  if(cnd) {
-    return(invisible())
-  }
-  prefix <- ifelse(is_attack, 'Attack', 'Defend')
-  msg <- sprintf('%sing player probability (`ppcf = %.3f` at `i = %d`) must be >= 0 and <= 1', prefix, ppcf, i)
-  warning(msg, call. = FALSE)
-}
-
-.truncate01 <- function(x) {
-  case_when(
-    x >= 1 ~ 1,
-    x <= 0 ~ 0,
-    TRUE ~ x
-  )
-}
-# `tar.get_[xy]` will be equal to `ball_[xy]` when just calculating pitch control only at the ball.
-# We will end up calculating pitch control for the entire pitch for a single frame.
-calculate_pc_at_target <-
-  function(players,
-           ball_x,
-           ball_y,
-           tar.get_x = ball_x,
-           tar.get_y = ball_y,
-           params = .get_default_pc_params()) {
-    
-    ball_dist <- .norm(tar.get_x, ball_x, tar.get_y, ball_y)
-    ball_time <- ball_dist / params[['average_ball_speed']]
-    
-    ps_att <- players %>% keep(~{vctrs::field(.x, 'is_attack')})
-    ps_def <- players %>% keep(~{!vctrs::field(.x, 'is_attack')})
-    
-    f_update_tti <- function(v) {
-      # Don't think `map` works for updating a value in place, so need to use a `for` loop (yikes!)
-      for(i in seq_along(v)) {
-        # browser()
-        value <- .get_tti(v[[i]], x2 = tar.get_x, y2 = tar.get_y)
-        .set_tti(v[[i]]) <- value
-      }
-      invisible(v)
-    }
-    
-    ps_att <- ps_att %>% f_update_tti()
-    ps_def <- ps_def %>% f_update_tti()
-    
-    f_tau_min <- function(v) {
-      v %>% map_dbl(~vctrs::field(..1, 'tti')) %>% min(na.rm = TRUE)
-    }
-    
-    tau_min_att <- ps_att %>% f_tau_min()
-    tau_min_def <- ps_def %>% f_tau_min()
-    
-    t_def <- params[['time_to_control_def']]
-    is_gt <- ifelse(tau_min_att - max(ball_time, tau_min_def) >= t_def, TRUE, FALSE)
-    if(is_gt) {
-      # message('`ppcf_def = 1` automatically because no defenders are sufficiently close.')
-      res <- list('ppcf_att' = 0, 'ppcf_def' = 1)
-      return(res)
-    }
-    
-    t_att <- params[['time_to_control_att']]
-    is_gt <- ifelse(tau_min_def - max(ball_time, tau_min_att) >= t_att, TRUE, FALSE)
-    if(is_gt) {
-      # message('`ppcf_att = 1` automatically because no attackers are sufficiently close.')
-      res <- list('ppcf_att' = 1, 'ppcf_def' = 0)
-      return(res)
-    }
-    
-    f_discard <- function(v, tau_min, t) {
-      res <-
-        v %>% 
-        discard(~is.na(vctrs::field(..1, 'x'))) %>% 
-        discard(~(vctrs::field(., 'tti') - tau_min) >= t)
-      res
-    }
-    ps_att_filt <- ps_att %>% f_discard(tau_min = tau_min_att, t = t_att)
-    ps_def_filt <- ps_def %>% f_discard(tau_min = tau_min_def, t = t_def)
-    int_dt <- params[['int_dt']]
-    
-    dt_seq <- seq(ball_time - int_dt, ball_time + params[['max_int_time']], by = int_dt)
-    n_seq <- dt_seq %>% length()
-    ppcf_att <- rep(0, n_seq)
-    ppcf_def <- rep(0, n_seq)
-    p_tot <- 0
-    i <- 2
-    limit_hi <- 1 
-    limit_lo <- 0
-    
-    while (((1 - p_tot) > params[['model_converge_tol']]) & (i < n_seq) & i < params[['iter_min']]) {
-      t <- dt_seq[i]
-      ii <- i - 1
-      for(ip in seq_along(ps_att_filt)) {
-        
-        lhs <- 1 - ppcf_att[ii] - ppcf_def[ii]
-        p <- ps_att_filt[[ip]]
-        dppcf_dt <- lhs * .get_p_intercept(p, t) * vctrs::field(p, 'lambda_att')
-        
-        value_ip <- dppcf_dt * int_dt
-        
-        .assert_dppcf_dt(dppcf_dt, i = i, is_attack = TRUE)
-        .set_ppcf(ps_att_filt[[ip]]) <- value_ip
-        
-        value_i <- ppcf_att[i] + vctrs::field(ps_att_filt[[ip]], 'ppcf')
-        
-        if(value_i >= limit_hi) {
-          value_i <- limit_hi
-        } else if(value_i <= limit_lo) {
-          value_i <- limit_lo
-        }
-        
-        ppcf_att[i] <- value_i
-      }
-      
-      for(ip in seq_along(ps_def_filt)) {
-        
-        lhs <- 1 - ppcf_att[ii] - ppcf_def[ii]
-        p <- ps_def_filt[[ip]]
-        dppcf_dt <- lhs * .get_p_intercept(p, t) * vctrs::field(p, 'lambda_def')
-        
-        value_ip <- dppcf_dt * int_dt
-        
-        .assert_dppcf_dt(dppcf_dt, i = i, is_attack = FALSE)
-        .set_ppcf(ps_def_filt[[ip]]) <- value_ip
-        
-        value_i <- ppcf_def[i] + vctrs::field(ps_def_filt[[ip]], 'ppcf')
-        
-        if(value_i >= limit_hi) {
-          value_i <- limit_hi
-        } else if(value_i <= limit_lo) {
-          value_i <- limit_lo
-        }
-        
-        ppcf_def[i] <- value_i
-      }
-      
-      # "Normalize" to make sure the two sum up to 1.
-      ppcf_i <- ppcf_att[i] + ppcf_def[i]
-      ppcf_att[i] <- ppcf_att[i] / ppcf_i
-      ppcf_def[i] <- ppcf_def[i] / ppcf_i
-      
-      p_tot <- ppcf_att[i] + ppcf_def[i]
-      i <- i + 1
-      
-    }
-    
-    if(i >= n_seq) {
-      warning(sprintf('Integration failed to converge: `p_tot = %.3f`', p_tot), call. = FALSE)
-    }
-
-    
-    i_last <- i - 1
-    ppcf_att[i_last] <- .truncate01(ppcf_att[i_last])
-    ppcf_def[i_last] <- .truncate01(ppcf_def[i_last])
-    .assert_ppcf(ppcf_att[i_last], i, is_attack = TRUE)
-    .assert_ppcf(ppcf_def[i_last], i, is_attack = FALSE)
-    
-    i_seq <- 1:i_last
-    res <-
-      list(
-        'ppcf_att' = ppcf_att[i_last], 
-        'ppcf_def' = ppcf_def[i_last]
-      )
-    res
-  }
-
-do_calculate_pc_for_event <-
-  function(tracking,
-           events,
-           event_id,
-           params = .get_default_pc_params(),
-           epv_grid = import_epv_grid()) {
-    
-    events_filt <- events %>% filter(event_id == !!event_id)
-    start_frame <- events_filt[['start_frame']]
-    tracking_filt <- tracking %>% filter(frame == start_frame)
-    
-    players <-
-      tracking_filt %>%
-      pull(player_id) %>%
-      map(
-        ~ player(
-          player_id = .x,
-          events = events_filt,
-          tracking = tracking_filt,
-          frame = start_frame,
-          params = params
-        )
-      )
-    players
-    
-    # dx <- dims[1] / n_cell_x
-    # dy <- dims[2] / n_cell_y
-    # 
-    # if(geom == 'tile') {
-    #   init_x <- 0 + dx / 2
-    #   init_y <- 0 + dy / 2
-    # } else if (geom == 'contour') {
-    #   init_x <- 0
-    #   init_y <- 0
-    # }
-    # # browser()
-    # grid_pc <- 
-    #   crossing(
-    #     x = seq(init_x, dims[1], length.out = n_cell_x),
-    #     y = seq(init_y, dims[2], length.out = n_cell_y)
-    #   )
-    grid <- epv_grid %>% distinct(x, y)
-    ball_x <- tracking_filt[1, ][['ball_x']]
-    ball_y <- tracking_filt[1, ][['ball_y']]
-
-    f <- function() {
-      res <-
-        grid %>% 
-        mutate(
-          res = 
-            map2(x, y, 
-                 ~calculate_pc_at_target(
-                   players = players,
-                   ball_x = ball_x,
-                   ball_y = ball_y,
-                   tar.get_x = ..1,
-                   tar.get_y = ..2
-                 )
-            )
-        )
-      res
-    }
-    f_timed <- .time_it(f, .name = 'calculating pitch control')
-    pc_grid <-
-      f_timed() %>% 
-      mutate(
-        ppcf_att = map_dbl(res, ~pluck(.x, 'ppcf_att')),
-        ppcf_def = map_dbl(res, ~pluck(.x, 'ppcf_def'))
-      ) %>% 
-      select(-res) %>% 
-      arrange(x, y)
-    pc_grid
-  }
-```
-
-```{r epv, include=F, echo=F, eval=F}
-.rescale <- function(x, rng1, rng2) {
-  rng2[1] + ((x - rng1[1]) * (rng2[2] - rng2[1])) / (rng1[2] - rng1[1])
-}
-
-.tidy_epv_grid <- function(epv_grid) {
-  res <-
-    epv_grid %>% 
-    mutate(row = row_number()) %>% 
-    relocate(row) %>% 
-    pivot_longer(-row, names_to = 'col')
-  res
-}
-
-.get_epv_rng_orig <- function(dir = c('x', 'y')) {
-  dir <- match.arg(dir)
-  switch(dir, x = c(1L, 50L), y = c(1L, 32L))
-}
-
-.rescale_tidy_epv_grid <- function(tidy_epv_grid, dims = .get_dims_opta()) {
-  x_rng_orig <- .get_epv_rng_orig('x')
-  y_rng_orig <- .get_epv_rng_orig('y')
-  res <-
-    tidy_epv_grid %>% 
-    mutate(
-      across(col, ~str_remove(.x, '^X') %>% as.integer() %>% .rescale(x_rng_orig, c(0 + dims[1] / x_rng_orig[2] / 2, dims[1] - dims[1] / x_rng_orig[2] / 2))),
-      across(row, ~.rescale(.x, y_rng_orig, c(0 + dims[2] / y_rng_orig[2] / 2, dims[2] - dims[2] / y_rng_orig[2] / 2)))
-    ) %>% 
-    rename(x = col, y = row)
-  res
-}
-
-.add_grid_id_cols <- function(grid) {
-  res <-
-    grid %>% 
-    mutate(idx = dense_rank(x), idy = dense_rank(y))
-  res
-}
-
-import_epv_grid <- memoise::memoise({
-  function(path = file.path('data', 'EPV_grid.csv')) {
-    # res <- read_delim(path, delim = ',')
-    # res <- read.table(path, sep = ',') %>% as.matrix()
-    if(!fs::file_exists(path)) {
-      path <- 'https://raw.githubusercontent.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking/master/EPV_grid.csv'
-    }
-    res <- 
-      read_csv(path, col_names = FALSE) %>% 
-      .tidy_epv_grid() %>% 
-      .rescale_tidy_epv_grid() %>% 
-      .add_grid_id_cols()
-    res
-  }
-})
-
-import_xt_grid <- memoise::memoise({
-  function(path = file.path('data', 'xT.csv')) {
-        if(!fs::file_exists(path)) {
-      path <- 'https://raw.githubusercontent.com/anenglishgoat/InteractivePitchControl/master/xT.csv'
-    }
-    import_epv_grid(path = path)
-  }
-})
-
-plot_epv_grid <- function(epv_grid = import_epv_grid(), attack_direction = 1, ...) {
-  if(attack_direction == -1) {
-    epv_grid <- epv_grid %>% mutate(across(value, ~.x * -1))
-  }
-  viz <-
-    epv_grid %>% 
-    aes(x = x, y = y) +
-    .pitch_gg(...) +
-    geom_raster(
-      aes(fill = value), 
-      interpolate = TRUE,
-      hjust = 0.5,
-      vjust = 0.5,
-      alpha = 0.5
-    ) +
-    scale_fill_distiller(palette = 'Blues', direction = 1)
-  viz
-}
-
-.filter_epv_grid <- function(epv_grid, x, y) {
-  res <-
-    epv_grid %>% 
-    mutate(
-      # dx = sqrt(x^2 + start_x^2),
-      # dy = sqrt(y^2 + start_y^2)
-      dx = abs(x - !!x),
-      dy = abs(y - !!y)
-    ) %>% 
-    mutate(dz = sqrt(dx^2 + dy^2)) %>% 
-    filter(dz == min(dz)) %>% 
-    select(-dx, -dy, -dz)
-  res
-}
-
-.compute_epv_added <- function(epv_grid, start_x, start_y, end_x, end_y) {
-  epv_start <- epv_grid %>% .filter_epv_grid(start_x, start_y)
-  epv_end <- epv_grid %>% .filter_epv_grid(end_x, end_y)
-  value_start <- epv_start[['value']]
-  value_end <- epv_end[['value']]
-  list(
-    'start' = value_start,
-    'end' = value_end,
-    'change' = value_end - value_start
-  )
-}
-
-.do_compute_epv_added <- function(events, event_id, epv_grid) {
-  events_filt <- events %>% filter(event_id == !!event_id)
-  assertthat::assert_that(nrow(events_filt) == 1L)
-  start_x <- events_filt[['start_x']]
-  start_y <- events_filt[['start_y']]
-  end_x <- events_filt[['end_x']]
-  end_y <- events_filt[['end_y']]
-  res <-
-    .compute_epv_added(
-      epv_grid = epv_grid,
-      start_x = start_x,
-      start_y = start_y,
-      end_x = end_x,
-      end_y = end_y
-    )
-  res
-}
-
-do_compute_epv_added <- function(..., epv_grid = import_epv_grid()) {
-  do_compute_epv_added(..., epv_grid = epv_grid)
-}
-
-do_compute_xt_added <- function(..., epv_grid = import_xt_grid()) {
-  do_compute_epv_added(..., epv_grid = epv_grid)
-}
-
-do_compute_eepv_added <- function(tracking, events, event_id, epv_grid = import_epv_grid(), params = .get_default_pc_params(), ...) {
-
-  events_filt <- events %>% filter(event_id == !!event_id)
-  start_frame <- events_filt[['start_frame']]
-  end_frame <- events_filt[['end_frame']]
-  tracking_start <- tracking %>% filter(frame == start_frame)
-  tracking_end <- tracking %>% filter(frame == end_frame)
-  
-  players_start <-
-    tracking_start %>%
-    pull(player_id) %>%
-    map(
-      ~ player(
-        player_id = .x,
-        events = events_filt,
-        tracking = tracking_start,
-        frame = start_frame,
-        params = params
-      )
-    )
-  players_start
-  
-  ball_x_start <- tracking_start[1, ][['ball_x']]
-  ball_y_start <- tracking_start[1, ][['ball_y']]
-  
-  pc_start <-
-    calculate_pc_at_target(
-      players = players_start,
-      ball_x = ball_x_start,
-      ball_y = ball_y_start,
-      tar.get_x = ball_x_start,
-      tar.get_y = ball_y_start
-    )
-  
-  ball_x_end <- tracking_end[1, ][['ball_x']]
-  ball_y_end <- tracking_end[1, ][['ball_y']]
-  
-  pc_end <-
-    calculate_pc_at_target(
-      players = players_start,
-      ball_x = ball_x_start,
-      ball_y = ball_y_start,
-      tar.get_x = ball_x_end,
-      tar.get_y = ball_y_end
-    )
-  
-  events_filt <- events %>% filter(event_id == !!event_id)
-  assertthat::assert_that(nrow(events_filt) == 1L)
-  
-  # # Use the `tracking` ball position as start and end instead of the `event` columns since it is more precise.
-  # start_x <- events_filt[['start_x']]
-  # start_y <- events_filt[['start_y']]
-  # end_x <- events_filt[['end_x']]
-  # end_y <- events_filt[['end_y']]
-  start_x <- ball_x_start
-  start_y <- ball_y_start
-  end_x <- ball_x_end
-  end_y <- ball_y_end
-  
-  epv_start <- epv_grid %>% .filter_epv_grid(start_x, start_y) %>% pluck('value')
-  epv_end <- epv_grid %>% .filter_epv_grid(end_x, end_y) %>% pluck('value')
-  ppcf_att_start <- pc_start %>% pluck('ppcf_att')
-  ppcf_att_end <- pc_end %>% pluck('ppcf_att')
-  eepv_start <- epv_start * ppcf_att_start
-  eepv_end <- epv_end * ppcf_att_end
-  res <-
-    list(
-      'epv_start' = epv_start,
-      'epv_end' = epv_end,
-      'ppcf_att_start' = ppcf_att_start,
-      'ppcf_att_end' = ppcf_att_end,
-      'eepv_start' = eepv_start,
-      'eepv_end' = eepv_end,
-      'eepv_added' = eepv_end - eepv_start
-    )
-  res
-}
-```
-
 ## Intro
 
 There's never been a better time to be involved in sports analytics. There is a wealth of open-sourced data and code (not to mention well-researched and public analysis) to digest and use. Both people working for teams and people just doing at as a hobby are publishing new and interesting analyses every day.
@@ -880,31 +53,15 @@ Now, I am not one for language wars---and, in fact, I use python often---but I t
 
 Most of the process of translating python to R was relatively straightforward (slicing and dicing data frames and arrays/vectors is just part of data cleaning), so I won't detail them here. However, there was one part that was particularly interesting---the conversion of a python class object. This was actually the key (and most challenging part) of the conversion process.
 
-<!-- I thought it would be a good testing ground for porting python code to R code in a "native" R fashion, with the added challenge of [object-orientated programming (OOP)](https://en.wikipedia.org/wiki/Object-oriented_programming). -->
-
 There are some great resources for describing how to implement [object-orientated programming (OOP)](https://en.wikipedia.org/wiki/Object-oriented_programming) in R, including a couple of chapter's from [Hadley Wickham](https://twitter.com/hadleywickham)'s [Advanced R book](https://adv-r.hadley.nz/oo.html) and a [very practical write-up](https://blog.earo.me/2019/11/03/practical-guide-to-s3/) from [Earo Wang](https://twitter.com/earowang). Every object-oriented task has its unique aspects, so hopefully my discussion here has something to add to what has already been written on the subject matter.
-
-## Implementation of the Class
 
 ***For demonstration purposes, I'm going to walk through my steps for converting the python class object as if I were doing it for the first time.***
 
-Below is a stripped down version of Laurie's code, showing the "essence" of what we need to replicate.[^2] I won't explain everything, but hopefully what is not explained here
+## Contructor
+
+Below is a stripped down version of Laurie's code, showing the "essence" of what we need to replicate.[^2]
 
 [^2]: If you actually browse Laurie's code, you'll notice that I've changed some of the names of these functions, e.g. `tti()` here instead of `simple_time_to_intercept()` there, `tracking_df` instead of `team` there. Don't worry about that. I just wanted to make things as comparable as possible for the diligent reader, and I tried to make variable names that were either (or both) more succinct or more clear.
-
-Let's make some notes and come back to these as we develop our R class.
-
-1.  We need a unique identifier: `player_id`. This is really just a "best practice" thing for object-oriented programming and makes sense given our context. For a sport like soccer, a unique identifier could just be the player's name, a combination of the team name and the player jersey number, a league unique identifier, etc.
-
-2.  A single-row data frame `frame` is passed to several of the methods, including the constructor `__init__`. This single row data frame is sourced from a much larger `tracking` data frame, with rows for every 0.04 second time interval (25 frames per second, or one frame per 0.04 seconds) in the game.
-
-3.  The python code stores both the player's `position` and `velocity` as 2x1 arrays. This works well with the [unpacking](https://www.w3schools.com/python/gloss_python_assign_value_to_multiple_variables.asp) that is done in other places in Laurie's code.
-
-4.  `tti`, short for "time to intercept (the ball)", uses the player's `position` and `velocity` to define the attribute `tti` (not to be confused with the method itself). This implies that `position` and `velocity` should be defined before `tti()` is ever called, as they are in `__init__`. `tti` needs the `position_final` 2x1 array to calculate `tti` which is not known upon instantiation; rather, `tti` can only be properly defined when called to do a specific calculation relating the player's `position` and `velocity` (both defined implicitly in the class, without needing user-specification) with a user-supplied `position_final` pair of x and y values.
-
-5.  `p_intercept`, short for "probability to intercept (the ball)" depends on `tti` and an additional parameter `t`, a user-specified value representing how much time is allotted to reach the ball. Like `tti`, `p_intercept` is only "properly" defined when actually doing a calculation on the player's attributes. Unlike `tti`, there is no attribute in the `player` instance that stores this probability; it's value must be saved in a variable external to the player class if the user wants to use it for something other than an ephemeral calculation.[^3]
-
-[^3]: One might argue that we should be consistent with `tti` and `p_intercept` and store them in the same way---either both as attributes or neither as attributes---given that both are dependent on some user-specified values (`final_position` for `tti` and `t` for `p_intercept`). I'm just showing how it is done in Laurie's code. I think it is simple enough as is and there is no compelling functional reason why we should change the implementation.
 
 ```{python player-python, include=T, echo=T, eval=F}
 class player(object):
@@ -928,12 +85,42 @@ class player(object):
     def p_intercept(self,t):
         # `tti_sigma` is the standard deviation of the sigmoid function that quantifies the uncertainty in player arrival time
         tti_sigma = 0.45
-        den = 1 + np.exp( -np.pi/np.sqrt(3.0)/tti_sigma * (t-self.tti)))
+        den = 1 + np.exp(-np.pi/np.sqrt(3.0)/tti_sigma * (t-self.tti)))
         return 1 / den
       
 ```
 
-Ok, on to the R code. We'll be using [S3](https://adv-r.hadley.nz/s3.html) and the [`{vctrs}` package](https://vctrs.r-lib.org/) to help create our `player` class. Again, I've omitted details with `<...>`.
+Let's make some notes and come back to these as we develop our R class.
+
+1.  We need a unique identifier: `player_id`. This is really just a "best practice" thing for object-oriented programming and makes sense given our context. For a sport like soccer, a unique identifier could just be the player's name, a combination of the team name and the player jersey number, a league unique identifier, etc.
+
+2.  A single-row data frame `frame` is passed to several of the methods, including the constructor `__init__`. This single row data frame is sourced from a much larger `tracking` data frame, with rows for every 0.04 second time interval (25 frames per second, or one frame per 0.04 seconds) in the game.
+
+3.  The python code stores both the player's `position` and `velocity` as 2x1 arrays. This works well with the [unpacking](https://www.w3schools.com/python/gloss_python_assign_value_to_multiple_variables.asp) that is done in other places in Laurie's code.
+
+4.  `tti`, short for "time to intercept (a target location)", uses the player's `position` and `velocity` to define the attribute `tti` (not to be confused with the method itself). This implies that `position` and `velocity` should be defined before `tti()` is ever called, as they are in `__init__`. `tti` needs the `position_final` 2x1 array to calculate `tti` which is not known upon instantiation; rather, `tti` can only be properly defined when called to do a specific calculation relating the player's `position` and `velocity` (both defined implicitly in the class, without needing user-specification) with a user-supplied `position_final` pair of x and y values.
+
+5.  `p_intercept`, short for "probability to intercept (a target location)" depends on `tti` and an additional parameter `t`, a user-specified value representing how much time is allotted to reach the ball. Like `tti`, `p_intercept` is only "properly" defined when actually doing a calculation on the player's attributes. Unlike `tti`, there is no attribute in the `player` instance that stores this probability; it's value must be saved in a variable external to the player class if the user wants to use it for something other than an ephemeral calculation.[^3]
+
+[^3]: One might argue that we should be consistent with `tti` and `p_intercept` and store them in the same way---either both as attributes or neither as attributes---given that both are dependent on some user-specified values (`final_position` for `tti` and `t` for `p_intercept`). I'm just showing how it is done in Laurie's code. I think it is simple enough as is and there is no compelling functional reason why we should change the implementation.
+
+Time to intercept a "target" location (`tti`) may not be intuitive to comprehend immediately. The plot[^4] below annotates the `tti` of a "target" location on the pitch (which does **not** have to be where the ball actually is). `tti` assumes that the player continues moving at their current speed (annotated by the arrows) for `reaction_time` seconds before running at `vmax` (full speed) to the target position. `tti` for each player is independent of the `tti` of all other players, which is a relatively reasonable assumption. [^5]
+
+[^4]: Data for this plot and all that follow from post-processed [Metrica Sports sample game 2 data](https://github.com/metrica-sports/sample-data).
+
+[^5]: author of one of my favorite books **Soccermatics**
+
+![](viz_tti_ex.png)
+
+The probability of reaching the "target" location (`p_intercept`) is directly related to the player's `tti`. Uncertainty about how long it will take the player to reach the target location is quantified by the constant `tti_sigma` in the calculation. (`tti` is the mean and `tti_sigma` is the standard deviation of the distribution for a player's time to arrive at the target location.)
+
+![](viz_p_intercept_ex_1.png)
+
+Notably, this probability is independent of all other players' probabilities (which explains how it is possible that both players are shown to have probabilities greater than 50% when `t = 8` above). When adjusting for all players' probabilities (by dividing by the sum of all probabilities), the numbers change. This probability adjustment is key when we calculate pitch control.
+
+![](viz_p_intercept_ex_2.png)
+
+Ok, on to the R code. We'll be using [S3](https://adv-r.hadley.nz/s3.html) and the [`{vctrs}` package](https://vctrs.r-lib.org/) to help create our `player` class. (As with the python class, I've simplified the actual implementation for demonstration purposes.)
 
 First, we start with the constructor `new_player()`. Note that there is no direct `__init__` equivalent in R. Here we will make a function that is prefixed with `new_` and ends with the name of our class (`player`).
 
@@ -943,8 +130,7 @@ new_player <-
            x = double(),
            y = double(),
            x_v = double(),
-           y_v = double(),
-           <...>) {
+           y_v = double()) {
     vctrs::new_rcrd(
       list(
         player_id = player_id,
@@ -971,6 +157,8 @@ Now let's reflect upon our prior notes.
 
 5.  Like `tti`, we will need a separate `p_intercept` method to be used to calculate the probabililty of intercepting a ball given a player's position, speed, and the final position of the ball (all fed as inputs to `tti`), as well as the additional user-specified `t`, representing how much time is allotted to reach the ball.
 
+## Validator
+
 Let's proceed by creating a validator function to, you guessed it, validate fields in the `player` class. It is good practice to check the values used to construct the class. The python code did not have any validation like this, but I don't think it was ever expected to be extremely robust to any user input.
 
 ```{r validate_player, include=T, echo=T, eval=F}
@@ -985,11 +173,13 @@ validate_player <- function(player) {
 
 Note that we could have simply done this validation in the constructor function, but I think it makes sense to put the validation in its own function so that the constructor is more direct (especially if the validation checks are complex).
 
+## Helper
+
 Finally, we'll create a helper `player()` function, which is our "user-facing" function that we expect/want users to use to instantiate objects.
 
 ```{r player, include=T, echo=T, eval=F}
 player <- 
-  function(player_id, frame, tracking, <...>) {
+  function(player_id, frame, tracking) {
     
     player_id <- as.integer(player_id)
     frame <- as.integer(frame)
@@ -1010,8 +200,7 @@ player <-
         x_v = tracking_filt[['x_v']],
         y_v = tracking_filt[['y_v']]
       )
-    player <- validate_player(player)
-    player
+    validate_player(player)
   }
 ```
 
@@ -1020,75 +209,51 @@ Note the following:
 -   We coerce `player_id` and `frame` to integers instead of doubles (particularly since they are expected to be integers in the constructor). This ensures that the new `player` is instantiated properly by the constructor and passes our validation.
 -   We pass in our entire `tracking` data frame (that has rows for every 0.04 second interval in the game), as well as the `frame` to slice out of it. (`player_id` is also used to filter `tracking`.) This makes it convenient for user to instantiate new `player` objects when operating on the `tracking` data frame. There is no need to extract the singular initial position and velocity components "manually"; instead, the helper function does it for the user.
 
-Let's do one more thing for our player class---create a custom print method. (Writing a custom print method is not required whatsoever, but it can be very helpful for debugging.) If we weren't using `{vctrs}` and just S3, we would do this by writing a `print.player` function. However, `{vctrs}` provides a "pretty" header for us auto-magically (that looks like `<player[1]>`) if we use it to write our print method.
+## Aside
 
-To take advantage of the pretty-printing functionality offered by `{vctrs}`, we write a `format.player()` method that will be called by a subclass of the generic `vctrs::obj_print_data` method[^4], which itself is called whenever we print out an object (whether explicitly with `print` or just by typing the name of the variable representing our `player` instance). We'll add the player's position and velocity components to the print out.
+R's S3 framework is not a formal OOP framework (not even close really). Note that it does not have a reserved keyword to represent the instance of the class like `self` in python. Also, it is not actually necessary to much of what is done above (with the constructor, validator, and helper).
 
-[^4]: `vctrs::obj_print_data` that can also handle [Unicode](https://home.unicode.org/) easily, although we are not using any Unicode characters here. Also, it is able to handle extra `NULL`s and `[1]` that may be printed out if we just use `cat` or `print` directly.
+For example, we don't actually have to create a formal-ish constructor prefixed with `new_`. We don't even need a constructor function at all in S3. We could do something like `class(var) <- 'player'` to create a a `player` object. Of course, this is prone to errors down the line, so we don't do that. Likewise with the validator and helper functions. The point of these constructs is to add clarity to our class code. They aren't strictly necessary.
 
-```{r ref.label='player-print', include=T, echo=T, eval=F}
+## Printing
+
+Let's do one more thing for our `player` class---create a custom print method. (Writing a custom print method is not required whatsoever, but it can be very helpful for debugging.) If we weren't using `{vctrs}` and just S3, we would do this by writing a `print.player` function. However, `{vctrs}` provides a "pretty" header for us auto-magically (that looks like `<player[1]>`) if we use it to write our print method.
+
+To take advantage of the pretty-printing functionality offered by `{vctrs}`, we write a `format.player()` method that will be called by a subclass of the generic `vctrs::obj_print_data` method[^6], which itself is called whenever we print out an object (whether explicitly with `print` or just by typing the name of the variable representing our `player` instance). We'll add the player's position and velocity components to the print out.
+
+[^6]: `vctrs::obj_print_data` that can also handle [Unicode](https://home.unicode.org/) easily, although we are not using any Unicode characters here. Also, it is able to handle extra `NULL`s and `[1]` that may be printed out if we just use `cat` or `print` directly.
+
+```{r players-print, include=T, echo=T, eval=F}
+format.player <- function(player, ...) {
+  if(vctrs::field(player, 'in_frame')) {
+    suffix <- 
+      sprintf(
+        'with `position = (%.2f, %.2f)` and `velocity = <%.1f, %.1f>`', 
+        vctrs::field(player, 'player_id'), 
+        vctrs::field(player, 'y'), 
+        vctrs::field(player, 'x_v'),
+        vctrs::field(player, 'y_v')
+      )
+  } else {
+    suffix <- 'is not on the pitch'
+  }
+  prefix <- sprintf('`player_id = %s` ', vctrs::field(player, 'player_id'))
+  msg <- sprintf('%s%s', prefix, suffix)
+  paste(msg, sep = '\n')
+}
+
+obj_print_data.player <- function(player) {
+  cat(format(player), sep = '\n')
+}
 ```
+
+## Basic Usage
 
 Ok, so that is all fine and dandy, but how would we go about instantiating `player`s in a normal workflow?
 
-Let's say that we want to calculate the pitch control for a single `frame` in the `tracking` data.
+Let's say that we want to calculate the pitch control for a single `frame` in the `tracking` data (called `tracking_start` below).[^7] Note that the pitch dimensions have been translated to a 100x100 unit-less grid. (A real pitch is something like 105x68 m).
 
-```{r data, include=F, echo=F, eval=F}
-# Data comes from post-processed Metrica sample game 2 data. I'm using a single frame here. Coordinates have been transformed to be on Opta's 100x100 unit grid.
-.event_id <- 823L
-.start_frame <- 53027L
-.end_frame <- 53045L
-.ball_x_start <- 89.251
-.ball_y_start <- 36.112
-.ball_x_end <- 91.866
-.ball_y_end <- 54.338
-# The events data frame has an `end_frame` in the actual data set as well, hence the `start_` prefix for `frame`.
-events_filt <-
-  tibble(
-    event_id = .event_id,
-    start_frame = .start_frame,
-    end_frame = .end_frame,
-    start_x = .ball_x_start,
-    start_y = .ball_y_start,
-    end_x = .ball_x_end,
-    end_y = .ball_y_end,
-    side = 'away'
-  )
-
-# `frame` would already be a column in the data frame in the original data set, but I've just removed it from the tribble (along with `ball_x` and `ball_y`) to make the tribble thinner.
-# This is how the `tracking` data frame might look. I've named it `tracking_start` here to indicate that it is just the first frame of the event (which has both a start and end frame) filtered out of a larger `tracking` data set.
-
-tracking_start <-
-  tibble::tribble(
-    ~frame, ~ball_x, ~ball_y,  ~side, ~player_id,     ~x,     ~y,   ~x_v,   ~y_v,
-    53027L,  89.251,  36.112, "home",         1L, 86.403, 57.897,  5.625, -5.861,
-    53027L,  89.251,  36.112, "home",         2L, 90.569, 39.919,  1.429, -2.975,
-    53027L,  89.251,  36.112, "home",         3L, 91.436, 34.291,   1.35,  3.521,
-    53027L,  89.251,  36.112, "home",         4L, 87.993, 22.997,  0.957,  5.107,
-    53027L,  89.251,  36.112, "home",         5L,  79.96, 36.311,  4.036,  1.764,
-    53027L,  89.251,  36.112, "home",         6L,  78.28, 52.395,  3.707, -0.911,
-    53027L,  89.251,  36.112, "home",         7L, 81.707, 25.492,  1.621,  2.239,
-    53027L,  89.251,  36.112, "home",         8L, 72.437, 73.768,  1.921, -0.725,
-    53027L,  89.251,  36.112, "home",         9L, 58.304, 37.277,  0.821, -1.132,
-    53027L,  89.251,  36.112, "home",        10L, 56.848, 51.611,  0.857, -0.843,
-    53027L,  89.251,  36.112, "home",        11L,  97.66, 47.477, -0.293,  0.918,
-    53027L,  89.251,  36.112, "home",        12L,     NA,     NA,     NA,     NA,
-    53027L,  89.251,  36.112, "home",        13L,     NA,     NA,     NA,     NA,
-    53027L,  89.251,  36.112, "home",        14L,     NA,     NA,     NA,     NA,
-    53027L,  89.251,  36.112, "away",        15L, 65.766, 15.929,  2.039,  1.254,
-    53027L,  89.251,  36.112, "away",        16L, 54.231,  34.43,  2.125, -0.729,
-    53027L,  89.251,  36.112, "away",        17L, 52.172, 57.135,  1.232,   -1.1,
-    53027L,  89.251,  36.112, "away",        18L, 53.468, 78.232,  0.461,  -2.15,
-    53027L,  89.251,  36.112, "away",        19L, 83.557, 23.396,  1.368,  4.664,
-    53027L,  89.251,  36.112, "away",        20L, 68.541,  41.98,  2.793,  1.207,
-    53027L,  89.251,  36.112, "away",        21L, 58.819, 58.089,  1.221, -1.139,
-    53027L,  89.251,  36.112, "away",        22L,  75.67, 66.388,  3.482, -0.968,
-    53027L,  89.251,  36.112, "away",        23L, 89.311, 36.268,  1.589,  4.239,
-    53027L,  89.251,  36.112, "away",        24L, 90.368, 54.044,  2.754,  1.468,
-    53027L,  89.251,  36.112, "away",        25L, 20.222, 53.147,  0.125, -0.314,
-    53027L,  89.251,  36.112, "away",        26L,     NA,     NA,     NA,     NA
-  )
-```
+[^7]: This is the same data used to generate the first handful of plots.
 
 ```{r tracking_start, include=T, echo=T, eval=F}
 tracking_start
@@ -1111,18 +276,8 @@ tracking_start
 
 Let's convert players with id's 10 through 12 (on the home team) to `player` instances and see how they look when printed out.
 
-```{r players-fake, include=T, echo=T, eval=F}
-players <-
-  10L:12L %>% 
-  map(~player(player_id = .x, frame = 53027L, tracking = tracking_start))
-players
-```
-
-```{r players-real, include=F, echo=F, eval=F}
-players <-
-  10L:12L %>%
-  map(~player(player_id = .x, frame = .start_frame, tracking = tracking_start, events = events_filt))
-players
+```{r players-init, include=T, echo=T, eval=F}
+10L:12L %>% map(~player(player_id = .x, frame = 53027L, tracking = tracking_start))
 ```
 
     ## [[1]]
@@ -1137,9 +292,11 @@ players
     ## <player[1]>
     ## `player_id = 12` is not on the pitch
 
-Cool. We still need to implement analogues for the `tti` and `p_intercept` methods in the python `player` class. Starting with `tti`, let's use [some pseudo-encapsulation (with getters and setters)](https://www.w3schools.com/java/java_encapsulation.asp) for a player's `tti` value.
+## Pseudo-Encapsulation
 
-```{r tti-1-fake, include=T, echo=T, eval=F}
+We still need to implement analogues for the `tti` and `p_intercept` methods in the python `player` class. Starting with `tti`, let's use [some pseudo-encapsulation (with getters and setters)](https://www.w3schools.com/java/java_encapsulation.asp) for a player's `tti` value.
+
+```{r tti, include=T, echo=T, eval=F}
 # Frobenious norm
 euclidean_norm <- function(x1, x2, y1, y2) {
   m <- matrix(c(x1, y1)) - matrix(c(x2, y2))
@@ -1185,37 +342,30 @@ There's a couple of things going on here:
 
 -   The `.get_tti` and `.set_tti` functions that call `UseMethod` are true S3 generics that perform method dispatch, i.e. find the correct method for the object passed to the generic (based on the class of the object). The `.get_tti.player` and `.set_tti.player` with the `.player` "suffix" so that they only work in their defined manners when passed in a `player` instance. (They won't be called with an object that is not of the `player` class.)
 -   The ellipses (`...`) in the S3 generic function signatures may be a bit mysterious since they aren't passed explicitly to `UseMethod`. Any non-`player` arguments are captured in these ellipses and passed to whatever method that is called from the generic (e.g. `.get_tti.player` method called from the `.get_tti` generic). For `.get_tti`, the ellipses is intended to capture `x2` and `y2`, and for `.set_tti`, it captures `value`.
--   We must use the "strange" syntax `.set_tti<-.player` (instead of just `.set_tti.player`, which may seem more "natural") in order to update an attribute in an already instantiated class. [^5]
--   We define the function `euclidean_norm()` outside of `.get_tti.player` simply because it is not something that is specific to the time to intercept calculation for a player; it can work with any two pairs of x and y coordinates.[^6]
+-   We must use the "strange" syntax `.set_tti<-.player` (instead of just `.set_tti.player`, which may seem more "natural") in order to update an attribute in an already instantiated class. [^8]
+-   We define the function `euclidean_norm()` outside of `.get_tti.player` simply because it is not something that is specific to the time to intercept calculation for a player; it can work with any two pairs of x and y coordinates.[^9]
 -   `ri` and `vmax`, representing a player's reaction time and a player's maximum velocity respectively, are constants defined in the Spearman paper. We could change these if we wanted to, or even make them dynamic (i.e. configurable via other function parameters, or even at instantiation time).
 
-[^5]: [R6](https://adv-r.hadley.nz/r6.html) is probably a better OOP system to use for this whole use case. The capability to update instance attributes is more native to that framework.
+[^8]: [R6](https://adv-r.hadley.nz/r6.html) is probably a better OOP system to use for this whole use case. The capability to update instance attributes is more native to that framework.
 
-[^6]: It's best to separate out logic in functions like this where it makes sense to do so. It ultimately makes re-factoring and debugging a lot easier.
+[^9]: It's best to separate out logic in functions like this where it makes sense to do so. It ultimately makes re-factoring and debugging a lot easier.
 
 To really complete our getter and setter methods for `tti`, we should write methods to handle the case when a non-`player` object is passed to them. The generic `.get_tti` and `.set_tti` methods will dispatch to these functions if the object passed to them (the first argument named `player`) doesn't actually inherit from the `player` class.
 
 ```{r tti-2-fake, include=T, echo=T, eval=F}
-msg_cls_err <- function(player, f) {
-  cls <- class(player)[1]
-  sprintf('`%s()` doesn\'t know how to handle class `%s`!', f, cls) 
-}
-
 .get_tti.default <- function(player, ...) {
-  stop(msg_cls_err(player, '.get_tti'), call. = FALSE)
+  stop(.msg_cls_err(player, '.get_tti'), call. = FALSE)
 }
 
 .set_tti.default <- function(player, ...) {
-  stop(msg_cls_err(player, '.get_tti'), call. = FALSE)
+  stop(.msg_cls_err(player, '.get_tti'), call. = FALSE)
 }
 ```
 
 Let's see how our pseudo-encapsulation looks in action.
 
 ```{r players-fake-2, include=T, echo=T, eval=F}
-players <-
-  8L:10L %>% 
-  map(~player(player_id = .x, frame = 53027L, tracking = tracking_start))
+players <- 8L:10L %>% map(~player(player_id = .x, frame = 53027L, tracking = tracking_start))
 map(players, ~vctrs::field(.x, 'tti'))
 ```
 
@@ -1228,18 +378,11 @@ map(players, ~vctrs::field(.x, 'tti'))
     ## [[3]]
     ## [1] -1
 
-```{r players-real-2, include=F, echo=F, eval=F}
-players <-
-  8L:10L %>%
-  map(~player(player_id = .x, frame = .start_frame, tracking = tracking_start, events = events_filt))
-map(players, ~vctrs::field(.x, 'tti'))
-```
-
-```{r .get_tti-real-demo, include=T, echo=T, eval=F}
-tar.get_x <- 89
-tar.get_y <- 36
+```{r tti-demo, include=T, echo=T, eval=F}
+target_x <- 89
+target_y <- 36
 for(i in seq_along(players)) {
-  value <- .get_tti(players[[i]], x2 = tar.get_x, y2 = tar.get_y)
+  value <- .get_tti(players[[i]], x2 = target_x, y2 = target_y)
   .set_tti(players[[i]]) <- value
 }
 map(players, ~vctrs::field(.x, 'tti'))
@@ -1254,11 +397,11 @@ map(players, ~vctrs::field(.x, 'tti'))
     ## [[3]]
     ## [1] 7.689027
 
-They seem to work as intended.
+Note how the player `tti` values changed after we defined them for a specified `target_x` and `target_y`.
 
-Our approach to `p_intercept` is very similar to that for `tti`---we define getters and setters, as well as generics for the class (the intended target of method dispatch), as well as a default class to handle unexpected inputs. Probably the only interesting thing is the caclualation itself
+Our approach to `p_intercept` is very similar to that for `tti`, so I don't show most of it here. As before, we define getters and setters, as well as generics for the class (the intended target of method dispatch), as well as a default class to handle unexpected inputs. Probably the only interesting part is the calculation itself, as shown below. If you compare it to the `p_intercept` method in the python object definition, you'll see it's basically identical.
 
-```{r p_intercept-fake, include=T, echo=T, eval=F}
+```{r p_intercept, include=T, echo=T, eval=F}
 .get_p_intercept.player <- function(player, t) {
   tti_sigma <- 0.45
   den <- 1 + exp((-base::pi / sqrt(3) / tti_sigma) * (t - vctrs::field(player, 'tti')))
@@ -1266,108 +409,13 @@ Our approach to `p_intercept` is very similar to that for `tti`---we define gett
 }
 ```
 
-## Aside
+There is certainly more to show, especially for what is needed to calculate pitch control. (We need to integrate probabilities across all players over time, and do it for the entire pitch.) Nonetheless, the `player` class and the pseudo-encapsulation that we've implemented with S3 and `{vctrs}` is really the key component underlying the whole pitch control calculation.
 
-R's S3 framework is not a formal OOP framework (not even close really). Note that it does not have a reserved keyword to represent the instance of the class like `self` in python. Also, it is not actually necessary to much of what is done above (with the constructor, validator, and helper).
+## Advanced Usage
 
-For example, we don't actually have to create a formal-ish constructor prefixed with `new_`. We don't even need a constructor function at all in S3. We could do something like `class(var) <- 'player'` to create a a `player` object. Of course, this is prone to errors down the line, so we don't do that. Likewise with the validator and helper functions. The point of these constructs is to add clarity to our class code. They aren't strictly necessary.
+To really motivate the reader, let's see what this implementation allows us to do.
 
-## Harnessing the Power of the Class
-
-The translation of the python class to an R class was all that I wanted to show. To really motivate the reader, let's see what this implementation allows us to do.
-
-First, let's emulate the pitch control plot of event 823 (event 822 for python and its zero-indexing), which is a pass by the away (red) team in the penalty area preceding a successful shot.
-
-```{r pc-viz, include=F, echo=F, eval=F}
-epv_grid <- import_epv_grid()
-
-pc_grid_epv_start <-
-  do_calculate_pc_for_event(
-    tracking = tracking_start,
-    events = events_filt %>% mutate(frame = start_frame),
-    event_id = .event_id,
-    epv_grid = epv_grid
-  )
-  
-pal2 <- c('home' = 'red', 'away' = 'blue')
-arw <- arrow(length = unit(3, 'pt'), type = 'closed')
-# See https://stackoverflow.com/a/17313561/120898
-pts <- function(x) {
-  as.numeric(grid::convertUnit(grid::unit(x, 'pt'), 'mm'))
-}
-
-.gg_constants <- function(...) {
-  list(
-    # ...,
-    scale_color_manual(values = pal2),
-    geom_segment(
-      data = tracking_filt %>% filter(!is.na(x)),
-      size = 0.5,
-      arrow = arw,
-      aes(x = x, y = y, xend = x + x_v, yend = y + y_v, color = side)
-    ),
-    ggrepel::geom_text_repel(
-      data = tracking_filt %>% filter(!is.na(x)),
-      aes(x = x, y = y, color = side, label = player_id),
-      force = 2,
-      size = pts(8)
-    ),
-    geom_point(
-      data = tracking_filt %>% filter(!is.na(x)),
-      aes(x = x, y = y, color = side),
-      size = 4
-    ),
-    geom_point(
-      data = events_filt,
-      aes(x = start_x, y = start_y),
-      size = 3,
-      fill = 'yellow',
-      color = 'black',
-      shape = 21
-    ),
-    geom_curve(
-      data = events_filt,
-      aes(x = start_x, y = start_y, xend = end_x, yend = end_y),
-      size = 1,
-      arrow = arw,
-      color = 'black',
-      curvature = -0.2
-    ),
-    theme(
-      plot.title = ggtext::element_markdown('Karla', face = 'bold', size = 18, color = 'gray20'),
-      plot.title.position = 'plot',
-      plot.subtitle = ggtext::element_markdown('Karla', face = 'bold', size = 14, color = 'gray50'),
-      plot.margin = margin(10, 10, 10, 10),
-      plot.caption = ggtext::element_markdown('Karla', size = 14, color = 'gray20', hjust = 0),
-      plot.caption.position = 'plot'
-    ),
-    labs(
-      caption = '**Viz:** @TonyElHabr | **Data:** Metrica Sports'
-    )
-  )
-}
-
-viz_pc_grid_epv_start <-
-  pc_grid_epv_start %>% 
-  ggplot() +
-  aes(x = x, y = y) +
-  .pitch_gg() +
-  geom_raster(
-    aes(fill = ppcf_att),
-    interpolate = TRUE,
-    hjust = 0,
-    vjust = 0,
-    alpha = 0.4
-  ) +
-  scale_fill_gradient2(low = pal2[['home']], high = pal2[['away']], midpoint = 0.5) +
-  scale_color_gradient2(low = pal2[['home']], high = pal2[['away']], midpoint = 0.5) +
-  guides(fill = FALSE) +
-  ggnewscale::new_scale_color() +
-  labs(title = glue::glue('Metrica Sample Game 2, Event {.event_id}, Pitch Control')) +
-  .gg_constants()
-viz_pc_grid_epv_start
-# save_plot(viz_pc_grid_epv_start, file = sprintf('pc_%s_r', .event_id))
-```
+First, let's emulate the pitch control plot of event 823, which is a pass by the away (blue) team in the home (red) team's penalty area preceding a successful shot.
 
 ![](pc_823_r.png)
 
@@ -1379,43 +427,6 @@ By no means is it a perfect replication---some of the contour edges are at diffe
 
 Second, let's replicate the [expected possession value (EPV)](http://www.sloansportsconference.com/wp-content/uploads/2019/02/Decomposing-the-Immeasurable-Sport.pdf) plot of the same event, including the EPV added by the pass.
 
-```{r epv-viz, include=F, echo=F, eval=F}
-epvxppcf_grid_start <-
-  inner_join(pc_grid_epv_start, epv_grid) %>%
-  mutate(epv = ppcf_att * value)
-epvxppcf_grid_start
-
-eepv_added <-
-  do_compute_eepv_added(
-    bind_rows(tracking_start, tracking_end), 
-    events_filt, 
-    event_id = .event_id
-  )
-eepv_added
-
-viz_epvxppcf_grid_start <-
-  epvxppcf_grid_start %>%
-  arrange(desc(epv)) %>% 
-  ggplot() +
-  aes(x = x, y = y) +
-  .pitch_gg() +
-  geom_raster(
-    aes(fill = epv),
-    interpolate = TRUE,
-    hjust = 0,
-    vjust = 0,
-    alpha = 0.5
-  ) +
-  scale_fill_distiller(palette = 'Blues', direction = 1) +
-  labs(
-    title = glue::glue('Metrica Sample Game 2, Event {.event_id}, Expected Possession Value (EPV)'),
-    subtitle = glue::glue('EPV Added: {scales::number(eepv_added[["eepv_added"]], accuracy = 0.001)}')
-  ) +
-  .gg_constants()
-viz_epvxppcf_grid_start
-# save_plot(viz_epvxppcf_grid_start, file = sprintf('epv_%s_r', .event_id))
-```
-
 ![](epv_823_r.png)
 
 Again, we can compare this plot to the python equivalent.
@@ -1424,12 +435,12 @@ Again, we can compare this plot to the python equivalent.
 
 Cool, it seems to be pretty close. We do have a small discrepancy in the EPV added calculation. (This EPV is actually an "expected" EPV calculation that uses pitch control to weight the pre-learned EPV grid). I believe this is probably due to discrepancies in the integration done in the pitch control calculation and not due to a significant a code issue.
 
-The code to prepare the data for these plots gets more complex, which is why I have excluded it here.[^7] However, none of it is unreasonably difficult to understand or implement once we have a properly defined `player` object.
+The code to prepare the data for these plots gets more complex, which is why I have excluded it here.[^10] However, none of it is unreasonably difficult to understand or implement once we have a properly defined `player` object.
 
-[^7]: Feel free to check out the source for this markdown file to see the full implementation.
+[^10]: Feel free to check out the source the [code](https://github.com/tonyelhabr/LaurieOnTracking/blob/master/analysis/01-freestyle-blog.R) used in the full implementation, as well as the code to generate the plots.
 
 ## Conclusion
 
-Thus, we see that there is a huge payoff to creating a sound and robust `player` object---we can calculate pitch control and EPV, and feed them into pretty visualizations that can provide insight. I believe that the code here could be easily adapted to fit whatever one would like to study. For example, the valuation grid used here could be easily swapped out with [expected threat (xT)](https://karun.in/blog/expected-threat.html), which is a more modern and probably a better valuation framework than the one used here.[^8] Furthermore, one could calculate EPV across the entire game. The possibilities for analyses really open up.
+Thus, we see that there is a huge payoff to creating a sound and robust `player` object---we can calculate pitch control and EPV, and feed them into pretty visualizations that can provide insight. I believe that the code here could be easily adapted to fit whatever one would like to study. For example, the valuation grid used here could be easily swapped out with [expected threat (xT)](https://karun.in/blog/expected-threat.html), which is a more modern and probably a better valuation framework than the one used here.[^11] Furthermore, one could calculate EPV across the entire game. The possibilities for analyses really open up.
 
-[^8]: [Here](https://raw.githubusercontent.com/anenglishgoat/InteractivePitchControl/master/xT.csv) is a CSV with the grid for xT.
+[^11]: [Here](https://raw.githubusercontent.com/anenglishgoat/InteractivePitchControl/master/xT.csv) is a CSV with the grid for xT.

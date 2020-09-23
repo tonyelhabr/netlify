@@ -44,6 +44,11 @@ ignoreFiles = ["\\.ipynb$", ".ipynb_checkpoints$", "\\.Rmd$", "\\.Rmarkdown$", "
 
 preserveTaxonomyNames = true # Added this.
 
+
+# Reference: https://github.com/wowchemy/wowchemy-hugo-modules/issues/341
+[markup.highlight]
+codeFences = true
+
 # https://discourse.gohugo.io/t/hugo-0-60-0-raw-html-omitted-issue/22010/6
 [markup.goldmark.renderer]
   unsafe = true

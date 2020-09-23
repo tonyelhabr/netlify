@@ -1,7 +1,7 @@
 ---
 authors:
 - tony
-bio: Data person. Passionate mostly about energy markets and sports analytics.
+bio: Passionate mostly about energy markets and sports analytics.
 education:
   courses:
   - course: M.S. in Analytics (Data Science)
