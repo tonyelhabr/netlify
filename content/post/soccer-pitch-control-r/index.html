@@ -1,0 +1,321 @@
+---
+title: S3 Classes and {vctrs} to Create a Soccer Pitch Control Model
+draft: true
+date: '2020-09-23'
+categories:
+  - r
+tags:
+  - r
+  - soccer
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: true
+header:
+  caption: ''
+  image: 'featured.jpg'
+output:
+  html_document:
+    keep_md: yes
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>There’s never been a better time to be involved in sports analytics. There is a wealth of open-sourced data and code (not to mention well-researched and public analysis) to digest and use. Both people working for teams and people just doing at as a hobby are publishing new and interesting analyses every day.</p>
+<p>In particular, the <a href="https://www.youtube.com/channel/UCUBFJYcag8j2rm_9HkrrA7w">FriendsOfTracking (FOT)</a> group, co-led by Professor and author <a href="ttps://twitter.com/Soccermatics">David Sumpter</a><a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> have put together an awesome series of videos on YouTube discussing modern soccer analytics, along with a collection of repositories on GitHub sharing the code shown in videos.</p>
+<p><a href="https://twitter.com/EightyFivePoint">Laurie Shaw</a> has shared code that implements the <a href="https://www.youtube.com/watch?v=X9PrwPyolyU">pitch control model</a> described in <a href="https://twitter.com/the_spearman">William Spearman</a>’s paper <a href="http://www.sloansportsconference.com/wp-content/uploads/2018/02/2002.pdf">“Beyond Expected Goals”</a> is interesting to me. The model is different than the one that I used <a href="https://twitter.com/TonyElHabr/status/1304766718468857857?s=20">to create some animations on Twitter</a>. Those were based on the pitch control model described by <a href="https://twitter.com/JaviOnData">Javier Fernandez</a> and <a href="https://twitter.com/lukebornn">Luke Bornn</a> in their paper <a href="http://www.sloansportsconference.com/wp-content/uploads/2018/03/1003.pdf">“Wide Open Spaces”</a> (<a href="https://www.robert-hickman.eu/post/fall_back_in_to_space/">code</a> courtesy of <a href="https://twitter.com/robwhickman">Rob Hickman</a>). (Apologies for the onslaught of links!)</p>
+<p>Now, I am not one for language wars—and, in fact, I use python often—but I thought it would be awesome to be able to plot Spearman’s pitch control model directly with <code>{ggplot2}</code> and friends. Thus, I set out to convert Laurie’s code to R, attempting to give it a “native” R feel while I was at it.</p>
+<p>Most of the process of translating python to R was relatively straightforward (slicing and dicing data frames and arrays/vectors is just part of data cleaning), so I won’t detail them here. However, there was one part that was particularly interesting—the conversion of a python class object. This was actually the key (and most challenging part) of the conversion process.</p>
+<!-- I thought it would be a good testing ground for porting python code to R code in a "native" R fashion, with the added challenge of [object-orientated programming (OOP)](https://en.wikipedia.org/wiki/Object-oriented_programming). -->
+<p>There are some great resources for describing how to implement <a href="https://en.wikipedia.org/wiki/Object-oriented_programming">object-orientated programming (OOP)</a> in R, including a couple of chapter’s from <a href="https://twitter.com/hadleywickham">Hadley Wickham</a>’s <a href="https://adv-r.hadley.nz/oo.html">Advanced R book</a> and a <a href="https://blog.earo.me/2019/11/03/practical-guide-to-s3/">very practical write-up</a> from <a href="https://twitter.com/earowang">Earo Wang</a>. Every object-oriented task has its unique aspects, so hopefully my discussion here has something to add to what has already been written on the subject matter.</p>
+</div>
+<div id="implementation-of-the-class" class="section level2">
+<h2>Implementation of the Class</h2>
+<p><strong><em>For demonstration purposes, I’m going to walk through my steps for converting the python class object as if I were doing it for the first time.</em></strong></p>
+<p>Below is a stripped down version of Laurie’s code, showing the “essence” of what we need to replicate.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> I won’t explain everything, but hopefully what is not explained here</p>
+<p>Let’s make some notes and come back to these as we develop our R class.</p>
+<ol style="list-style-type: decimal">
+<li><p>We need a unique identifier: <code>player_id</code>. This is really just a “best practice” thing for object-oriented programming and makes sense given our context. For a sport like soccer, a unique identifier could just be the player’s name, a combination of the team name and the player jersey number, a league unique identifier, etc.</p></li>
+<li><p>A single-row data frame <code>frame</code> is passed to several of the methods, including the constructor <code>__init__</code>. This single row data frame is sourced from a much larger <code>tracking</code> data frame, with rows for every 0.04 second time interval (25 frames per second, or one frame per 0.04 seconds) in the game.</p></li>
+<li><p>The python code stores both the player’s <code>position</code> and <code>velocity</code> as 2x1 arrays. This works well with the <a href="https://www.w3schools.com/python/gloss_python_assign_value_to_multiple_variables.asp">unpacking</a> that is done in other places in Laurie’s code.</p></li>
+<li><p><code>tti</code>, short for “time to intercept (the ball)”, uses the player’s <code>position</code> and <code>velocity</code> to define the attribute <code>tti</code> (not to be confused with the method itself). This implies that <code>position</code> and <code>velocity</code> should be defined before <code>tti()</code> is ever called, as they are in <code>__init__</code>. <code>tti</code> needs the <code>position_final</code> 2x1 array to calculate <code>tti</code> which is not known upon instantiation; rather, <code>tti</code> can only be properly defined when called to do a specific calculation relating the player’s <code>position</code> and <code>velocity</code> (both defined implicitly in the class, without needing user-specification) with a user-supplied <code>position_final</code> pair of x and y values.</p></li>
+<li><p><code>p_intercept</code>, short for “probability to intercept (the ball)” depends on <code>tti</code> and an additional parameter <code>t</code>, a user-specified value representing how much time is allotted to reach the ball. Like <code>tti</code>, <code>p_intercept</code> is only “properly” defined when actually doing a calculation on the player’s attributes. Unlike <code>tti</code>, there is no attribute in the <code>player</code> instance that stores this probability; it’s value must be saved in a variable external to the player class if the user wants to use it for something other than an ephemeral calculation.<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p></li>
+</ol>
+<pre class="python"><code>class player(object):
+    def __init__(self,player_id,frame):
+        self.id = player_id
+        self.get_position(frame)
+        self.get_velocity(frame)
+        
+    def .get_position(self,frame):
+        self.position = np.array(frame[self.player_id + &#39;x&#39;, self.player_id + &#39;y&#39;])
+        
+    def .get_velocity(self,frame):
+        self.velocity = np.array(frame[self.player_id + &#39;x_v&#39;, self.player_id + &#39;y_v&#39;])
+    
+    def tti(self,final_position):
+        reaction_time = 0.7 # in s
+        vmax = 5 # in m/s
+        reaction_position = self.position + self.velocity * reaction_time
+        self.tti = reaction_time + np.linalg.norm(final_positon - reaction_position)/vmax
+
+    def p_intercept(self,t):
+        # `tti_sigma` is the standard deviation of the sigmoid function that quantifies the uncertainty in player arrival time
+        tti_sigma = 0.45
+        den = 1 + np.exp( -np.pi/np.sqrt(3.0)/tti_sigma * (t-self.tti)))
+        return 1 / den</code></pre>
+<p>Ok, on to the R code. We’ll be using <a href="https://adv-r.hadley.nz/s3.html">S3</a> and the <a href="https://vctrs.r-lib.org/"><code>{vctrs}</code> package</a> to help create our <code>player</code> class. Again, I’ve omitted details with <code>&lt;...&gt;</code>.</p>
+<p>First, we start with the constructor <code>new_player()</code>. Note that there is no direct <code>__init__</code> equivalent in R. Here we will make a function that is prefixed with <code>new_</code> and ends with the name of our class (<code>player</code>).</p>
+<pre class="r"><code>new_player &lt;-
+  function(player_id = integer(),
+           x = double(),
+           y = double(),
+           x_v = double(),
+           y_v = double(),
+           &lt;...&gt;) {
+    vctrs::new_rcrd(
+      list(
+        player_id = player_id,
+        x = x,
+        y = y,
+        x_v = x_v,
+        y_v = y_v,
+        tti = -1 # dummy value
+      ),
+      class = &#39;player&#39;
+    )
+  }</code></pre>
+<p>Now let’s reflect upon our prior notes.</p>
+<ol style="list-style-type: decimal">
+<li><p>We have the <code>player_id</code> in this constructor.</p></li>
+<li><p>We don’t pass the data frame <code>tracking</code> here. We’ll do it in our helper function. We might say that our constructor is “low-level”, not intended for the user to call directly.</p></li>
+<li><p>We split the position and velocity vectors into their individual x and y components, resulting in four total variables instead of two. I don’t think a vector (unnamed or named), list, or matrix are particularly compelling data types to use for an x-y pair of values in R. None natively support unpacking (although R vectors do have some form of “broadcasting” with their recycling behavior).</p></li>
+<li><p>We assign a “dummy” value (-1) to <code>tti</code> when initializing the class instance. We will have a method to update <code>tti</code> based on x and y components.</p></li>
+<li><p>Like <code>tti</code>, we will need a separate <code>p_intercept</code> method to be used to calculate the probabililty of intercepting a ball given a player’s position, speed, and the final position of the ball (all fed as inputs to <code>tti</code>), as well as the additional user-specified <code>t</code>, representing how much time is allotted to reach the ball.</p></li>
+</ol>
+<p>Let’s proceed by creating a validator function to, you guessed it, validate fields in the <code>player</code> class. It is good practice to check the values used to construct the class. The python code did not have any validation like this, but I don’t think it was ever expected to be extremely robust to any user input.</p>
+<pre class="r"><code>validate_player &lt;- function(player) {
+  vctrs::vec_assert(vctrs::field(player, &#39;player_id&#39;), integer())
+  vctrs::vec_assert(vctrs::field(player, &#39;x&#39;), double())
+  vctrs::vec_assert(vctrs::field(player, &#39;y&#39;), double())
+  vctrs::vec_assert(vctrs::field(player, &#39;tti&#39;), double())
+  player
+}</code></pre>
+<p>Note that we could have simply done this validation in the constructor function, but I think it makes sense to put the validation in its own function so that the constructor is more direct (especially if the validation checks are complex).</p>
+<p>Finally, we’ll create a helper <code>player()</code> function, which is our “user-facing” function that we expect/want users to use to instantiate objects.</p>
+<pre class="r"><code>player &lt;- 
+  function(player_id, frame, tracking, &lt;...&gt;) {
+    
+    player_id &lt;- as.integer(player_id)
+    frame &lt;- as.integer(frame)
+
+    assertthat::assert_that(is.data.frame(tracking))
+    nms_req &lt;- c(&#39;player_id&#39;, &#39;frame&#39;, &#39;x&#39;, &#39;y&#39;, &#39;x_v&#39;, &#39;y_v&#39;)
+    assertthat::assert_that(all(nms_req %in% names(tracking)))
+    
+    # `!!` to make sure that we filter using the integer values, not the column itself.
+    tracking_filt &lt;- tracking %&gt;% filter(player_id == !!player_id, frame == !!frame)
+    assertthat::assert_that(nrow(tracking_filt) == 1L)
+    
+    player &lt;-
+      new_player(
+        player_id = player_id,
+        x = tracking_filt[[&#39;x&#39;]],
+        y = tracking_filt[[&#39;y&#39;]],
+        x_v = tracking_filt[[&#39;x_v&#39;]],
+        y_v = tracking_filt[[&#39;y_v&#39;]]
+      )
+    player &lt;- validate_player(player)
+    player
+  }</code></pre>
+<p>Note the following:</p>
+<ul>
+<li>We coerce <code>player_id</code> and <code>frame</code> to integers instead of doubles (particularly since they are expected to be integers in the constructor). This ensures that the new <code>player</code> is instantiated properly by the constructor and passes our validation.</li>
+<li>We pass in our entire <code>tracking</code> data frame (that has rows for every 0.04 second interval in the game), as well as the <code>frame</code> to slice out of it. (<code>player_id</code> is also used to filter <code>tracking</code>.) This makes it convenient for user to instantiate new <code>player</code> objects when operating on the <code>tracking</code> data frame. There is no need to extract the singular initial position and velocity components “manually”; instead, the helper function does it for the user.</li>
+</ul>
+<p>Let’s do one more thing for our player class—create a custom print method. (Writing a custom print method is not required whatsoever, but it can be very helpful for debugging.) If we weren’t using <code>{vctrs}</code> and just S3, we would do this by writing a <code>print.player</code> function. However, <code>{vctrs}</code> provides a “pretty” header for us auto-magically (that looks like <code>&lt;player[1]&gt;</code>) if we use it to write our print method.</p>
+<p>To take advantage of the pretty-printing functionality offered by <code>{vctrs}</code>, we write a <code>format.player()</code> method that will be called by a subclass of the generic <code>vctrs::obj_print_data</code> method<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>, which itself is called whenever we print out an object (whether explicitly with <code>print</code> or just by typing the name of the variable representing our <code>player</code> instance). We’ll add the player’s position and velocity components to the print out.</p>
+<pre class="r"><code>format.player &lt;- function(player, ...) {
+  if(vctrs::field(player, &#39;in_frame&#39;)) {
+    suffix &lt;- sprintf(&#39;with `position = (%.2f, %.2f)` and `velocity = &lt;%.1f, %.1f&gt;`&#39;, vctrs::field(player, &#39;player_id&#39;), vctrs::field(player, &#39;y&#39;), vctrs::field(player, &#39;x_v&#39;), vctrs::field(player, &#39;y_v&#39;))
+  } else {
+    suffix &lt;- &#39;is not on the pitch&#39;
+  }
+  prefix &lt;- sprintf(&#39;`player_id = %s` &#39;, vctrs::field(player, &#39;player_id&#39;))
+  msg &lt;- sprintf(&#39;%s%s&#39;, prefix, suffix)
+  paste(msg, sep = &#39;\n&#39;)
+}
+
+obj_print_data.player &lt;- function(player) {
+  cat(format(player), sep = &#39;\n&#39;)
+}</code></pre>
+<p>Ok, so that is all fine and dandy, but how would we go about instantiating <code>player</code>s in a normal workflow?</p>
+<p>Let’s say that we want to calculate the pitch control for a single <code>frame</code> in the <code>tracking</code> data.</p>
+<pre class="r"><code>tracking_start</code></pre>
+<pre><code>## # A tibble: 26 x 9
+##    frame ball_x ball_y side  player_id     x     y   x_v    y_v
+##    &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+##  1 53027  89.25  36.11 home          1 86.40 57.90 5.625 -5.861
+##  2 53027  89.25  36.11 home          2 90.57 39.92 1.429 -2.975
+##  3 53027  89.25  36.11 home          3 91.44 34.29 1.35   3.521
+##  4 53027  89.25  36.11 home          4 87.99 23.00 0.957  5.107
+##  5 53027  89.25  36.11 home          5 79.96 36.31 4.036  1.764
+##  6 53027  89.25  36.11 home          6 78.28 52.40 3.707 -0.911
+##  7 53027  89.25  36.11 home          7 81.71 25.49 1.621  2.239
+##  8 53027  89.25  36.11 home          8 72.44 73.77 1.921 -0.725
+##  9 53027  89.25  36.11 home          9 58.30 37.28 0.821 -1.132
+## 10 53027  89.25  36.11 home         10 56.85 51.61 0.857 -0.843
+## # ... with 16 more rows</code></pre>
+<p>Let’s convert players with id’s 10 through 12 (on the home team) to <code>player</code> instances and see how they look when printed out.</p>
+<pre class="r"><code>players &lt;-
+  10L:12L %&gt;% 
+  map(~player(player_id = .x, frame = 53027L, tracking = tracking_start))
+players</code></pre>
+<pre><code>## [[1]]
+## &lt;player[1]&gt;
+## `player_id = 10` with `position = (10.00, 51.61)` and `velocity = &lt;0.9, -0.8&gt;`
+## 
+## [[2]]
+## &lt;player[1]&gt;
+## `player_id = 11` with `position = (11.00, 47.48)` and `velocity = &lt;-0.3, 0.9&gt;`
+## 
+## [[3]]
+## &lt;player[1]&gt;
+## `player_id = 12` is not on the pitch</code></pre>
+<p>Cool. We still need to implement analogues for the <code>tti</code> and <code>p_intercept</code> methods in the python <code>player</code> class. Starting with <code>tti</code>, let’s use <a href="https://www.w3schools.com/java/java_encapsulation.asp">some pseudo-encapsulation (with getters and setters)</a> for a player’s <code>tti</code> value.</p>
+<pre class="r"><code># Frobenious norm
+euclidean_norm &lt;- function(x1, x2, y1, y2) {
+  m &lt;- matrix(c(x1, y1)) - matrix(c(x2, y2))
+  sqrt(sum(m^2))
+}
+
+.get_tti.player &lt;- function(player, x2, y2) {
+  ri &lt;- 0.7 # in s
+  vmax &lt;- 5 # in m/s
+  x1 &lt;- vctrs::field(player, &#39;x&#39;) + vctrs::field(player, &#39;x_v&#39;) * ri
+  y1 &lt;- vctrs::field(player, &#39;y&#39;) + vctrs::field(player, &#39;y_v&#39;) * ri
+  ri + euclidean_norm(x1, x2, y1, y2) / vmax
+}
+
+.msg_cls_err &lt;- function(player, f) {
+  cls &lt;- class(player)[1]
+  sprintf(&#39;`%s()` doesn\&#39;t know how to handle class `%s`!&#39;, f, cls) 
+}
+
+.get_tti.default &lt;- function(player, ...) {
+  stop(.msg_cls_err(player, &#39;.get_tti&#39;), call. = FALSE)
+}
+
+.get_tti &lt;- function(player, ...) {
+  UseMethod(&#39;.get_tti&#39;)
+}
+
+`.set_tti&lt;-.player` &lt;- function(player, value) {
+  vctrs::field(player, &#39;tti&#39;) &lt;- value
+  player
+}
+
+`.set_tti&lt;-.default` &lt;- function(player, ...) {
+  stop(.msg_cls_err(player, &#39;.set_tti&#39;), call. = FALSE)
+}
+
+`.set_tti&lt;-` &lt;- function(player, ...) {
+  UseMethod(&#39;.set_tti&lt;-&#39;)
+}</code></pre>
+<p>There’s a couple of things going on here:</p>
+<ul>
+<li>The <code>.get_tti</code> and <code>.set_tti</code> functions that call <code>UseMethod</code> are true S3 generics that perform method dispatch, i.e. find the correct method for the object passed to the generic (based on the class of the object). The <code>.get_tti.player</code> and <code>.set_tti.player</code> with the <code>.player</code> “suffix” so that they only work in their defined manners when passed in a <code>player</code> instance. (They won’t be called with an object that is not of the <code>player</code> class.)</li>
+<li>The ellipses (<code>...</code>) in the S3 generic function signatures may be a bit mysterious since they aren’t passed explicitly to <code>UseMethod</code>. Any non-<code>player</code> arguments are captured in these ellipses and passed to whatever method that is called from the generic (e.g. <code>.get_tti.player</code> method called from the <code>.get_tti</code> generic). For <code>.get_tti</code>, the ellipses is intended to capture <code>x2</code> and <code>y2</code>, and for <code>.set_tti</code>, it captures <code>value</code>.</li>
+<li>We must use the “strange” syntax <code>.set_tti&lt;-.player</code> (instead of just <code>.set_tti.player</code>, which may seem more “natural”) in order to update an attribute in an already instantiated class. <a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></li>
+<li>We define the function <code>euclidean_norm()</code> outside of <code>.get_tti.player</code> simply because it is not something that is specific to the time to intercept calculation for a player; it can work with any two pairs of x and y coordinates.<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a></li>
+<li><code>ri</code> and <code>vmax</code>, representing a player’s reaction time and a player’s maximum velocity respectively, are constants defined in the Spearman paper. We could change these if we wanted to, or even make them dynamic (i.e. configurable via other function parameters, or even at instantiation time).</li>
+</ul>
+<p>To really complete our getter and setter methods for <code>tti</code>, we should write methods to handle the case when a non-<code>player</code> object is passed to them. The generic <code>.get_tti</code> and <code>.set_tti</code> methods will dispatch to these functions if the object passed to them (the first argument named <code>player</code>) doesn’t actually inherit from the <code>player</code> class.</p>
+<pre class="r"><code>msg_cls_err &lt;- function(player, f) {
+  cls &lt;- class(player)[1]
+  sprintf(&#39;`%s()` doesn\&#39;t know how to handle class `%s`!&#39;, f, cls) 
+}
+
+.get_tti.default &lt;- function(player, ...) {
+  stop(msg_cls_err(player, &#39;.get_tti&#39;), call. = FALSE)
+}
+
+.set_tti.default &lt;- function(player, ...) {
+  stop(msg_cls_err(player, &#39;.get_tti&#39;), call. = FALSE)
+}</code></pre>
+<p>Let’s see how our pseudo-encapsulation looks in action.</p>
+<pre class="r"><code>players &lt;-
+  8L:10L %&gt;% 
+  map(~player(player_id = .x, frame = 53027L, tracking = tracking_start))
+map(players, ~vctrs::field(.x, &#39;tti&#39;))</code></pre>
+<pre><code>## [[1]]
+## [1] -1
+## 
+## [[2]]
+## [1] -1
+## 
+## [[3]]
+## [1] -1</code></pre>
+<pre class="r"><code>tar.get_x &lt;- 89
+tar.get_y &lt;- 36
+for(i in seq_along(players)) {
+  value &lt;- .get_tti(players[[i]], x2 = tar.get_x, y2 = tar.get_y)
+  .set_tti(players[[i]]) &lt;- value
+}
+map(players, ~vctrs::field(.x, &#39;tti&#39;))</code></pre>
+<pre><code>## [[1]]
+## [1] 8.749699
+## 
+## [[2]]
+## [1] 6.72504
+## 
+## [[3]]
+## [1] 7.689027</code></pre>
+<p>They seem to work as intended.</p>
+<p>Our approach to <code>p_intercept</code> is very similar to that for <code>tti</code>—we define getters and setters, as well as generics for the class (the intended target of method dispatch), as well as a default class to handle unexpected inputs. Probably the only interesting thing is the caclualation itself</p>
+<pre class="r"><code>.get_p_intercept.player &lt;- function(player, t) {
+  tti_sigma &lt;- 0.45
+  den &lt;- 1 + exp((-base::pi / sqrt(3) / tti_sigma) * (t - vctrs::field(player, &#39;tti&#39;)))
+  1 / den
+}</code></pre>
+</div>
+<div id="aside" class="section level2">
+<h2>Aside</h2>
+<p>R’s S3 framework is not a formal OOP framework (not even close really). Note that it does not have a reserved keyword to represent the instance of the class like <code>self</code> in python. Also, it is not actually necessary to much of what is done above (with the constructor, validator, and helper).</p>
+<p>For example, we don’t actually have to create a formal-ish constructor prefixed with <code>new_</code>. We don’t even need a constructor function at all in S3. We could do something like <code>class(var) &lt;- 'player'</code> to create a a <code>player</code> object. Of course, this is prone to errors down the line, so we don’t do that. Likewise with the validator and helper functions. The point of these constructs is to add clarity to our class code. They aren’t strictly necessary.</p>
+</div>
+<div id="harnessing-the-power-of-the-class" class="section level2">
+<h2>Harnessing the Power of the Class</h2>
+<p>The translation of the python class to an R class was all that I wanted to show. To really motivate the reader, let’s see what this implementation allows us to do.</p>
+<p>First, let’s emulate the pitch control plot of event 823 (event 822 for python and its zero-indexing), which is a pass by the away (red) team in the penalty area preceding a successful shot.</p>
+<p><img src="pc_823_r.png" /></p>
+<p>Compare this to the python version.</p>
+<p><img src="pc_822_python.png" /></p>
+<p>By no means is it a perfect replication—some of the contour edges are at different angles—but I think it’s a pretty good emulation overall.</p>
+<p>Second, let’s replicate the <a href="http://www.sloansportsconference.com/wp-content/uploads/2019/02/Decomposing-the-Immeasurable-Sport.pdf">expected possession value (EPV)</a> plot of the same event, including the EPV added by the pass.</p>
+<p><img src="epv_823_r.png" /></p>
+<p>Again, we can compare this plot to the python equivalent.</p>
+<p><img src="epv_822_python.png" /></p>
+<p>Cool, it seems to be pretty close. We do have a small discrepancy in the EPV added calculation. (This EPV is actually an “expected” EPV calculation that uses pitch control to weight the pre-learned EPV grid). I believe this is probably due to discrepancies in the integration done in the pitch control calculation and not due to a significant a code issue.</p>
+<p>The code to prepare the data for these plots gets more complex, which is why I have excluded it here.<a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a> However, none of it is unreasonably difficult to understand or implement once we have a properly defined <code>player</code> object.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Thus, we see that there is a huge payoff to creating a sound and robust <code>player</code> object—we can calculate pitch control and EPV, and feed them into pretty visualizations that can provide insight. I believe that the code here could be easily adapted to fit whatever one would like to study. For example, the valuation grid used here could be easily swapped out with <a href="https://karun.in/blog/expected-threat.html">expected threat (xT)</a>, which is a more modern and probably a better valuation framework than the one used here.<a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a> Furthermore, one could calculate EPV across the entire game. The possibilities for analyses really open up.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>author of one of my favorite books <strong>Soccermatics</strong><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>If you actually browse Laurie’s code, you’ll notice that I’ve changed some of the names of these functions, e.g. <code>tti()</code> here instead of <code>simple_time_to_intercept()</code> there, <code>tracking_df</code> instead of <code>team</code> there. Don’t worry about that. I just wanted to make things as comparable as possible for the diligent reader, and I tried to make variable names that were either (or both) more succinct or more clear.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>One might argue that we should be consistent with <code>tti</code> and <code>p_intercept</code> and store them in the same way—either both as attributes or neither as attributes—given that both are dependent on some user-specified values (<code>final_position</code> for <code>tti</code> and <code>t</code> for <code>p_intercept</code>). I’m just showing how it is done in Laurie’s code. I think it is simple enough as is and there is no compelling functional reason why we should change the implementation.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p><code>vctrs::obj_print_data</code> that can also handle <a href="https://home.unicode.org/">Unicode</a> easily, although we are not using any Unicode characters here. Also, it is able to handle extra <code>NULL</code>s and <code>[1]</code> that may be printed out if we just use <code>cat</code> or <code>print</code> directly.<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://adv-r.hadley.nz/r6.html">R6</a> is probably a better OOP system to use for this whole use case. The capability to update instance attributes is more native to that framework.<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>It’s best to separate out logic in functions like this where it makes sense to do so. It ultimately makes re-factoring and debugging a lot easier.<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>Feel free to check out the source for this markdown file to see the full implementation.<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://raw.githubusercontent.com/anenglishgoat/InteractivePitchControl/master/xT.csv">Here</a> is a CSV with the grid for xT.<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

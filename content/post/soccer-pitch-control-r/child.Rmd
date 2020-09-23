@@ -1,4 +1,0 @@
-
-```{r example-chunk}
-a <- tibble(x = 1)
-```
