@@ -21,6 +21,7 @@ output:
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
+<p><strong><em>Note: This post was update on 2020-09-24 to correct field dimension translations that were previously distorting the pitch control contours. The R analogues now match up much more closely with the python versions after the updates.</em></strong></p>
 <div id="intro" class="section level2">
 <h2>Intro</h2>
 <p>There’s never been a better time to be involved in sports analytics. There is a wealth of open-sourced data and code (not to mention well-researched and public analysis) to digest and use. Both people working for teams and people just doing at as a hobby are publishing new and interesting analyses every day.</p>
@@ -68,7 +69,7 @@ output:
 <p><img src="viz_tti_ex.png" /></p>
 <p>The probability of reaching the “target” location (<code>p_intercept</code>) is directly related to the player’s <code>tti</code>. Uncertainty about how long it will take the player to reach the target location is quantified by the constant <code>tti_sigma</code> in the calculation. (<code>tti</code> is the mean and <code>tti_sigma</code> is the standard deviation of the distribution for a player’s time to arrive at the target location.)</p>
 <p><img src="viz_p_intercept_ex_1.png" /></p>
-<p>Notably, this probability is independent of all other players’ probabilities (which explains how it is possible that both players are shown to have probabilities greater than 50% when <code>t = 8</code> above). When adjusting for all players’ probabilities (by dividing by the sum of all probabilities), the numbers change. This probability adjustment is key when we calculate pitch control.</p>
+<p>Notably, this probability is independent of all other players’ probabilities (which explains how it is possible that both players are shown to have probabilities greater than 50% when <code>t = 6</code> above). When adjusting for all players’ probabilities (by dividing by the sum of all probabilities), the numbers change. This probability adjustment is key when we calculate pitch control.</p>
 <p><img src="viz_p_intercept_ex_2.png" /></p>
 <p>Ok, on to the R code. We’ll be using <a href="https://adv-r.hadley.nz/s3.html">S3</a> and the <a href="https://vctrs.r-lib.org/"><code>{vctrs}</code> package</a> to help create our <code>player</code> class. (As with the python class, I’ve simplified the actual implementation for demonstration purposes.)</p>
 <p>First, we start with the constructor <code>new_player()</code>. Note that there is no direct <code>__init__</code> equivalent in R. Here we will make a function that is prefixed with <code>new_</code> and ends with the name of our class (<code>player</code>).</p>
@@ -308,12 +309,12 @@ map(players, ~vctrs::field(.x, &#39;tti&#39;))</code></pre>
 <p><img src="pc_823_r.png" /></p>
 <p>Compare this to the python version.</p>
 <p><img src="pc_822_python.png" /></p>
-<p>By no means is it a perfect replication—some of the contour edges are at different angles—but I think it’s a pretty good emulation overall.</p>
+<p>It’s not a perfect replication, but I think it’s very close overall.</p>
 <p>Second, let’s replicate the <a href="http://www.sloansportsconference.com/wp-content/uploads/2019/02/Decomposing-the-Immeasurable-Sport.pdf">expected possession value (EPV)</a> plot of the same event, including the EPV added by the pass.</p>
 <p><img src="epv_823_r.png" /></p>
 <p>Again, we can compare this plot to the python equivalent.</p>
 <p><img src="epv_822_python.png" /></p>
-<p>Cool, it seems to be pretty close. We do have a small discrepancy in the EPV added calculation. (This EPV is actually an “expected” EPV calculation that uses pitch control to weight the pre-learned EPV grid). I believe this is probably due to discrepancies in the integration done in the pitch control calculation and not due to a significant a code issue.</p>
+<p>Cool, my R version seems to very close to the python original. We do have a small discrepancy in the EPV added calculation. (This EPV is actually an “expected” EPV calculation that uses pitch control to weight the pre-learned EPV grid). I believe this is probably due to discrepancies in the integration done in the pitch control calculation and not due to a significant a code issue.</p>
 <p>The code to prepare the data for these plots gets more complex, which is why I have excluded it here.<a href="#fn10" class="footnote-ref" id="fnref10"><sup>10</sup></a> However, none of it is unreasonably difficult to understand or implement once we have a properly defined <code>player</code> object.</p>
 </div>
 <div id="conclusion" class="section level2">

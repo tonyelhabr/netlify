@@ -20,6 +20,8 @@ output:
 
 
 
+***Note: This post was update on 2020-09-24 to correct field dimension translations that were previously distorting the pitch control contours. The R analogues now match up much more closely with the python versions after the updates.***
+
 ## Intro
 
 There's never been a better time to be involved in sports analytics. There is a wealth of open-sourced data and code (not to mention well-researched and public analysis) to digest and use. Both people working for teams and people just doing at as a hobby are publishing new and interesting analyses every day.
@@ -97,7 +99,7 @@ The probability of reaching the "target" location (`p_intercept`) is directly re
 
 ![](viz_p_intercept_ex_1.png)
 
-Notably, this probability is independent of all other players' probabilities (which explains how it is possible that both players are shown to have probabilities greater than 50% when `t = 8` above). When adjusting for all players' probabilities (by dividing by the sum of all probabilities), the numbers change. This probability adjustment is key when we calculate pitch control.
+Notably, this probability is independent of all other players' probabilities (which explains how it is possible that both players are shown to have probabilities greater than 50% when `t = 6` above). When adjusting for all players' probabilities (by dividing by the sum of all probabilities), the numbers change. This probability adjustment is key when we calculate pitch control.
 
 ![](viz_p_intercept_ex_2.png)
 
@@ -415,7 +417,7 @@ Compare this to the python version.
 
 ![](pc_822_python.png)
 
-By no means is it a perfect replication---some of the contour edges are at different angles---but I think it's a pretty good emulation overall.
+It's not a perfect replication, but I think it's very close overall.
 
 Second, let's replicate the [expected possession value (EPV)](http://www.sloansportsconference.com/wp-content/uploads/2019/02/Decomposing-the-Immeasurable-Sport.pdf) plot of the same event, including the EPV added by the pass.
 
@@ -425,7 +427,7 @@ Again, we can compare this plot to the python equivalent.
 
 ![](epv_822_python.png)
 
-Cool, it seems to be pretty close. We do have a small discrepancy in the EPV added calculation. (This EPV is actually an "expected" EPV calculation that uses pitch control to weight the pre-learned EPV grid). I believe this is probably due to discrepancies in the integration done in the pitch control calculation and not due to a significant a code issue.
+Cool, my R version seems to very close to the python original. We do have a small discrepancy in the EPV added calculation. (This EPV is actually an "expected" EPV calculation that uses pitch control to weight the pre-learned EPV grid). I believe this is probably due to discrepancies in the integration done in the pitch control calculation and not due to a significant a code issue.
 
 The code to prepare the data for these plots gets more complex, which is why I have excluded it here.[^10] However, none of it is unreasonably difficult to understand or implement once we have a properly defined `player` object.
 
