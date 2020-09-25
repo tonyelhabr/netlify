@@ -41,10 +41,10 @@ output:
         self.get_position(frame)
         self.get_velocity(frame)
         
-    def .get_position(self,frame):
+    def get_position(self,frame):
         self.position = np.array(frame[self.player_id + &#39;x&#39;, self.player_id + &#39;y&#39;])
         
-    def .get_velocity(self,frame):
+    def get_velocity(self,frame):
         self.velocity = np.array(frame[self.player_id + &#39;x_v&#39;, self.player_id + &#39;y_v&#39;])
     
     def tti(self,final_position):
