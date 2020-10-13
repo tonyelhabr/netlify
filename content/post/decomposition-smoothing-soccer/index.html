@@ -1,0 +1,344 @@
+---
+title: Decomposition and Smoothing with data.table, reticulate, and spatstat
+date: '2020-10-18'
+categories:
+  - r
+tags:
+  - r
+  - soccer
+  - reticulate
+  - data.table
+  - spatstat
+  - tidyverse
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: true
+header:
+  caption: ''
+  image: 'featured.jpg'
+output:
+  html_document:
+    keep_md: yes
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>While reading up on modern soccer analytics (<a href="https://www.tonyelhabr.rbind.io/soccer-pitch-control-r">I’ve had an itch for soccer and tracking data recently</a>), I stumbled upon <a href="(https://github.com/devinpleuler/analytics-handbook)">an excellent set of tutorials</a> written by <a href="https://twitter.com/devinpleuler">Devin Pleuler</a>. In particular, his notebook on <a href="https://en.wikipedia.org/wiki/Non-negative_matrix_factorization">non-negative matrix factorization (NNMF)</a> caught my eye. I hadn’t really heard of the concept before, but it turned out to be much less daunting once I realized that it is just another type of matrix decomposition. <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular value decomposition (SVD)</a>, which I’m much more familiar with, belongs to the same family of calculations (although NNMF and SVD are quite different). In an effort to really gain a better understanding of NNMF, I set out to emulate his notebook.</p>
+<p>In the process of converting his python code to R, I encountered three challenges with resolutions worth documenting.</p>
+<ol style="list-style-type: decimal">
+<li><p>Before the NNMF calculation, I needed to perform <a href="https://www.w3resource.com/sql/joins/perform-a-non-equi-join.php">non-equi join</a> with a fairly size-able data set. Unfortunately, <a href="https://dplyr.tidyverse.org/"><code>{dplyr}</code></a><a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> does not have built-in support for such a join 😭. I tossed aside any kind of personal implicit bias against <a href="https://cran.r-project.org/web/packages/data.table/index.html"><code>{data.table}</code></a>—which is certainly the go-to option in the R ecosystem for non-equi joins—and used it for this process.</p></li>
+<li><p>For the NNMF calculation, the only R implementation (that I could find) comes with the <a href="https://cran.r-project.org/web/packages/NMF/index.html">{NMF} package</a><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, which requires the installation of the <a href="https://cran.r-project.org/web/packages/BiocManager/index.html">Bioconductor-exclusive {BiocManager} package</a>. I’m relatively unfamiliar with <a href="https://www.bioconductor.org/">Bioconductor</a>, so this was not very appealing (although I did end up downloading <code>{NMF}</code> and trying it out). Instead, I ended up using <a href="https://rstudio.github.io/reticulate/"><code>{reticulate}</code></a> to call the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html"><code>skearn.decomposition.NMF()</code></a> function directly (as is done in the python code). This is a perfect example of using <code>{reticulate}</code> for a non-trivial reason (i.e. for an algorithm).</p></li>
+<li><p>After the NNMF computation, I needed to perform <a href="https://en.wikipedia.org/wiki/Gaussian_blur">2-D Gaussian smoothing</a>, which is helpful for making the output of the NNMF output more interpretable. The <a href="https://cran.r-project.org/web/packages/spatstat/index.html"><code>{spatstat}</code> package</a> had just the function for the job (<code>spatstat::blur()</code>), and it all it took for me was to write some a tidy wrapper function to integrate it nicely into my workflow.</p></li>
+</ol>
+<p>I’ve always considered myself a “whatever gets the job done” kind of person, not insistent on ignoring solutions that use “base” R, <code>{data.table}</code>, python, etc. Nonetheless, replicating Devin’s notebook really underscored the importance of being comfortable outside of a <code>{tidyverse}</code>-centric workflow.</p>
+<p>Anyways, this post outlines the code and my thought process in porting Devin’s code to R. I’ll skip some of the details, emphasizing the things that are most interesting.</p>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>We’ll be working with the <a href="https://github.com/statsbomb/open-data">open-sourced StatsBomb data</a> for the <a href="https://en.wikipedia.org/wiki/2018_FIFA_World_Cup">2018 Men’s World Cup</a>, which I’ve called <code>events</code> below. <a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+<p>This is a relatively large data set with lots of columns (and rows). However, we only need three columns for what we’re going to do: (1) a unique identifier for each player, <code>player_id</code>, along with their (2) <code>x</code> and (3) <code>y</code> coordinates.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<p>A quick summary of the data shows that there are 603 unique players, and that the <code>x</code> and <code>y</code> coordinates range from 1 to 120 (yards) and 1 to 80 respectively.</p>
+<pre class="r"><code>events &lt;-
+  events %&gt;% 
+  select(player_id = player.id, x = location.x, y = location.y) %&gt;% 
+  drop_na() %&gt;% 
+  summarize(
+    n = n(),
+    n_player = n_distinct(player_id),
+    across(c(x, y), list(min = min, max = max, mean = mean))
+  )
+events</code></pre>
+<pre><code>## # A tibble: 1 x 8
+##       n n_player x_min x_max x_mean y_min y_max y_mean
+##   &lt;int&gt;    &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 224018      603     1   120  60.05     1    80  40.37</code></pre>
+</div>
+<div id="non-equi-joining-with-data.table" class="section level2">
+<h2>Non-Equi Joining with <code>{data.table}</code></h2>
+<p>Our first challenge is to convert the following chunk of python.</p>
+<pre class="python"><code>import numpy as np
+
+x_scale, y_scale = 30, 20
+
+x_bins = np.linspace(0, 120, x_scale)
+y_bins = np.linspace(0, 80, y_scale)
+
+players = {}
+
+for e in events:
+    if &#39;player&#39; in e.keys():
+        player_id = e[&#39;player&#39;][&#39;id&#39;]
+        if player_id not in players.keys():
+            players[player_id] = np.zeros((x_scale, y_scale))
+        try:
+            x_bin = int(np.digitize(e[&#39;location&#39;][0], x_bins[1:], right=True))
+            y_bin = int(np.digitize(e[&#39;location&#39;][1], y_bins[1:], right=True))
+            players[player_id][x_bin][y_bin] += 1
+        except:
+            pass</code></pre>
+<p>This code creates a nested <code>dict</code>, where the keys are player id’s and the values are 20x30 matrices. Each element in the matrix is an integer that represents the count of times that the player was recorded being at a certain position on the pitch. (These counts range from 0 to 94 for this data set.)</p>
+<p>Some technical details:</p>
+<ol style="list-style-type: decimal">
+<li>The python <code>events</code> is actually a pretty heavily nested list<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>, hence the non-rectangular operations such as <code>e['player']['id']</code>.</li>
+<li>Observations with missing coordinates are ignored with the <code>try</code>-<code>except</code> block.</li>
+<li><code>x</code> and <code>y</code> values (elements of the <code>'location'</code> sub-list) are mapped to “bins” using <code>numpy</code>’s <code>digitize()</code> function, which is analogous to <code>base::cut()</code>.</li>
+</ol>
+<p>How can we do this same data manipulation in an idiomatic R fashion? We could certainly create a named list element and use <code>base::cut()</code> to closely match the python approach. However, I prefer to stick with data frames and SQL-ish operations since I think these are much more “natural” for R users.<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
+<p>So, going forward with data frames and joins, it’s quickly apparent that we’ll have to do some non-equi joining. <code>{fuzzyjoin}</code> and <a href="https://cran.r-project.org/web/packages/sqldf/index.html"><code>{sqldf}</code></a> offer functionality for such an approach, but <code>{data.table}</code> is really the best option. The only minor inconvenience here is that we have to explicitly coerce our <code>events</code> data frame to a data.table.</p>
+<p>We’ll also need a helper, grid-like data frame to assist with the binning. The 600-row <code>grid_xy_yards</code> data frame (30 <code>x</code> bins * 20 <code>y</code> bins) below is essentially a tidy definition of the cells of the grid upon which we are binning the <code>events</code> data. (One can use whatever flavor of <code>crossing()</code>, <code>expand.grid()</code>, <code>seq()</code>, etc. that you prefer to create a data frame like this.)</p>
+<p>Visually, this grid looks like this.</p>
+<p><img src="viz_grid_nnmf.png" /></p>
+<p>And if you prefer numbers instead of a chart, see the first 10 rows below.</p>
+<pre class="r"><code>grid_xy_yards</code></pre>
+<pre><code>## # A tibble: 600 x 5
+##     idx     x      y next_y next_x
+##   &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+## 1     1     0  0      4.211  4.138
+## 2     2     0  4.211  8.421  4.138
+## 3     3     0  8.421 12.63   4.138
+## 4     4     0 12.63  16.84   4.138
+## 5     5     0 16.84  21.05   4.138
+## 6     6     0 21.05  25.26   4.138
+## 7     7     0 25.26  29.47   4.138
+## 8     8     0 29.47  33.68   4.138
+## 9     9     0 33.68  37.89   4.138
+## 10    10     0 37.89  42.11   4.138
+## # ... with 590 more rows</code></pre>
+<p>Two things to note about this supplementary data frame:</p>
+<ol style="list-style-type: decimal">
+<li><p>Cells aren’t evenly spaced integers, i.e. <code>x</code> cells are defined at 0, 4.138, 8.276, …, 80 instead of something like 0, 4, 8, …, 80, and <code>y</code> cells are defined at 0, 4.211, 8.421, …, 120 instead of something like 0, 4, 8, …, 120). That’s simply due to using 30 and 20 instead of 31 and 21 to split up the <code>x</code> and <code>y</code> ranges respectively. I point this out because this SQL-ish approach would have been much easier if these numbers were just integers! We could have done an inner join on an integer grid instead of non-equi-joining upon a grid of floating point numbers. Unfortunately, joining on floating point numbers as keys leads to <a href="https://stackoverflow.com/questions/52207851/how-do-you-join-on-floating-point-columns-in-sql">inconsistent results, simply due to the nature of floating points</a>.<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a></p></li>
+<li><p>The index <code>idx</code> is important! This will come back into play when we do the NNMF procedure, at which point we’ll “flatten” out our <code>x</code>-<code>y</code> pairs into a 1-d format.</p></li>
+</ol>
+<p>Ok, on to the actual data joining.</p>
+<pre class="r"><code>events_dt &lt;- events %&gt;% drop_na() %&gt;% data.table::as.data.table()
+grid_xy_yards_dt &lt;- grid_xy_yards %&gt;% data.table::as.data.table()
+
+# We don&#39;t even have to load `{data.table}` for this to work!
+events_binned &lt;-
+  events_dt[grid_xy_yards_dt, on=.(x &gt; x, x &lt;= next_x, y &gt;= y, y &lt; next_y)] %&gt;% 
+  as_tibble() %&gt;% 
+  select(player_id, idx, x, y)
+events_binned</code></pre>
+<pre><code>## # A tibble: 224,038 x 4
+##    player_id   idx     x     y
+##        &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1      5462     1     0     0
+##  2      5467     1     0     0
+##  3      5488     1     0     0
+##  4      3632     1     0     0
+##  5      5576     1     0     0
+##  6      5595     1     0     0
+##  7      5263     1     0     0
+##  8      4063     1     0     0
+##  9      5231     1     0     0
+## 10      5231     1     0     0
+## # ... with 224,028 more rows</code></pre>
+<p>In retrospect, this join was pretty straightforward!</p>
+<p>The rest of the code below is just doing the actual tallying.</p>
+<ol style="list-style-type: decimal">
+<li>First, we make an intermediate data set <code>grid_players</code>, which is the Cartesian product of all possible cells in the grid and all players in <code>events</code>.</li>
+<li>Second, we “add back” missing cells to <code>events_binned</code> using the intermediate data set <code>grid_players</code>.</li>
+</ol>
+<p>In the end, we end up with a <code>players</code> data frame with 603 <code>player_id</code>s * 30 <code>x</code> bins * 20 <code>y</code> bins = 361,800 rows.</p>
+<pre class="r"><code># This `dummy` column approach is an easy way to do a Cartesian join when the two data frames don&#39;t share any column names.
+grid_players &lt;-
+  grid_xy_yards %&gt;% 
+  mutate(dummy = 0L) %&gt;% 
+  # Cartesian join of all possible cells in the grid and all players in `events`.
+  full_join(
+    events %&gt;% 
+      drop_na() %&gt;% 
+      distinct(player_id) %&gt;% 
+      mutate(dummy = 0L),
+    by = &#39;dummy&#39;
+  )
+
+players &lt;-
+  events_binned %&gt;% 
+  group_by(player_id, x, y, idx) %&gt;% 
+  summarize(n = n()) %&gt;% 
+  ungroup() %&gt;% 
+  # Rejoin back on the grid to &#39;add back&#39; cells with empty counts (i.e. `n = 0`).
+  full_join(grid_players, by = c(&#39;player_id&#39;, &#39;x&#39;, &#39;y&#39;, &#39;idx&#39;)) %&gt;% 
+  select(-dummy, -next_x, -next_y) %&gt;% 
+  replace_na(list(n = 0L)) %&gt;% 
+  arrange(player_id, x, y)
+players</code></pre>
+<pre><code>## # A tibble: 361,800 x 5
+##    player_id     x      y   idx     n
+##        &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt; &lt;int&gt;
+##  1      2941     0  0         1     0
+##  2      2941     0  4.211     2     0
+##  3      2941     0  8.421     3     0
+##  4      2941     0 12.63      4     0
+##  5      2941     0 16.84      5     0
+##  6      2941     0 21.05      6     0
+##  7      2941     0 25.26      7     0
+##  8      2941     0 29.47      8     0
+##  9      2941     0 33.68      9     0
+## 10      2941     0 37.89     10     0
+## # ... with 361,790 more rows</code></pre>
+<p>To make this a little bit more tangible, let’s plot Messi’s heatmap. (Is this really a blog post about soccer if it doesn’t mention Messi 😆?)</p>
+<p><img src="viz_43_messi_binned.png" /></p>
+</div>
+<div id="non-negative-matrix-factorization-nnmf-with-reticulate-and-sklearn" class="section level2">
+<h2>Non-Negative Matrix Factorization (NNMF) with <code>{reticulate}</code> and <code>sklearn</code></h2>
+<p>Next up is the actual NNMF calculation. I don’t care if you’re the biggest R <a href="https://www.urbandictionary.com/define.php?term=Stan">stan</a> in the world—you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant.</p>
+<pre class="python"><code>from sklearn.decomposition import NMF
+
+# Flatten individual player matrices into shape=(600,) which is the product of the original shape components (30 by 20)
+unraveled = [np.matrix.flatten(v) for k, v in players.items()]
+comps = 30
+model = NMF(n_components=comps, init=&#39;random&#39;, random_state=0)
+W = model.fit_transform(unraveled)</code></pre>
+<p>After re-formatting our <code>players</code> data into a wide format—equivalent to the <code>numpy.matrix.flatten()</code> call in the python code—we could use the <code>{NMF}</code> package for an R replication.</p>
+<pre class="r"><code># Convert from tidy format to wide format (603 rows x 600 columns)
+players_mat &lt;-
+  players %&gt;% 
+  select(player_id, idx, n) %&gt;% 
+  pivot_wider(names_from = idx, values_from = n) %&gt;% 
+  select(-player_id) %&gt;% 
+  as.matrix()
+
+comps &lt;- 30L
+W &lt;- NMF::nmf(NMF::rmatrix(players_mat), rank = comps, seed = 0, method = &#39;Frobenius&#39;)</code></pre>
+<p>However, I found that the results weren’t all that comparable to the python results. (Perhaps I needed to define the arguments in a different manner.) So why not use <code>{reticulate}</code> and call the <code>sklearn.decomposition.NMF()</code> function to make sure that we exactly emulate the python decomposition?</p>
+<pre class="r"><code>sklearn &lt;- reticulate::import(&#39;sklearn&#39;)
+# Wont&#39; work if `n_components` aren&#39;t explicitly defined as integers!
+model &lt;- sklearn$decomposition$NMF(n_components = comps, init = &#39;random&#39;, random_state = 0L)
+W &lt;- model$fit_transform(players_mat)</code></pre>
+<p>The result includes 30 20x30 matrices—one 30x20 <code>x</code>-<code>y</code> matrix for each of the 30 components (<code>comps</code>). We have some wrangling left to do to gain anything meaningful from this NNMF procedure, but we have something to work with!</p>
+</div>
+<div id="gaussian-smoothing-with-spatstat" class="section level2">
+<h2>Gaussian Smoothing with <code>{spatstat}</code></h2>
+<p>The last thing to do is to post-process the NNMF results and, of course, make pretty plots. The python plotting is pretty standard <code>matplotlib</code>, with the exception of the Gaussian smoothing performed on each component’s matrix <code>model.component_</code> in the loop to make sub-plots.</p>
+<pre class="python"><code>from scipy.ndimage import gaussian_filter
+
+for i in range(9):
+    # ... Excerpted
+    z = np.rot90(gaussian_filter(model.components_[i].reshape(x_scale, y_scale), sigma=1.5), 1)
+    # ... Excerpted</code></pre>
+<p>The first 9 smoothed component matrices come out looking like this. <a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a></p>
+<p><img src="viz_nnmf_dimensions_1to9_py.png" /></p>
+<p>There’s a couple of steps involved to do the same thing in R.</p>
+<ol style="list-style-type: decimal">
+<li><p>First, we’ll convert the components matrices to a tidy format, <code>decomp_tidy</code></p></li>
+<li><p>Second, we’ll join our tidied components matrices with our tidy grid of cells, <code>grid_xy_yards</code>, and convert our <code>x</code> and <code>y</code> bins to integers in preparation of the matrix operation performed in the subsequent step.</p></li>
+<li><p>Lastly, we’ll perform the Gaussian smoothing on nested data frames with a custom function, <code>smoothen_dimension</code>, that wraps <code>spatstat::blur()</code>. This function also maps <code>idx</code> back to field positions (in meters instead of yards) using the supplementary <code>grid_xy_rev_m</code><a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a> data frame (which is a lot like <code>grid_xy_yards</code>)</p></li>
+</ol>
+<pre class="r"><code># 1
+decomp_tidy &lt;-
+  model$components_ %&gt;% 
+  as_tibble() %&gt;% 
+  # &quot;Un-tidy&quot; tibble with 30 rows (one for each dimension) and 600 columns (one for every `idx`)
+  mutate(dimension = row_number()) %&gt;% 
+  # Convert to a tidy tibble with dimensions * x * y rows (30 * 30 * 20 = 1800)
+  pivot_longer(-dimension, names_to = &#39;idx&#39;, values_to = &#39;value&#39;) %&gt;% 
+  # The columns from the matrix are named `V1`, `V2`, ... `V600` by default, so convert them to an integer that can be joined on.
+  mutate(across(idx, ~str_remove(.x, &#39;^V&#39;) %&gt;% as.integer()))
+
+# 2
+decomp &lt;-
+  decomp_tidy %&gt;% 
+  # Join on our grid of x-y pairs.
+  inner_join(
+    # Using `dense_rank` because we need indexes here (i.e. 1, 2, ..., 30 instead of 0, 4.1, 8.2, ..., 120 for `x`).
+    grid_xy_yards %&gt;% 
+      select(idx, x, y) %&gt;% 
+      mutate(across(c(x, y), dense_rank))
+  )
+
+# 3
+smoothen_component &lt;- function(.data, ...) {
+  mat &lt;-
+    .data %&gt;% 
+    select(x, y, value) %&gt;% 
+    pivot_wider(names_from = x, values_from = value) %&gt;% 
+    select(-y) %&gt;% 
+    as.matrix()
+  
+  mat_smoothed &lt;-
+    mat %&gt;% 
+    spatstat::as.im() %&gt;% 
+    # Pass `sigma` in here.
+    spatstat::blur(...) %&gt;% 
+    # Could use `spatstat::as.data.frame.im()`, but it converts directly to x,y,value triplet of columns, which is not the format I want.
+    pluck(&#39;v&#39;)
+  
+  res &lt;-
+    mat_smoothed %&gt;% 
+    # Convert 20x30 y-x matrix to tidy format with 20*30 rows.
+    as_tibble() %&gt;% 
+    mutate(y = row_number()) %&gt;% 
+    pivot_longer(-y, names_to = &#39;x&#39;, values_to = &#39;value&#39;) %&gt;% 
+      # The columns from the matrix are named `V1`, `V2`, ... `V30` by default, so convert them to an integer that can be joined on.
+    mutate(across(x, ~str_remove(.x, &#39;^V&#39;) %&gt;% as.integer())) %&gt;% 
+    arrange(x, y) %&gt;% 
+    # &quot;Re-index&quot; rows with `idx`, ranging from 1 to 600.
+    mutate(idx = row_number()) %&gt;% 
+    select(-x, -y) %&gt;% 
+    # Convert `x` and `y` indexes (i.e. 1, 2, 3, ..., to meters and flip the y-axis).
+    inner_join(grid_xy_rev_m) %&gt;% 
+    # Re-scale smoothed values to 0-1 range.
+    mutate(frac = (value - min(value)) / (max(value) - min(value))) %&gt;% 
+    ungroup()
+  res
+}
+
+decomp_smooth &lt;-
+  decom %&gt;% 
+  nest(data = -c(dimension)) %&gt;% 
+  # `sigma` passed into `...` of `smoothen_component()`. (`data` passed as first argument.)
+  mutate(data = map(data, smoothen_component, sigma = 1.5)) %&gt;% 
+  unnest(data)
+decomp_smooth</code></pre>
+<div>
+<pre><code>## # A tibble: 18,000 x 8
+##    dimension    value   idx     x     y next_y next_x     frac
+##        &lt;int&gt;    &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
+##  1         1 0.002191     1     0 68     4.211  4.138 0.004569
+##  2         1 0.004843     2     0 64.42  8.421  4.138 0.01064 
+##  3         1 0.008334     3     0 60.84 12.63   4.138 0.01863 
+##  4         1 0.01130      4     0 57.26 16.84   4.138 0.02541 
+##  5         1 0.01258      5     0 53.68 21.05   4.138 0.02834 
+##  6         1 0.01208      6     0 50.11 25.26   4.138 0.02719 
+##  7         1 0.01033      7     0 46.53 29.47   4.138 0.02319 
+##  8         1 0.008165     8     0 42.95 33.68   4.138 0.01824 
+##  9         1 0.006156     9     0 39.37 37.89   4.138 0.01364 
+## 10         1 0.004425    10     0 35.79 42.11   4.138 0.009680
+## # ... with 17,990 more rows</code></pre>
+</div>
+<p>With the data in the proper format, the plotting is pretty straightforward <code>{ggplot2}</code> code (so it’s excerpted).</p>
+<p><img src="viz_nnmf_dimensions_1to9_r_smooth.png" /></p>
+<p>Viola! I would say that our R version of the python plot is very comparable (just by visual inspection). Note that we could achieve a similar visual profile without the smoothing—see below—but the smoothing undoubtedly makes pattern detection a little less ambiguous.</p>
+<p><img src="viz_nnmf_dimensions_1to9_r_unsmooth.png" /></p>
+<p>From the smoothed contours, we can discern several different player profiles (in terms of positioning).</p>
+<ul>
+<li>Components 1, 5, 9: left back</li>
+<li>Components 2: right midfielder</li>
+<li>Component 3: attacking right midfielder</li>
+<li>Component 4: wide left midfielder</li>
+<li>Component 6: central left midfielder</li>
+<li>Components 7, 8: goalkeeper</li>
+</ul>
+<p>The redundancy with left back and goalkeeper is not ideal. That’s certainly something we could fine tune with more experimentation with components. Anyways, the point of this post wasn’t so much about the insights that could be gained (although that’s ultimately what stakeholders would be interested in if this were a “real” analysis).</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Translating python code can be challenging, throwing us off from our typical workflow (for me, being <code>{tidyverse}</code>-centric). But hopefully one can see the value in “doing whatever it takes”, even if it means using “non-tidy” R functions (e.g. <code>{data.table}</code>, matrices, etc.) or a different language altogether.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>the go-to package for data manipulation and all SQL-ish things<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>Non-negative matrix factorization may also be abbreviated just as NMF, hence the package name.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>There’s nothing too interesting about the data retrieval—I’ve essentially just called <code>StatsBombR::FreeCompetitions()</code>, <code>StatsBombR::FreeMatches()</code>,<code>StatsBombR::FreeEvents()</code>, and <code>StatsBombR::allclean()</code> in succession for <code>competition_id = 43</code>.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>minimally converted from the original JSON format<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>compared to <code>dict</code> and <code>list</code>s or python users<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>A potential solution would be to round the floating point numbers before joining and “restore” them after the join, but that’s just kluge-y and inelegant.<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>There is nothing stopping us from plotting all 30 components—and, in fact, Devin does in his notebook—but I think it’s easier to digest a fraction of the components (for pedagogical purposes).<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn8"><p>StatsBomb data treats the origin as the top-left corner of the pitch, which I find inconvenient for plotting since I prefer the origin to be the bottom left. Thus, this grid also flip the y-axis of the grid, hence the <code>_rev</code> part of the variable name.<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

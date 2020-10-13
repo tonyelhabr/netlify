@@ -1,4 +1,3 @@
-
 .article-banner {
   /*width: 60%;*/
   height: auto;
@@ -15,7 +14,7 @@ table {
   width: 0%;
   margin-left: auto;
   margin-right: auto;
-  color: #ffffff
+  color: #ffffff;
 }
 
 table > thead > tr > td {
@@ -39,37 +38,20 @@ table > tbody > tr > td {
   font-size: 1rem;
 }
 
-/*
-Default highlight.js is dracula.
-Colors described below (and in data/themes/custom.toml) are the colors used in this scheme.
-
-1: blue: #8be9fd; rgb(139, 233, 253); hsl(191, 97%, 77%)
-2: pink: #f76497; rgb(247, 100, 151); hsl(339, 90%, 68%)
-3: pale yellow: #f8f8f2; rgb(248, 248, 242); hsl(60, 30%, 96%)
-4: green: #50fa7b; rgb(80, 250, 123); hsl(135, 94%, 65%)
-5: yellow: #f1fa8c; rgb(241, 250, 140); hsl(65, 92%, 76%)
-6: dark blue: #6272a4; rgb(98, 114, 164); hsl(225, 27%, 51%)
-  dark blue: #6272a4; rgb(98, 114, 300); hsl(225, 27%, 51%)
-7: purple: #bd93f9; rgb(189, 147, 249); hsl(265, 89%, 78%)
-*/
-
 /*code,*/
 .dark pre,
 .dark code {
-  /*font-size: 0.9rem;*/
   white-space: pre-wrap;
 }
 
-
 .hljs-comment,
 .hljs-meta {
-  color: rgb(189, 147, 249); 
+  color: rgb(189, 147, 249);
 }
-
 
 .hljs-quote,
 .hljs-deletion {
-  color: rgb(247, 100, 151); 
+  color: rgb(247, 100, 151);
 }
 
 .hljs-keyword {
@@ -81,8 +63,7 @@ Colors described below (and in data/themes/custom.toml) are the colors used in t
 @import url('https://fonts.googleapis.com/css2?family=Karla');
 /*@import url(https://unpkg.com/firacode/distr/fira_code.css);*/
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300&display=swap');
-/*@import url('https://fonts.googleapis.com/css2?family=Fira+Mono&display=swap');*/
-/*@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300&display=swap');*/
+@import url('https://fonts.googleapis.com/css2?family=PT+Mono&display=swap');
 
 html {
   font-family: 'Karla', sans-serif;
@@ -92,8 +73,7 @@ html {
 }
 
 body,
-p 
-h1,
+p h1,
 h2,
 h3,
 h4,
@@ -103,10 +83,46 @@ h5 {
 
 .dark code {
   /*font-weight: lighter;*/
-  font-family: 'Fira Code', sans-serif;
-  font-size: .8rem;
+  /*font-family: 'Fira Code', monospace;*/
+  font-family: 'PT Mono', monospace;
+  font-size: 0.85rem;
 }
 
-.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-title, .hljs-section, .hljs-doctag, .hljs-type, .hljs-name, .hljs-strong {
-   font-weight: normal;
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-title,
+.hljs-section,
+.hljs-doctag,
+.hljs-type,
+.hljs-name,
+.hljs-strong {
+  font-weight: normal;
 }
+
+.hljs-pipe,
+.hljs-tidyverse,
+.hljs-dplyr,
+.hljs-assign {
+  color: #50fa7b;
+}
+
+.hljs-fun-param {
+  color: #8be9fd;
+}
+
+
+.hljs css,
+.hljs-selector-tag,
+.hljs-meta,
+.hljs-comment {
+  color: #ffb86c;
+}
+
+
+/*
+.hljs css,
+.hljs bash {
+  color: #ffb86c;
+}
+*/
