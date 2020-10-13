@@ -391,7 +391,7 @@ smoothen_component <- function(.data, ...) {
 }
 
 decomp_smooth <-
-  decom %>% 
+  decomp %>% 
   nest(data = -c(dimension)) %>% 
   # `sigma` passed into `...` of `smoothen_component()`. (`data` passed as first argument.)
   mutate(data = map(data, smoothen_component, sigma = 1.5)) %>% 

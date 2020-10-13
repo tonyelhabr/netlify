@@ -288,7 +288,7 @@ smoothen_component &lt;- function(.data, ...) {
 }
 
 decomp_smooth &lt;-
-  decom %&gt;% 
+  decomp %&gt;% 
   nest(data = -c(dimension)) %&gt;% 
   # `sigma` passed into `...` of `smoothen_component()`. (`data` passed as first argument.)
   mutate(data = map(data, smoothen_component, sigma = 1.5)) %&gt;% 

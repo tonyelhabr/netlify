@@ -9,7 +9,7 @@ education:
     year: 2020
   - course: B.S. in Electrical Engineering
     institution: The University of Texas at Austin
-    year: 2012
+    year: 2016
 email: ""
 interests:
 - Energy Markets (Electricity)
