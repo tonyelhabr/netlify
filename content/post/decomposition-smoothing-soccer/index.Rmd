@@ -1,6 +1,6 @@
 ---
 title: Decomposition and Smoothing with data.table, reticulate, and spatstat
-date: '2020-10-18'
+date: '2020-10-14'
 categories:
   - r
 tags:
