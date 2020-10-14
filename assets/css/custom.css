@@ -114,7 +114,10 @@ h5 {
 
 .hljs css,
 .hljs-selector-tag,
-.hljs-meta,
+.hljs-meta {
+  color: #8be9fd;
+}
+
 .hljs-comment {
   color: #ffb86c;
 }
