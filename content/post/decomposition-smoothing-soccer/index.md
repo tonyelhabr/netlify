@@ -256,7 +256,7 @@ To make this a little bit more tangible, let's plot Messi's heatmap. (Is this re
 
 # Non-Negative Matrix Factorization (NNMF) with `{reticulate}` and `sklearn`
 
-Next up is the actual NNMF calculation. I don't care if you're the biggest R [stan](https://www.urbandictionary.com/define.php?term=Stan) in the world---you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant.
+Next up is the actual NNMF calculation. I don't care if you're the biggest R [stan](https://www.urbandictionary.com/define.php?term=Stan) in the world---you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant. The `comps=30` here means
 
 
 ```python
@@ -268,6 +268,10 @@ comps = 30
 model = NMF(n_components=comps, init='random', random_state=0)
 W = model.fit_transform(unraveled)
 ```
+
+My understanding is that `comps=30` is telling the algorithm to reduce our original data (with 603 players) to a lower dimensional space with 30 player "archetypes" that best represent the commonalities among the 603 players.[^7] Per Devin, the choice of 30 here is somewhat arbitrary. In practice, one might perform some cross validation to identify what number minimizes some loss function, but that's beyond the scope of what we're doing here.
+
+[^7]: I believe the number of components is analogous to the number of components that one would define in performing [principal components analysis (PCA)](https://en.wikipedia.org/wiki/Principal_component_analysis).
 
 After re-formatting our `players` data into a wide format---equivalent to the `numpy.matrix.flatten()` call in the python code---we could use the `{NMF}` package for an R replication.
 
@@ -311,9 +315,9 @@ for i in range(9):
     # ... Excerpted
 ```
 
-The first 9 smoothed component matrices come out looking like this. [^7]
+The first 9 smoothed component matrices come out looking like this. [^8]
 
-[^7]: There is nothing stopping us from plotting all 30 components---and, in fact, Devin does in his notebook---but I think it's easier to digest a fraction of the components (for pedagogical purposes).
+[^8]: There is nothing stopping us from plotting all 30 components---and, in fact, Devin does in his notebook---but I think it's easier to digest a fraction of the components (for pedagogical purposes).
 
 ![](viz_nnmf_dimensions_1to9_py.png)
 
@@ -323,9 +327,9 @@ There's a couple of steps involved to do the same thing in R.
 
 2.  Second, we'll join our tidied components matrices with our tidy grid of cells, `grid_xy_yards`, and convert our `x` and `y` bins to integers in preparation of the matrix operation performed in the subsequent step.
 
-3.  Lastly, we'll perform the Gaussian smoothing on nested data frames with a custom function, `smoothen_dimension`, that wraps `spatstat::blur()`. This function also maps `idx` back to field positions (in meters instead of yards) using the supplementary `grid_xy_rev_m`[^8] data frame (which is a lot like `grid_xy_yards`)
+3.  Lastly, we'll perform the Gaussian smoothing on nested data frames with a custom function, `smoothen_dimension`, that wraps `spatstat::blur()`. This function also maps `idx` back to field positions (in meters instead of yards) using the supplementary `grid_xy_rev_m`[^9] data frame (which is a lot like `grid_xy_yards`)
 
-[^8]: StatsBomb data treats the origin as the top-left corner of the pitch, which I find inconvenient for plotting since I prefer the origin to be the bottom left. Thus, this grid also flip the y-axis of the grid, hence the `_rev` part of the variable name.
+[^9]: StatsBomb data treats the origin as the top-left corner of the pitch, which I find inconvenient for plotting since I prefer the origin to be the bottom left. Thus, this grid also flip the y-axis of the grid, hence the `_rev` part of the variable name.
 
 
 
@@ -337,7 +341,7 @@ decomp_tidy <-
   as_tibble() %>% 
   # "Un-tidy" tibble with 30 rows (one for each dimension) and 600 columns (one for every `idx`)
   mutate(dimension = row_number()) %>% 
-  # Convert to a tidy tibble with dimensions * x * y rows (30 * 30 * 20 = 1800)
+  # Convert to a tidy tibble with dimensions * x * y rows (30 * 30 * 20 = 18,000)
   pivot_longer(-dimension, names_to = 'idx', values_to = 'value') %>% 
   # The columns from the matrix are named `V1`, `V2`, ... `V600` by default, so convert them to an integer that can be joined on.
   mutate(across(idx, ~str_remove(.x, '^V') %>% as.integer()))

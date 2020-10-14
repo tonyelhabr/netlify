@@ -185,7 +185,7 @@ players</code></pre>
 </div>
 <div id="non-negative-matrix-factorization-nnmf-with-reticulate-and-sklearn" class="section level1">
 <h1>Non-Negative Matrix Factorization (NNMF) with <code>{reticulate}</code> and <code>sklearn</code></h1>
-<p>Next up is the actual NNMF calculation. I don’t care if you’re the biggest R <a href="https://www.urbandictionary.com/define.php?term=Stan">stan</a> in the world—you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant.</p>
+<p>Next up is the actual NNMF calculation. I don’t care if you’re the biggest R <a href="https://www.urbandictionary.com/define.php?term=Stan">stan</a> in the world—you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant. The <code>comps=30</code> here means</p>
 <pre class="python"><code>from sklearn.decomposition import NMF
 
 # Flatten individual player matrices into shape=(600,) which is the product of the original shape components (30 by 20)
@@ -193,6 +193,7 @@ unraveled = [np.matrix.flatten(v) for k, v in players.items()]
 comps = 30
 model = NMF(n_components=comps, init=&#39;random&#39;, random_state=0)
 W = model.fit_transform(unraveled)</code></pre>
+<p>My understanding is that <code>comps=30</code> is telling the algorithm to reduce our original data (with 603 players) to a lower dimensional space with 30 player “archetypes” that best represent the commonalities among the 603 players.<a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a> Per Devin, the choice of 30 here is somewhat arbitrary. In practice, one might perform some cross validation to identify what number minimizes some loss function, but that’s beyond the scope of what we’re doing here.</p>
 <p>After re-formatting our <code>players</code> data into a wide format—equivalent to the <code>numpy.matrix.flatten()</code> call in the python code—we could use the <code>{NMF}</code> package for an R replication.</p>
 <pre class="r"><code># Convert from tidy format to wide format (603 rows x 600 columns)
 players_mat &lt;-
@@ -219,13 +220,13 @@ for i in range(9):
     # ... Excerpted
     z = np.rot90(gaussian_filter(model.components_[i].reshape(x_scale, y_scale), sigma=1.5), 1)
     # ... Excerpted</code></pre>
-<p>The first 9 smoothed component matrices come out looking like this. <a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a></p>
+<p>The first 9 smoothed component matrices come out looking like this. <a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a></p>
 <p><img src="viz_nnmf_dimensions_1to9_py.png" /></p>
 <p>There’s a couple of steps involved to do the same thing in R.</p>
 <ol style="list-style-type: decimal">
 <li><p>First, we’ll convert the components matrices to a tidy format, <code>decomp_tidy</code></p></li>
 <li><p>Second, we’ll join our tidied components matrices with our tidy grid of cells, <code>grid_xy_yards</code>, and convert our <code>x</code> and <code>y</code> bins to integers in preparation of the matrix operation performed in the subsequent step.</p></li>
-<li><p>Lastly, we’ll perform the Gaussian smoothing on nested data frames with a custom function, <code>smoothen_dimension</code>, that wraps <code>spatstat::blur()</code>. This function also maps <code>idx</code> back to field positions (in meters instead of yards) using the supplementary <code>grid_xy_rev_m</code><a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a> data frame (which is a lot like <code>grid_xy_yards</code>)</p></li>
+<li><p>Lastly, we’ll perform the Gaussian smoothing on nested data frames with a custom function, <code>smoothen_dimension</code>, that wraps <code>spatstat::blur()</code>. This function also maps <code>idx</code> back to field positions (in meters instead of yards) using the supplementary <code>grid_xy_rev_m</code><a href="#fn9" class="footnote-ref" id="fnref9"><sup>9</sup></a> data frame (which is a lot like <code>grid_xy_yards</code>)</p></li>
 </ol>
 <pre class="r"><code># 1
 decomp_tidy &lt;-
@@ -233,7 +234,7 @@ decomp_tidy &lt;-
   as_tibble() %&gt;% 
   # &quot;Un-tidy&quot; tibble with 30 rows (one for each dimension) and 600 columns (one for every `idx`)
   mutate(dimension = row_number()) %&gt;% 
-  # Convert to a tidy tibble with dimensions * x * y rows (30 * 30 * 20 = 1800)
+  # Convert to a tidy tibble with dimensions * x * y rows (30 * 30 * 20 = 18,000)
   pivot_longer(-dimension, names_to = &#39;idx&#39;, values_to = &#39;value&#39;) %&gt;% 
   # The columns from the matrix are named `V1`, `V2`, ... `V600` by default, so convert them to an integer that can be joined on.
   mutate(across(idx, ~str_remove(.x, &#39;^V&#39;) %&gt;% as.integer()))
@@ -336,7 +337,8 @@ decomp_smooth</code></pre>
 <li id="fn4"><p>minimally converted from the original JSON format<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
 <li id="fn5"><p>compared to <code>dict</code> and <code>list</code>s or python users<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
 <li id="fn6"><p>A potential solution would be to round the floating point numbers before joining and “restore” them after the join, but that’s just kluge-y and inelegant.<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
-<li id="fn7"><p>There is nothing stopping us from plotting all 30 components—and, in fact, Devin does in his notebook—but I think it’s easier to digest a fraction of the components (for pedagogical purposes).<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
-<li id="fn8"><p>StatsBomb data treats the origin as the top-left corner of the pitch, which I find inconvenient for plotting since I prefer the origin to be the bottom left. Thus, this grid also flip the y-axis of the grid, hence the <code>_rev</code> part of the variable name.<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>I believe the number of components is analogous to the number of components that one would define in performing <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">principal components analysis (PCA)</a>.<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn8"><p>There is nothing stopping us from plotting all 30 components—and, in fact, Devin does in his notebook—but I think it’s easier to digest a fraction of the components (for pedagogical purposes).<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+<li id="fn9"><p>StatsBomb data treats the origin as the top-left corner of the pitch, which I find inconvenient for plotting since I prefer the origin to be the bottom left. Thus, this grid also flip the y-axis of the grid, hence the <code>_rev</code> part of the variable name.<a href="#fnref9" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
