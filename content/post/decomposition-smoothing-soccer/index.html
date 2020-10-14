@@ -206,7 +206,7 @@ comps &lt;- 30L
 W &lt;- NMF::nmf(NMF::rmatrix(players_mat), rank = comps, seed = 0, method = &#39;Frobenius&#39;)</code></pre>
 <p>However, I found that the results weren’t all that comparable to the python results. (Perhaps I needed to define the arguments in a different manner.) So why not use <code>{reticulate}</code> and call the <code>sklearn.decomposition.NMF()</code> function to make sure that we exactly emulate the python decomposition?</p>
 <pre class="r"><code>sklearn &lt;- reticulate::import(&#39;sklearn&#39;)
-# Wont&#39; work if `n_components` aren&#39;t explicitly defined as integers!
+# Won&#39;t work if `n_components` aren&#39;t explicitly defined as integers!
 model &lt;- sklearn$decomposition$NMF(n_components = comps, init = &#39;random&#39;, random_state = 0L)
 W &lt;- model$fit_transform(players_mat)</code></pre>
 <p>The result includes 30 20x30 matrices—one 30x20 <code>x</code>-<code>y</code> matrix for each of the 30 components (<code>comps</code>). We have some wrangling left to do to gain anything meaningful from this NNMF procedure, but we have something to work with!</p>
@@ -293,7 +293,6 @@ decomp_smooth &lt;-
   mutate(data = map(data, smoothen_component, sigma = 1.5)) %&gt;% 
   unnest(data)
 decomp_smooth</code></pre>
-<div>
 <pre><code># # A tibble: 18,000 x 8
 #    dimension    value   idx     x     y next_y next_x     frac
 #        &lt;int&gt;    &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
@@ -308,7 +307,6 @@ decomp_smooth</code></pre>
 #  9         1 0.006156     9     0 39.37 37.89   4.138 0.01364 
 # 10         1 0.004425    10     0 35.79 42.11   4.138 0.009680
 # # ... with 17,990 more rows</code></pre>
-</div>
 <p>With the data in the proper format, the plotting is pretty straightforward <code>{ggplot2}</code> code (so it’s excerpted).</p>
 <p><img src="viz_nnmf_dimensions_1to9_r_smooth.png" /></p>
 <p>Viola! I would say that our R version of the python plot is very comparable (just by visual inspection). Note that we could achieve a similar visual profile without the smoothing—see below—but the smoothing undoubtedly makes pattern detection a little less ambiguous.</p>

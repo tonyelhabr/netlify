@@ -290,7 +290,7 @@ However, I found that the results weren't all that comparable to the python resu
 
 ```r
 sklearn <- reticulate::import('sklearn')
-# Wont' work if `n_components` aren't explicitly defined as integers!
+# Won't work if `n_components` aren't explicitly defined as integers!
 model <- sklearn$decomposition$NMF(n_components = comps, init = 'random', random_state = 0L)
 W <- model$fit_transform(players_mat)
 ```
@@ -399,8 +399,6 @@ decomp_smooth <-
 decomp_smooth
 ```
 
-<div>
-
     # # A tibble: 18,000 x 8
     #    dimension    value   idx     x     y next_y next_x     frac
     #        <int>    <dbl> <int> <dbl> <dbl>  <dbl>  <dbl>    <dbl>
@@ -415,8 +413,6 @@ decomp_smooth
     #  9         1 0.006156     9     0 39.37 37.89   4.138 0.01364 
     # 10         1 0.004425    10     0 35.79 42.11   4.138 0.009680
     # # ... with 17,990 more rows
-
-</div>
 
 With the data in the proper format, the plotting is pretty straightforward `{ggplot2}` code (so it's excerpted).
 
