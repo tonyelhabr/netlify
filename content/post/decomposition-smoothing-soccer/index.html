@@ -40,16 +40,12 @@ output:
 <p>This is a relatively large data set with lots of columns (and rows). However, we only need three columns for what we’re going to do: (1) a unique identifier for each player, <code>player_id</code>, along with their (2) <code>x</code> and (3) <code>y</code> coordinates.</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <p>A quick summary of the data shows that there are 603 unique players, and that the <code>x</code> and <code>y</code> coordinates range from 1 to 120 (yards) and 1 to 80 respectively.</p>
-<pre class="r"><code>events &lt;-
-  events %&gt;% 
-  select(player_id = player.id, x = location.x, y = location.y) %&gt;% 
-  drop_na() %&gt;% 
+<pre class="r"><code>events %&gt;% 
   summarize(
     n = n(),
     n_player = n_distinct(player_id),
     across(c(x, y), list(min = min, max = max, mean = mean))
-  )
-events</code></pre>
+  )</code></pre>
 <pre><code># # A tibble: 1 x 8
 #       n n_player x_min x_max x_mean y_min y_max y_mean
 #   &lt;int&gt;    &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
@@ -104,7 +100,7 @@ for e in events:
 # 7     7     0 25.26  29.47   4.138
 # 8     8     0 29.47  33.68   4.138
 # 9     9     0 33.68  37.89   4.138
-# 10    10     0 37.89  42.11   4.138
+# 10    10    0 37.89  42.11   4.138
 # # ... with 590 more rows</code></pre>
 <p>Two things to note about this supplementary data frame:</p>
 <ol style="list-style-type: decimal">
@@ -198,6 +194,7 @@ W = model.fit_transform(unraveled)</code></pre>
 <pre class="r"><code># Convert from tidy format to wide format (603 rows x 600 columns)
 players_mat &lt;-
   players %&gt;% 
+  drop_na() %&gt;% 
   select(player_id, idx, n) %&gt;% 
   pivot_wider(names_from = idx, values_from = n) %&gt;% 
   select(-player_id) %&gt;% 

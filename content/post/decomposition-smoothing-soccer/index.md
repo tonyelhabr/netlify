@@ -61,16 +61,12 @@ A quick summary of the data shows that there are 603 unique players, and that th
 
 
 ```r
-events <-
-  events %>% 
-  select(player_id = player.id, x = location.x, y = location.y) %>% 
-  drop_na() %>% 
+events %>% 
   summarize(
     n = n(),
     n_player = n_distinct(player_id),
     across(c(x, y), list(min = min, max = max, mean = mean))
   )
-events
 ```
 
     # # A tibble: 1 x 8
@@ -130,11 +126,11 @@ Visually, this grid looks like this.
 
 
 
+
+
 ![](viz_grid_nnmf.png)
 
 And if you prefer numbers instead of a chart, see the first 10 rows below.
-
-
 
 
 ```r
@@ -153,7 +149,7 @@ grid_xy_yards
     # 7     7     0 25.26  29.47   4.138
     # 8     8     0 29.47  33.68   4.138
     # 9     9     0 33.68  37.89   4.138
-    # 10    10     0 37.89  42.11   4.138
+    # 10    10    0 37.89  42.11   4.138
     # # ... with 590 more rows
 
 Two things to note about this supplementary data frame:
@@ -280,6 +276,7 @@ After re-formatting our `players` data into a wide format---equivalent to the `n
 # Convert from tidy format to wide format (603 rows x 600 columns)
 players_mat <-
   players %>% 
+  drop_na() %>% 
   select(player_id, idx, n) %>% 
   pivot_wider(names_from = idx, values_from = n) %>% 
   select(-player_id) %>% 

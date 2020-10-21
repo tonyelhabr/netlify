@@ -80,21 +80,21 @@ matches <-
 
 events <- matches %>% StatsBombR::StatsBombFreeEvents()
 events <- events %>% StatsBombR::allclean()
+events <-
+  events %>% 
+  select(player_id = player.id, x = location.x, y = location.y) %>% 
+  drop_na()
 ```
 
 A quick summary of the data shows that there are 603 unique players, and that the `x` and `y` coordinates range from 1 to 120 (yards) and 1 to 80 respectively.
 
 ```{r eval=F, include=T, echo=T}
-events <-
-  events %>% 
-  select(player_id = player.id, x = location.x, y = location.y) %>% 
-  drop_na() %>% 
+events %>% 
   summarize(
     n = n(),
     n_player = n_distinct(player_id),
     across(c(x, y), list(min = min, max = max, mean = mean))
   )
-events
 ```
 
     # # A tibble: 1 x 8
@@ -150,40 +150,13 @@ We'll also need a helper, grid-like data frame to assist with the binning. The 6
 Visually, this grid looks like this.
 
 ```{r eval=F, include=F, echo=F}
-viz_grid <-
-  grid_xy_yards %>% 
-  ggplot() +
-  # .gg_pitch(pitch = ..get_pitch(dimension = ggsoccer::pitch_statsbomb)) +
-  geom_rect(aes(xmin = x, ymin = y, xmax = next_x, ymax = next_y), fill = NA, color = 'black') +
-  geom_text(
-    aes(x = (x + next_x) / 2, y = (y + next_y) / 2, label = idx), size = 3
-  ) +
-  coord_fixed(ratio = 2 / 3) +
-  theme_void()
-viz_grid
-```
-
-```{r eval=F, include=F, echo=F}
-ggsave(
-  plot = viz_grid, 
-  filename = fs::path(.get_dir_plots(), 'viz_grid_nnmf.png'), 
-  width = 8, 
-  height = 8 * 2 / 3
-)
-```
-
-![](viz_grid_nnmf.png)
-
-And if you prefer numbers instead of a chart, see the first 10 rows below.
-
-```{r eval=F, include=F, echo=F}
 rng_x_yards <- c(0, 120)
 rng_y_yards <- c(0, 80)
 rng_x_m <- c(0, 105)
 rng_y_m <- c(0, 68)
 
 seq_coord_yards <- function(coord = c('x', 'y'), n) {
-  rng <- switch(coord, x = rng_x_yards), y = rng_y_yards)
+  rng <- switch(coord, x = rng_x_yards, y = rng_y_yards)
   seq(rng[1], rng[2], length.out = n)
 }
 
@@ -207,6 +180,32 @@ grid_xy_yards <-
   ungroup()
 ```
 
+```{r eval=F, include=F, echo=F}
+viz_grid <-
+  grid_xy_yards %>% 
+  ggplot() +
+  geom_rect(aes(xmin = x, ymin = y, xmax = next_x, ymax = next_y), fill = NA, color = 'black') +
+  geom_text(
+    aes(x = (x + next_x) / 2, y = (y + next_y) / 2, label = idx), size = 3
+  ) +
+  coord_fixed(ratio = 2 / 3) +
+  theme_void()
+viz_grid
+```
+
+```{r eval=F, include=F, echo=F}
+ggsave(
+  plot = viz_grid, 
+  filename = fs::path(.get_dir_plots(), 'viz_grid_nnmf.png'), 
+  width = 8, 
+  height = 8 * 2 / 3
+)
+```
+
+![](viz_grid_nnmf.png)
+
+And if you prefer numbers instead of a chart, see the first 10 rows below.
+
 ```{r eval=F, echo=T, include=T}
 grid_xy_yards
 ```
@@ -223,7 +222,7 @@ grid_xy_yards
     # 7     7     0 25.26  29.47   4.138
     # 8     8     0 29.47  33.68   4.138
     # 9     9     0 33.68  37.89   4.138
-    # 10    10     0 37.89  42.11   4.138
+    # 10    10    0 37.89  42.11   4.138
     # # ... with 590 more rows
 
 Two things to note about this supplementary data frame:
@@ -346,6 +345,40 @@ To make this a little bit more tangible, let's plot Messi's heatmap. (Is this re
     res
   }
 
+# Fix for pitch_international here: https://github.com/Torvaney/ggsoccer/blob/master/R/dimensions.R (which has length = 106 instead of 105).
+.pitch_international <- list(
+  length = 105,
+  width = 68,
+  penalty_box_length = 16.5,
+  penalty_box_width = 40.32,
+  six_yard_box_length = 5.5,
+  six_yard_box_width = 18.32,
+  penalty_spot_distance = 11,
+  goal_width = 7.32,
+  origin_x = 0,
+  origin_y = 0
+)
+
+..get_pitch <- function(pitch_fill = 'white', pitch_color = 'black', limits = FALSE, dimension = .pitch_international) {
+  ggsoccer::annotate_pitch(
+    dimension = dimension,
+    fill = pitch_fill, 
+    colour = pitch_color,
+    limits = limits
+  )
+}
+
+.gg_pitch <- function(pitch = ..get_pitch(), ..., aspect_ratio = 68/105) {
+  res <-
+    list(
+      ...,
+      pitch,
+      ggsoccer::theme_pitch(aspect_ratio = aspect_ratio),
+      theme(legend.position = 'none')
+    )
+  res
+}
+
 viz_players1 <-
   ggplot() +
   .gg_pitch(pitch = ..get_pitch(dimension = ggsoccer::pitch_statsbomb)) +
@@ -425,6 +458,7 @@ After re-formatting our `players` data into a wide format---equivalent to the `n
 # Convert from tidy format to wide format (603 rows x 600 columns)
 players_mat <-
   players %>% 
+  drop_na() %>% 
   select(player_id, idx, n) %>% 
   pivot_wider(names_from = idx, values_from = n) %>% 
   select(-player_id) %>% 
@@ -585,40 +619,6 @@ decomp_smooth
 With the data in the proper format, the plotting is pretty straightforward `{ggplot2}` code (so it's excerpted).
 
 ```{r eval=F, echo=F, include=F}
-# Fix for pitch_international here: https://github.com/Torvaney/ggsoccer/blob/master/R/dimensions.R (which has length = 106 instead of 105).
-.pitch_international <- list(
-  length = 105,
-  width = 68,
-  penalty_box_length = 16.5,
-  penalty_box_width = 40.32,
-  six_yard_box_length = 5.5,
-  six_yard_box_width = 18.32,
-  penalty_spot_distance = 11,
-  goal_width = 7.32,
-  origin_x = 0,
-  origin_y = 0
-)
-
-..get_pitch <- function(pitch_fill = 'white', pitch_color = 'black', limits = FALSE, dimension = .pitch_international) {
-  ggsoccer::annotate_pitch(
-    dimension = dimension,
-    fill = pitch_fill, 
-    colour = pitch_color,
-    limits = limits
-  )
-}
-
-.gg_pitch <- function(pitch = ..get_pitch(), ..., aspect_ratio = 68/105) {
-  res <-
-    list(
-      ...,
-      pitch,
-      ggsoccer::theme_pitch(aspect_ratio = aspect_ratio),
-      theme(legend.position = 'none')
-    )
-  res
-}
-
 .get_dir_plots <- function() {
   getwd()
 }
