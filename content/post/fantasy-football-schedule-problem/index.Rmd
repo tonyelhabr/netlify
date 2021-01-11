@@ -54,7 +54,7 @@ Figuring out how unlucky I was to finish 7th requires me to first figure out how
 
 > Let $T={t_1, …, t_n}$ be a set of an even $n$ teams. Let $R$ denote a round consisting of a set of pairs $(t_i, t_j)$ (denoting a match), such that $0 < i <j ≤ n$, and such that each team in $T$ is participates exactly once in $R$. Let $S$ be a schedule consisting of a tuple of $n−1$ valid rounds $(R_1, …, R_{n−1})$, such that all rounds in $S$ are pair-wise disjoint (no round shares a match). How many valid constructions of $S$ are there for $n$ input teams?
 
-For a small number of teams, it's fairly simple to write out all possible combinations of matchups. For example, for a two-team league (where each team plays each other once), there is only one possible schedule (soluytion)---Team 1 vs. Team 2. For a four-team league, there are six possible schedules. Two are shown below.
+For a small number of teams, it's fairly simple to write out all possible combinations of matchups. For example, for a two-team league (where each team plays each other once), there is only one possible schedule (solution)---Team 1 vs. Team 2. For a four-team league, there are six possible schedules. Two are shown below.
 
 <center>
 
