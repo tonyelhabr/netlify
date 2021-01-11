@@ -9,6 +9,7 @@
   display: block;
 }
 
+
 table {
   display: inline;
   width: 0%;
@@ -36,6 +37,11 @@ table > tbody > tr > td {
 .media.stream-item .article-style {
   margin-top: 2px;
   font-size: 1rem;
+}
+
+
+blockquote {
+  color: #e5e5e5;
 }
 
 /*code,*/
@@ -111,7 +117,6 @@ h5 {
   color: #8be9fd;
 }
 
-
 .hljs css,
 .hljs-selector-tag,
 .hljs-meta {
@@ -121,7 +126,6 @@ h5 {
 .hljs-comment {
   color: #ffb86c;
 }
-
 
 /*
 .hljs css,

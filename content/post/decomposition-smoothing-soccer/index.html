@@ -88,20 +88,6 @@ for e in events:
 <p><img src="viz_grid_nnmf.png" /></p>
 <p>And if you prefer numbers instead of a chart, see the first 10 rows below.</p>
 <pre class="r"><code>grid_xy_yards</code></pre>
-<pre><code># # A tibble: 600 x 5
-#     idx     x      y next_y next_x
-#   &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-# 1     1     0  0      4.211  4.138
-# 2     2     0  4.211  8.421  4.138
-# 3     3     0  8.421 12.63   4.138
-# 4     4     0 12.63  16.84   4.138
-# 5     5     0 16.84  21.05   4.138
-# 6     6     0 21.05  25.26   4.138
-# 7     7     0 25.26  29.47   4.138
-# 8     8     0 29.47  33.68   4.138
-# 9     9     0 33.68  37.89   4.138
-# 10    10    0 37.89  42.11   4.138
-# # ... with 590 more rows</code></pre>
 <p>Two things to note about this supplementary data frame:</p>
 <ol style="list-style-type: decimal">
 <li><p>Cells aren’t evenly spaced integers, i.e. <code>x</code> cells are defined at 0, 4.138, 8.276, …, 80 instead of something like 0, 4, 8, …, 80, and <code>y</code> cells are defined at 0, 4.211, 8.421, …, 120 instead of something like 0, 4, 8, …, 120). That’s simply due to using 30 and 20 instead of 31 and 21 to split up the <code>x</code> and <code>y</code> ranges respectively. I point this out because this SQL-ish approach would have been much easier if these numbers were just integers! We could have done an inner join on an integer grid instead of non-equi-joining upon a grid of floating point numbers. Unfortunately, joining on floating point numbers as keys leads to <a href="https://stackoverflow.com/questions/52207851/how-do-you-join-on-floating-point-columns-in-sql">inconsistent results, simply due to the nature of floating points</a>.<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a></p></li>
@@ -117,20 +103,6 @@ events_binned &lt;-
   as_tibble() %&gt;% 
   select(player_id, idx, x, y)
 events_binned</code></pre>
-<pre><code># # A tibble: 224,038 x 4
-#    player_id   idx     x     y
-#        &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
-#  1      5462     1     0     0
-#  2      5467     1     0     0
-#  3      5488     1     0     0
-#  4      3632     1     0     0
-#  5      5576     1     0     0
-#  6      5595     1     0     0
-#  7      5263     1     0     0
-#  8      4063     1     0     0
-#  9      5231     1     0     0
-# 10      5231     1     0     0
-# # ... with 224,028 more rows</code></pre>
 <p>In retrospect, this join was pretty straightforward!</p>
 <p>The rest of the code below is just doing the actual tallying.</p>
 <ol style="list-style-type: decimal">
@@ -162,20 +134,6 @@ players &lt;-
   replace_na(list(n = 0L)) %&gt;% 
   arrange(player_id, x, y)
 players</code></pre>
-<pre><code># # A tibble: 361,800 x 5
-#    player_id     x      y   idx     n
-#        &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt; &lt;int&gt;
-#  1      2941     0  0         1     0
-#  2      2941     0  4.211     2     0
-#  3      2941     0  8.421     3     0
-#  4      2941     0 12.63      4     0
-#  5      2941     0 16.84      5     0
-#  6      2941     0 21.05      6     0
-#  7      2941     0 25.26      7     0
-#  8      2941     0 29.47      8     0
-#  9      2941     0 33.68      9     0
-# 10      2941     0 37.89     10     0
-# # ... with 361,790 more rows</code></pre>
 <p>To make this a little bit more tangible, let’s plot Messi’s heatmap. (Is this really a blog post about soccer if it doesn’t mention Messi 😆?)</p>
 <p><img src="viz_43_messi_binned.png" /></p>
 </div>
@@ -291,20 +249,6 @@ decomp_smooth &lt;-
   mutate(data = map(data, smoothen_component, sigma = 1.5)) %&gt;% 
   unnest(data)
 decomp_smooth</code></pre>
-<pre><code># # A tibble: 18,000 x 8
-#    dimension    value   idx     x     y next_y next_x     frac
-#        &lt;int&gt;    &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
-#  1         1 0.002191     1     0 68     4.211  4.138 0.004569
-#  2         1 0.004843     2     0 64.42  8.421  4.138 0.01064 
-#  3         1 0.008334     3     0 60.84 12.63   4.138 0.01863 
-#  4         1 0.01130      4     0 57.26 16.84   4.138 0.02541 
-#  5         1 0.01258      5     0 53.68 21.05   4.138 0.02834 
-#  6         1 0.01208      6     0 50.11 25.26   4.138 0.02719 
-#  7         1 0.01033      7     0 46.53 29.47   4.138 0.02319 
-#  8         1 0.008165     8     0 42.95 33.68   4.138 0.01824 
-#  9         1 0.006156     9     0 39.37 37.89   4.138 0.01364 
-# 10         1 0.004425    10     0 35.79 42.11   4.138 0.009680
-# # ... with 17,990 more rows</code></pre>
 <p>With the data in the proper format, the plotting is pretty straightforward <code>{ggplot2}</code> code (so it’s excerpted).</p>
 <p><img src="viz_nnmf_dimensions_1to9_r_smooth.png" /></p>
 <p>Viola! I would say that our R version of the python plot is very comparable (just by visual inspection). Note that we could achieve a similar visual profile without the smoothing—see below—but the smoothing undoubtedly makes pattern detection a little less ambiguous.</p>

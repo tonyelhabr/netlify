@@ -51,7 +51,7 @@ hljs.registerLanguage("r", function (e) {
                 b: r,
                 l: r,
                 k: {
-                    keyword: "function if in break next repeat else for return switch while try tryCatch stop warning require library attach detach source setMethod setGeneric setGroupGeneric setClass ... UseMethod c matrix cat sprintf paste paste0 list print sqrt sum class exp pi",
+                    keyword: "function if in break next repeat else for return switch while try tryCatch stop warning require library attach detach source setMethod setGeneric setGroupGeneric setClass ... UseMethod c matrix cat sprintf paste paste0 list print sqrt sum class exp pi Reduce rowSums setdiff unique length which set.seed sample :",
                     literal: "NULL NA TRUE FALSE T F Inf NaN NA_integer_|10 NA_real_|10 NA_character_|10 NA_complex_|10",
                 },
                 r: 0,
