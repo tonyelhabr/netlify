@@ -3,6 +3,7 @@ title: Decomposition and Smoothing with data.table, reticulate, and spatstat
 date: '2020-10-14'
 categories:
   - r
+  - python
 tags:
   - r
   - soccer
@@ -46,10 +47,6 @@ output:
     n_player = n_distinct(player_id),
     across(c(x, y), list(min = min, max = max, mean = mean))
   )</code></pre>
-<pre><code># # A tibble: 1 x 8
-#       n n_player x_min x_max x_mean y_min y_max y_mean
-#   &lt;int&gt;    &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
-# 1 224018      603     1   120  60.05     1    80  40.37</code></pre>
 </div>
 <div id="non-equi-joining-with-data.table" class="section level2">
 <h2>Non-Equi Joining with <code>{data.table}</code></h2>
@@ -137,8 +134,8 @@ players</code></pre>
 <p>To make this a little bit more tangible, let’s plot Messi’s heatmap. (Is this really a blog post about soccer if it doesn’t mention Messi 😆?)</p>
 <p><img src="viz_43_messi_binned.png" /></p>
 </div>
-<div id="non-negative-matrix-factorization-nnmf-with-reticulate-and-sklearn" class="section level1">
-<h1>Non-Negative Matrix Factorization (NNMF) with <code>{reticulate}</code> and <code>sklearn</code></h1>
+<div id="non-negative-matrix-factorization-nnmf-with-reticulate-and-sklearn" class="section level2">
+<h2>Non-Negative Matrix Factorization (NNMF) with <code>{reticulate}</code> and <code>sklearn</code></h2>
 <p>Next up is the actual NNMF calculation. I don’t care if you’re the biggest R <a href="https://www.urbandictionary.com/define.php?term=Stan">stan</a> in the world—you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant. The <code>comps=30</code> here means</p>
 <pre class="python"><code>from sklearn.decomposition import NMF
 
@@ -166,6 +163,7 @@ W &lt;- NMF::nmf(NMF::rmatrix(players_mat), rank = comps, seed = 0, method = &#3
 model &lt;- sklearn$decomposition$NMF(n_components = comps, init = &#39;random&#39;, random_state = 0L)
 W &lt;- model$fit_transform(players_mat)</code></pre>
 <p>The result includes 30 20x30 matrices—one 30x20 <code>x</code>-<code>y</code> matrix for each of the 30 components (<code>comps</code>). We have some wrangling left to do to gain anything meaningful from this NNMF procedure, but we have something to work with!</p>
+</div>
 <div id="gaussian-smoothing-with-spatstat" class="section level2">
 <h2>Gaussian Smoothing with <code>{spatstat}</code></h2>
 <p>The last thing to do is to post-process the NNMF results and, of course, make pretty plots. The python plotting is pretty standard <code>matplotlib</code>, with the exception of the Gaussian smoothing performed on each component’s matrix <code>model.component_</code> in the loop to make sub-plots.</p>
@@ -264,10 +262,9 @@ decomp_smooth</code></pre>
 </ul>
 <p>The redundancy with left back and goalkeeper is not ideal. That’s certainly something we could fine tune with more experimentation with components. Anyways, the point of this post wasn’t so much about the insights that could be gained (although that’s ultimately what stakeholders would be interested in if this were a “real” analysis).</p>
 </div>
-<div id="conclusion" class="section level2">
-<h2>Conclusion</h2>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
 <p>Translating python code can be challenging, throwing us off from our typical workflow (for me, being <code>{tidyverse}</code>-centric). But hopefully one can see the value in “doing whatever it takes”, even if it means using “non-tidy” R functions (e.g. <code>{data.table}</code>, matrices, etc.) or a different language altogether.</p>
-</div>
 </div>
 <div class="footnotes">
 <hr />

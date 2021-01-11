@@ -3,6 +3,7 @@ title: Decomposition and Smoothing with data.table, reticulate, and spatstat
 date: '2020-10-14'
 categories:
   - r
+  - python
 tags:
   - r
   - soccer
@@ -69,10 +70,7 @@ events %>%
   )
 ```
 
-    # # A tibble: 1 x 8
-    #       n n_player x_min x_max x_mean y_min y_max y_mean
-    #   <int>    <int> <dbl> <dbl>  <dbl> <dbl> <dbl>  <dbl>
-    # 1 224018      603     1   120  60.05     1    80  40.37
+
 
 ## Non-Equi Joining with `{data.table}`
 
@@ -211,7 +209,7 @@ To make this a little bit more tangible, let's plot Messi's heatmap. (Is this re
 
 ![](viz_43_messi_binned.png)
 
-# Non-Negative Matrix Factorization (NNMF) with `{reticulate}` and `sklearn`
+## Non-Negative Matrix Factorization (NNMF) with `{reticulate}` and `sklearn`
 
 Next up is the actual NNMF calculation. I don't care if you're the biggest R [stan](https://www.urbandictionary.com/define.php?term=Stan) in the world---you have to admit that the python code to perform the NNMF is quite simple and (dare I say) elegant. The `comps=30` here means
 
@@ -386,7 +384,7 @@ From the smoothed contours, we can discern several different player profiles (in
 
 The redundancy with left back and goalkeeper is not ideal. That's certainly something we could fine tune with more experimentation with components. Anyways, the point of this post wasn't so much about the insights that could be gained (although that's ultimately what stakeholders would be interested in if this were a "real" analysis).
 
-## Conclusion
+# Conclusion
 
 Translating python code can be challenging, throwing us off from our typical workflow (for me, being `{tidyverse}`-centric). But hopefully one can see the value in "doing whatever it takes", even if it means using "non-tidy" R functions (e.g. `{data.table}`, matrices, etc.) or a different language altogether.
 

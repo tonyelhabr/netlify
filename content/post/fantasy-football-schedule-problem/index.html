@@ -178,32 +178,32 @@ status = solver.SearchForAllSolutions(model, solution_printer)
 print()
 print(f&#39;Solve status: {solver.StatusName(status)}&#39;)
 print(f&#39;Solutions found: {solution_printer.get_n_sol()}&#39;)</code></pre>
-<pre class="python"><code>## Solution 1.
-## Team 1 vs. Team 2 in Round 3
-## Team 1 vs. Team 3 in Round 2
-## Team 1 vs. Team 4 in Round 1
-## Team 2 vs. Team 1 in Round 3
-## Team 2 vs. Team 3 in Round 1
-## Team 2 vs. Team 4 in Round 2
-## Team 3 vs. Team 1 in Round 2
-## Team 3 vs. Team 2 in Round 1
-## Team 3 vs. Team 4 in Round 3
-## Team 4 vs. Team 1 in Round 1
-## Team 4 vs. Team 2 in Round 2
-## Team 4 vs. Team 3 in Round 3
-## 
-## Found solution 2.
-## 
-## Found solution 3.
-## 
-## Found solution 4.
-## 
-## Found solution 5.
-## 
-## Found solution 6.
-## 
-## Solve status: OPTIMAL
-## Solutions found: 6</code></pre>
+<pre class="python"><code># Solution 1.
+# Team 1 vs. Team 2 in Round 3
+# Team 1 vs. Team 3 in Round 2
+# Team 1 vs. Team 4 in Round 1
+# Team 2 vs. Team 1 in Round 3
+# Team 2 vs. Team 3 in Round 1
+# Team 2 vs. Team 4 in Round 2
+# Team 3 vs. Team 1 in Round 2
+# Team 3 vs. Team 2 in Round 1
+# Team 3 vs. Team 4 in Round 3
+# Team 4 vs. Team 1 in Round 1
+# Team 4 vs. Team 2 in Round 2
+# Team 4 vs. Team 3 in Round 3
+# 
+# Found solution 2.
+# 
+# Found solution 3.
+# 
+# Found solution 4.
+# 
+# Found solution 5.
+# 
+# Found solution 6.
+# 
+# Solve status: OPTIMAL
+# Solutions found: 6</code></pre>
 <p>Easy enough to run for 10 teams and get an answer, right? <strong>WRONG</strong>. Turns out this the number of feasible solutions (schedules) starts to blow up really quickly. In fact, I believe the number of solutions for this particular problem is only known up to 14 teams. (I’ve intentionally left the numbers un-rounded to emphasize just how much the number of solutions increases as a function of the number of teams.)</p>
 <center>
 <table>
@@ -259,11 +259,11 @@ print(f&#39;Solutions found: {solution_printer.get_n_sol()}&#39;)</code></pre>
 rounds &lt;- league_size - 1
 mat &lt;- matrix(nrow = league_size, ncol = rounds)
 mat</code></pre>
-<pre class="r"><code>##      [,1] [,2] [,3]
-## [1,]   NA   NA   NA
-## [2,]   NA   NA   NA
-## [3,]   NA   NA   NA
-## [4,]   NA   NA   NA</code></pre>
+<pre class="r"><code>#      [,1] [,2] [,3]
+# [1,]   NA   NA   NA
+# [2,]   NA   NA   NA
+# [3,]   NA   NA   NA
+# [4,]   NA   NA   NA</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>Randomly select the opponent of team 1 in round 1.</li>
 </ol>
@@ -276,11 +276,11 @@ set.seed(1)
 team_1_round_1 &lt;- sample(2:league_size, 1, replace = FALSE)
 mat[team_i, round_i] &lt;- team_1_round_1
 mat</code></pre>
-<pre class="r"><code>##      [,1] [,2] [,3]
-## [1,]    2   NA   NA
-## [2,]   NA   NA   NA
-## [3,]   NA   NA   NA
-## [4,]   NA   NA   NA</code></pre>
+<pre class="r"><code>#      [,1] [,2] [,3]
+# [1,]    2   NA   NA
+# [2,]   NA   NA   NA
+# [3,]   NA   NA   NA
+# [4,]   NA   NA   NA</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>Find a unique set of opponents for teams 2 through <span class="math inline">\(n\)</span> to fill the rest of the cells in column 1.</li>
 </ol>
@@ -308,11 +308,11 @@ mat</code></pre>
     }
   }
 }</code></pre>
-<pre class="r"><code>##      [,1] [,2] [,3]
-## [1,]    2   NA   NA
-## [2,]    1   NA   NA
-## [3,]    4   NA   NA
-## [4,]    3   NA   NA</code></pre>
+<pre class="r"><code>#      [,1] [,2] [,3]
+# [1,]    2   NA   NA
+# [2,]    1   NA   NA
+# [3,]    4   NA   NA
+# [4,]    3   NA   NA</code></pre>
 <ol start="4" style="list-style-type: decimal">
 <li>Identify a unique set of opponents for team 1 for all other rounds (rounds 2 through <span class="math inline">\(n-1\)</span>).</li>
 </ol>
@@ -320,11 +320,11 @@ mat</code></pre>
 team1_all_rounds &lt;- sample(teams_possible, size = length(teams_possible))
 mat[1, 2:rounds] &lt;- team1_all_rounds
 mat</code></pre>
-<pre class="r"><code>##      [,1] [,2] [,3]
-## [1,]    2    3    4
-## [2,]    1   NA   NA
-## [3,]    4   NA   NA
-## [4,]    3   NA   NA</code></pre>
+<pre class="r"><code>#      [,1] [,2] [,3]
+# [1,]    2    3    4
+# [2,]    1   NA   NA
+# [3,]    4   NA   NA
+# [4,]    3   NA   NA</code></pre>
 <ol start="5" style="list-style-type: decimal">
 <li>Repeat step 3 for rounds 2 through <span class="math inline">\(n-2\)</span> (penultimate round).</li>
 </ol>
@@ -369,11 +369,11 @@ mat</code></pre>
   round_i &lt;- round_i + 1
 }
 mat</code></pre>
-<pre class="r"><code>##      [,1] [,2] [,3]
-## [1,]    2    3    4
-## [2,]    1    4   NA
-## [3,]    4    1   NA
-## [4,]    3    2   NA</code></pre>
+<pre class="r"><code>#      [,1] [,2] [,3]
+# [1,]    2    3    4
+# [2,]    1    4   NA
+# [3,]    4    1   NA
+# [4,]    3    2   NA</code></pre>
 <ol start="6" style="list-style-type: decimal">
 <li>Identify the only valid set of matchups for the last round <span class="math inline">\(n-1\)</span>.</li>
 </ol>
@@ -383,11 +383,11 @@ rs &lt;- rowSums(mat[idx_not1, 1:(rounds - 1)])
 teams_last &lt;- total - rs
 mat[idx_not1, rounds] &lt;- teams_last
 mat</code></pre>
-<pre class="r"><code>##      [,1] [,2] [,3]
-## [1,]    2    3    4
-## [2,]    1    4    3
-## [3,]    4    1    2
-## [4,]    3    2    1</code></pre>
+<pre class="r"><code>#      [,1] [,2] [,3]
+# [1,]    2    3    4
+# [2,]    1    4    3
+# [3,]    4    1    2
+# [4,]    3    2    1</code></pre>
 <p>That is the core of the solution. The rest of the work<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> involves repeating the steps for however many times you want, always checking for duplicates of previous solutions, i.e. <a href="https://en.wikipedia.org/wiki/Simple_random_sample#Distinction_between_a_systematic_random_sample_and_a_simple_random_sample">sampling without replacement</a>. (Or, if you don’t care about schedules being unique, i.e. sampling without replacement, it’s even easier.)</p>
 </div>
 <div id="application" class="section level2">

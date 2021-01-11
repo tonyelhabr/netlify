@@ -126,32 +126,32 @@ print(f'Solutions found: {solution_printer.get_n_sol()}')
 ```
 
 ``` {.python}
-## Solution 1.
-## Team 1 vs. Team 2 in Round 3
-## Team 1 vs. Team 3 in Round 2
-## Team 1 vs. Team 4 in Round 1
-## Team 2 vs. Team 1 in Round 3
-## Team 2 vs. Team 3 in Round 1
-## Team 2 vs. Team 4 in Round 2
-## Team 3 vs. Team 1 in Round 2
-## Team 3 vs. Team 2 in Round 1
-## Team 3 vs. Team 4 in Round 3
-## Team 4 vs. Team 1 in Round 1
-## Team 4 vs. Team 2 in Round 2
-## Team 4 vs. Team 3 in Round 3
-## 
-## Found solution 2.
-## 
-## Found solution 3.
-## 
-## Found solution 4.
-## 
-## Found solution 5.
-## 
-## Found solution 6.
-## 
-## Solve status: OPTIMAL
-## Solutions found: 6
+# Solution 1.
+# Team 1 vs. Team 2 in Round 3
+# Team 1 vs. Team 3 in Round 2
+# Team 1 vs. Team 4 in Round 1
+# Team 2 vs. Team 1 in Round 3
+# Team 2 vs. Team 3 in Round 1
+# Team 2 vs. Team 4 in Round 2
+# Team 3 vs. Team 1 in Round 2
+# Team 3 vs. Team 2 in Round 1
+# Team 3 vs. Team 4 in Round 3
+# Team 4 vs. Team 1 in Round 1
+# Team 4 vs. Team 2 in Round 2
+# Team 4 vs. Team 3 in Round 3
+# 
+# Found solution 2.
+# 
+# Found solution 3.
+# 
+# Found solution 4.
+# 
+# Found solution 5.
+# 
+# Found solution 6.
+# 
+# Solve status: OPTIMAL
+# Solutions found: 6
 ```
 
 Easy enough to run for 10 teams and get an answer, right? **WRONG**. Turns out this the number of feasible solutions (schedules) starts to blow up really quickly. In fact, I believe the number of solutions for this particular problem is only known up to 14 teams. (I've intentionally left the numbers un-rounded to emphasize just how much the number of solutions increases as a function of the number of teams.)
@@ -192,11 +192,11 @@ mat
 ```
 
 ``` {.r}
-##      [,1] [,2] [,3]
-## [1,]   NA   NA   NA
-## [2,]   NA   NA   NA
-## [3,]   NA   NA   NA
-## [4,]   NA   NA   NA
+#      [,1] [,2] [,3]
+# [1,]   NA   NA   NA
+# [2,]   NA   NA   NA
+# [3,]   NA   NA   NA
+# [4,]   NA   NA   NA
 ```
 
 2.  Randomly select the opponent of team 1 in round 1.
@@ -214,11 +214,11 @@ mat
 ```
 
 ``` {.r}
-##      [,1] [,2] [,3]
-## [1,]    2   NA   NA
-## [2,]   NA   NA   NA
-## [3,]   NA   NA   NA
-## [4,]   NA   NA   NA
+#      [,1] [,2] [,3]
+# [1,]    2   NA   NA
+# [2,]   NA   NA   NA
+# [3,]   NA   NA   NA
+# [4,]   NA   NA   NA
 ```
 
 3.  Find a unique set of opponents for teams 2 through $n$ to fill the rest of the cells in column 1.
@@ -251,11 +251,11 @@ while(team_i <= league_size) {
 ```
 
 ``` {.r}
-##      [,1] [,2] [,3]
-## [1,]    2   NA   NA
-## [2,]    1   NA   NA
-## [3,]    4   NA   NA
-## [4,]    3   NA   NA
+#      [,1] [,2] [,3]
+# [1,]    2   NA   NA
+# [2,]    1   NA   NA
+# [3,]    4   NA   NA
+# [4,]    3   NA   NA
 ```
 
 4.  Identify a unique set of opponents for team 1 for all other rounds (rounds 2 through $n-1$).
@@ -268,11 +268,11 @@ mat
 ```
 
 ``` {.r}
-##      [,1] [,2] [,3]
-## [1,]    2    3    4
-## [2,]    1   NA   NA
-## [3,]    4   NA   NA
-## [4,]    3   NA   NA
+#      [,1] [,2] [,3]
+# [1,]    2    3    4
+# [2,]    1   NA   NA
+# [3,]    4   NA   NA
+# [4,]    3   NA   NA
 ```
 
 5.  Repeat step 3 for rounds 2 through $n-2$ (penultimate round).
@@ -322,11 +322,11 @@ mat
 ```
 
 ``` {.r}
-##      [,1] [,2] [,3]
-## [1,]    2    3    4
-## [2,]    1    4   NA
-## [3,]    4    1   NA
-## [4,]    3    2   NA
+#      [,1] [,2] [,3]
+# [1,]    2    3    4
+# [2,]    1    4   NA
+# [3,]    4    1   NA
+# [4,]    3    2   NA
 ```
 
 6.  Identify the only valid set of matchups for the last round $n-1$.
@@ -341,11 +341,11 @@ mat
 ```
 
 ``` {.r}
-##      [,1] [,2] [,3]
-## [1,]    2    3    4
-## [2,]    1    4    3
-## [3,]    4    1    2
-## [4,]    3    2    1
+#      [,1] [,2] [,3]
+# [1,]    2    3    4
+# [2,]    1    4    3
+# [3,]    4    1    2
+# [4,]    3    2    1
 ```
 
 That is the core of the solution. The rest of the work[^2] involves repeating the steps for however many times you want, always checking for duplicates of previous solutions, i.e. [sampling without replacement](https://en.wikipedia.org/wiki/Simple_random_sample#Distinction_between_a_systematic_random_sample_and_a_simple_random_sample). (Or, if you don't care about schedules being unique, i.e. sampling without replacement, it's even easier.)
