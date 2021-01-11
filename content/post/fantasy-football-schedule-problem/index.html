@@ -104,11 +104,17 @@ output:
 </tr>
 <tr class="even">
 <td></td>
+<td></td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr class="odd">
+<td></td>
 <td>3</td>
 <td>1</td>
 <td>4</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td></td>
 <td></td>
 <td>2</td>
@@ -388,7 +394,7 @@ mat</code></pre>
 # [2,]    1    4    3
 # [3,]    4    1    2
 # [4,]    3    2    1</code></pre>
-<p>That is the core of the solution. The rest of the work<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> involves repeating the steps for however many times you want, always checking for duplicates of previous solutions, i.e. <a href="https://en.wikipedia.org/wiki/Simple_random_sample#Distinction_between_a_systematic_random_sample_and_a_simple_random_sample">sampling without replacement</a>. (Or, if you don’t care about schedules being unique, i.e. sampling without replacement, it’s even easier.)</p>
+<p>That is the core of the solution. The rest of the work<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> involves repeating the steps for however many times you want, always checking for duplicates of previous solutions, i.e. <a href="https://en.wikipedia.org/wiki/Simple_random_sample#Distinction_between_a_systematic_random_sample_and_a_simple_random_sample">sampling without replacement</a>. (Or, if you don’t care about schedules being unique, i.e. sampling with replacement, it’s even easier.)</p>
 </div>
 <div id="application" class="section level2">
 <h2>Application</h2>
@@ -405,7 +411,7 @@ mat</code></pre>
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p><a href="https://math.stackexchange.com/questions/284416/how-many-possible-arrangements-for-a-round-robin-tournament" class="uri">https://math.stackexchange.com/questions/284416/how-many-possible-arrangements-for-a-round-robin-tournament</a><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn1"><p>This is almost directly taken from <a href="https://math.stackexchange.com/questions/284416/how-many-possible-arrangements-for-a-round-robin-tournament" class="uri">https://math.stackexchange.com/questions/284416/how-many-possible-arrangements-for-a-round-robin-tournament</a>.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
 <li id="fn2"><p>In fantasy football, teams often play each other more than once in a year (depending on your league size), so I’ve somewhat simplified the problem for the purpose of this post. More work could be done to figure out the number of possibilities when more than one game has to be scheduled for each pair of teams.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>

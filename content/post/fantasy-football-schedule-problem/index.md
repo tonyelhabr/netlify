@@ -35,7 +35,7 @@ This inspired me to quantify just how unlikely I was. The most common way to cal
 
 Figuring out how unlucky I was to finish 7th requires me to first figure out how many possible schedules there are. Formally, the problem can be put as follows[^1]:
 
-[^1]: <https://math.stackexchange.com/questions/284416/how-many-possible-arrangements-for-a-round-robin-tournament>
+[^1]: This is almost directly taken from <https://math.stackexchange.com/questions/284416/how-many-possible-arrangements-for-a-round-robin-tournament>.
 
 > Let $T={t_1, …, t_n}$ be a set of an even $n$ teams. Let $R$ denote a round consisting of a set of pairs $(t_i, t_j)$ (denoting a match), such that $0 < i <j ≤ n$, and such that each team in $T$ is participates exactly once in $R$. Let $S$ be a schedule consisting of a tuple of $n−1$ valid rounds $(R_1, …, R_{n−1})$, such that all rounds in $S$ are pair-wise disjoint (no round shares a match). How many valid constructions of $S$ are there for $n$ input teams?
 
@@ -54,6 +54,7 @@ For a small number of teams, it's fairly simple to write out all possible combin
 | 2        | 1     | 1     | 3     |
 |          |       | 2     | 4     |
 |          | 2     | 1     | 2     |
+|          |       | 3     | 4     |
 |          | 3     | 1     | 4     |
 |          |       | 2     | 3     |
 
@@ -67,7 +68,8 @@ To truly answer this question, we can turn to [constraint programming](https://e
 
 Below is some python code that is able to identify the number feasible solutions for four teams. I print out the first solution for illustrative purposes.
 
-``` {.python}
+
+```python
 from ortools.sat.python import cp_model
 
 class SolutionPrinter(cp_model.CpSolverSolutionCallback):
@@ -125,7 +127,8 @@ print(f'Solve status: {solver.StatusName(status)}')
 print(f'Solutions found: {solution_printer.get_n_sol()}')
 ```
 
-``` {.python}
+
+```python
 # Solution 1.
 # Team 1 vs. Team 2 in Round 3
 # Team 1 vs. Team 3 in Round 2
@@ -184,14 +187,16 @@ Writing a script to perform an exhaustive search is not so easy itself, and, in 
 
 1.  Set up an $n$ x $n-1$ matrix, where the $n$ rows designate teams and the $n-1$ columns designate rounds.
 
-``` {.r}
+
+```r
 league_size = 4
 rounds <- league_size - 1
 mat <- matrix(nrow = league_size, ncol = rounds)
 mat
 ```
 
-``` {.r}
+
+```r
 #      [,1] [,2] [,3]
 # [1,]   NA   NA   NA
 # [2,]   NA   NA   NA
@@ -201,7 +206,8 @@ mat
 
 2.  Randomly select the opponent of team 1 in round 1.
 
-``` {.r}
+
+```r
 team_i <- 1
 round_i <- 1
 retry_i <- 1
@@ -213,7 +219,8 @@ mat[team_i, round_i] <- team_1_round_1
 mat
 ```
 
-``` {.r}
+
+```r
 #      [,1] [,2] [,3]
 # [1,]    2   NA   NA
 # [2,]   NA   NA   NA
@@ -223,7 +230,8 @@ mat
 
 3.  Find a unique set of opponents for teams 2 through $n$ to fill the rest of the cells in column 1.
 
-``` {.r}
+
+```r
 while(team_i <= league_size) {
   if(team_i %in% teams_already_matched) {
     team_i_round_i <- which(team_i == teams_already_matched)
@@ -250,7 +258,8 @@ while(team_i <= league_size) {
 }
 ```
 
-``` {.r}
+
+```r
 #      [,1] [,2] [,3]
 # [1,]    2   NA   NA
 # [2,]    1   NA   NA
@@ -260,14 +269,16 @@ while(team_i <= league_size) {
 
 4.  Identify a unique set of opponents for team 1 for all other rounds (rounds 2 through $n-1$).
 
-``` {.r}
+
+```r
 teams_possible <- setdiff(idx_team, c(1, team_1_round_1))
 team1_all_rounds <- sample(teams_possible, size = length(teams_possible))
 mat[1, 2:rounds] <- team1_all_rounds
 mat
 ```
 
-``` {.r}
+
+```r
 #      [,1] [,2] [,3]
 # [1,]    2    3    4
 # [2,]    1   NA   NA
@@ -277,7 +288,8 @@ mat
 
 5.  Repeat step 3 for rounds 2 through $n-2$ (penultimate round).
 
-``` {.r}
+
+```r
 while(round_i < rounds) {
   team_i <- 2
   while(team_i <= league_size) {
@@ -321,7 +333,8 @@ while(round_i < rounds) {
 mat
 ```
 
-``` {.r}
+
+```r
 #      [,1] [,2] [,3]
 # [1,]    2    3    4
 # [2,]    1    4   NA
@@ -331,7 +344,8 @@ mat
 
 6.  Identify the only valid set of matchups for the last round $n-1$.
 
-``` {.r}
+
+```r
 idx_not1 <- 2:league_size
 total <- Reduce(sum, idx_team) - idx_not1
 rs <- rowSums(mat[idx_not1, 1:(rounds - 1)])
@@ -340,7 +354,8 @@ mat[idx_not1, rounds] <- teams_last
 mat
 ```
 
-``` {.r}
+
+```r
 #      [,1] [,2] [,3]
 # [1,]    2    3    4
 # [2,]    1    4    3
@@ -348,7 +363,7 @@ mat
 # [4,]    3    2    1
 ```
 
-That is the core of the solution. The rest of the work[^2] involves repeating the steps for however many times you want, always checking for duplicates of previous solutions, i.e. [sampling without replacement](https://en.wikipedia.org/wiki/Simple_random_sample#Distinction_between_a_systematic_random_sample_and_a_simple_random_sample). (Or, if you don't care about schedules being unique, i.e. sampling without replacement, it's even easier.)
+That is the core of the solution. The rest of the work[^2] involves repeating the steps for however many times you want, always checking for duplicates of previous solutions, i.e. [sampling without replacement](https://en.wikipedia.org/wiki/Simple_random_sample#Distinction_between_a_systematic_random_sample_and_a_simple_random_sample). (Or, if you don't care about schedules being unique, i.e. sampling with replacement, it's even easier.)
 
 [^2]: In fantasy football, teams often play each other more than once in a year (depending on your league size), so I've somewhat simplified the problem for the purpose of this post. More work could be done to figure out the number of possibilities when more than one game has to be scheduled for each pair of teams.
 
