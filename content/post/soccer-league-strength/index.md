@@ -18,63 +18,52 @@ output:
     keep_md: yes
 ---
 
-```{r setup, include=F, echo=F, cache=F}
-knitr::opts_chunk$set(
-  include = TRUE,
-  echo = TRUE,
-  cache = FALSE,
-  eval = FALSE,
-  cache.lazy = FALSE,
-  fig.show = 'hide',
-  fig.align = 'center',
-  fig.width = 8,
-  fig.asp = 0.75,
-  fig.retina = 2,
-  warning = FALSE,
-  message = FALSE
-)
-```
+
 
 ## Introduction
 
-Arguing about domestic league strength is something that soccer fans seems to never tire of. ([*"Could Messi do it on a cold rainy night in Stoke?"*](https://www.goal.com/en-us/news/what-does-can-they-do-it-on-a-cold-rainy-night-in-stoke-mean/1f7alegnrwfr01i5vj34vak59k)) Many of these conversations are anecdotal, leading to "hot takes" that are unfalsifiable. While we'll probably never move away from these kinds of discussions, we can at least try to inform them with a quantitative approach.
+Arguing about domestic league strength is something that soccer fans seems to never tire of. ([*"Could Messi do it on a cold rainy night in Stoke?"*](https://www.goal.com/en-us/news/what-does-can-they-do-it-on-a-cold-rainy-night-in-stoke-mean/1f7alegnrwfr01i5vj34vak59k)) Many of these conversations are anecdotal, leading to "hot takes" that are unfalsifiable. While we'll probably never completely move away from these kinds of discussions, we can at least try to inform them with a quantitative approach.
 
 Perhaps the obvious way to do so is to take match results from international tournaments (e.g. Champions League, Europa). But such an approach can be flawed---there's not a large sample, and match results may not be reflective of "true" team strength (e.g. one team may win on xG by a large margin, but lose the game.)
 
 ## Methodology
 
-But what if we used an approach rooted in player performance? [I asked myself](https://twitter.com/TonyElHabr/status/1405946557237796871) that very question and came up with the following approach.
+But what if we used an approach rooted in player performance? I asked myself that very question and came up with the following approach. (This is how I came up with the numbers in [this Twitter thread.](https://twitter.com/TonyElHabr/status/1405946557237796871))
 
-1.  Identify players who played in more than one league within the same season or across consecutive seasons. Calculate the difference in each player's [atomic VAEP](https://arxiv.org/pdf/1802.07127.pdf)[^1] per 90 minutes (VAEP/90) after changing leagues.
+1.  Identify players who played in more than one league within the same season or across consecutive seasons.[^1] Calculate the difference in each player's [atomic VAEP](https://arxiv.org/pdf/1802.07127.pdf)[^2] per 90 minutes (VAEP/90) after changing leagues.
 
-[^1]: Valuing Actions by Estimating Probabilities (VAEP) based on the atomic SPADL format.
+[^1]: In other words, transfers and loans.
 
-```{r}
-# # A tibble: 2,462 x 7
-#    Season Player        `League A`        `League B`       `VAEP/90 A` `VAEP/90 B`   Diff.
-#     <dbl> <chr>         <chr>             <chr>                  <dbl>       <dbl>   <dbl>
-#  1   2020 Timo Werner   Bundesliga 1 (Ge~ Premier League ~       1.25        0.638  0.610 
-#  2   2020 Alexander Sø~ Super Lig (Turke~ Bundesliga 1 (G~       1.07        0.773  0.296 
-#  3   2020 Hakim Ziyech  Eredivisie (Neth~ Premier League ~       0.958       0.365  0.593 
-#  4   2020 Nicolás Gonz~ Bundesliga 2 (Ge~ Bundesliga 1 (G~       0.917       0.943 -0.0256
-#  5   2020 Fabian Klos   Bundesliga 2 (Ge~ Bundesliga 1 (G~       0.904       0.547  0.358 
-#  6   2020 Victor Osimh~ Ligue 1 (France)  Serie A (Italy)        0.889       1.01  -0.120 
-#  7   2020 Eldor Shomur~ Premier League (~ Serie A (Italy)        0.882       0.755  0.126 
-#  8   2020 Callum Robin~ Championship (En~ Premier League ~       0.880       0.682  0.198 
-#  9   2020 Jarrod Bowen  Championship (En~ Premier League ~       0.871       0.448  0.423 
-# 10   2020 Aleksandar M~ Championship (En~ Premier League ~       0.866       0.499  0.367 
+[^2]: Valuing Actions by Estimating Probabilities (VAEP) based on the atomic SPADL format.
+
+
+```r
+# # A tibble: 2,462 x 4
+#    Season Player              `League A`               `League B`              
+#     <dbl> <chr>               <chr>                    <chr>                   
+#  1   2020 Timo Werner         Bundesliga 1 (Germany)   Premier League (England)
+#  2   2020 Alexander Sørloth   Super Lig (Turkey)       Bundesliga 1 (Germany)  
+#  3   2020 Hakim Ziyech        Eredivisie (Netherlands) Premier League (England)
+#  4   2020 Nicolás González    Bundesliga 2 (Germany)   Bundesliga 1 (Germany)  
+#  5   2020 Fabian Klos         Bundesliga 2 (Germany)   Bundesliga 1 (Germany)  
+#  6   2020 Victor Osimhen      Ligue 1 (France)         Serie A (Italy)         
+#  7   2020 Eldor Shomurodov    Premier League (Russia)  Serie A (Italy)         
+#  8   2020 Callum Robinson     Championship (England)   Premier League (England)
+#  9   2020 Jarrod Bowen        Championship (England)   Premier League (England)
+# 10   2020 Aleksandar Mitrovic Championship (England)   Premier League (England)
 # # ... with 2,452 more rows
 ```
 
-Why VAEP? Theoretically it should capture more about in-game actions (including defense) than other stats such as [xG](https://fbref.com/en/expected-goals-model-explained/), which is biased in favor of attacking players. VAEP is not perfect by any means (e.g. it does not capture off-ball actions), but, in theory, it should be a better measure of overall performance. [^2]
+Why VAEP? Theoretically it should capture more about in-game actions (including defense) than other stats such as [xG](https://fbref.com/en/expected-goals-model-explained/), which is biased in favor of attacking players. It's not perfect by any means---for example, it does not capture off-ball actions---but, in theory, it should be a better measure of overall performance. [I had a Twitter thread in May 2021 describing how one could use VAEP ratings.](https://twitter.com/TonyElHabr/status/1393553732659519490)
 
-[^2]:  [I had a Twitter thread in May 2021 describing how one could use VAEP ratings.](https://twitter.com/TonyElHabr/status/1393553732659519490)
-
-Notably, we give up a little in interpretability in using VAEP, since it's not directly translatable to goals. [^3] The following table of top season-long xG totals since 2012 to contextualize the magnitudes of xG and VAEP.
+Notably, we give up a little in interpretability in using VAEP, since it's not directly translatable to goals. [^3] See the following plot and table of top season-long xG totals since 2012 to contextualize the magnitudes of xG and VAEP.
 
 [^3]: It's closer to [xG+xA](https://www.optasports.com/services/analytics/advanced-metrics/), although the authors might disagree with that as well. It's really best treated separately, which perhaps explains why the authors often using "rating" and "contribution" when referring to VAEP.
 
-```{r}
+![](viz_xg_v_vaep.png)
+
+
+```r
 # # A tibble: 36,857 x 5
 #    Season Player             Minutes    xG  VAEP
 #     <dbl> <chr>                <dbl> <dbl> <dbl>
@@ -91,13 +80,10 @@ Notably, we give up a little in interpretability in using VAEP, since it's not d
 # # ... with 36,847 more rows
 ```
 
-And a scatter plot, because who doesn't love a graph.
-
-![](viz_xg_v_vaep.png)
-
 2.  Convert the player-level VAEP/90 differences to z-scores by position and age group.
 
-```{r}
+
+```r
 # # A tibble: 2,462 x 7
 #    Season Player      Position `Age Group` `League A`      `League B`    `VAEP/90 Diff. Z`
 #     <dbl> <chr>       <chr>    <chr>       <chr>           <chr>                     <dbl>
@@ -114,9 +100,10 @@ And a scatter plot, because who doesn't love a graph.
 # # ... with 2,452 more rows
 ```
 
-Why grouping? This is intended to account for the fact that attacking players and "peaking" players (usually age 24-30) tend to have higher VAEP/90, so their league-to-league differences have larger variation. The choice to normalize is perhaps more questionable. The mean of differences is \~0 for all groups already, but the dispersion is smaller without normalization (i.e. standard deviations are closer to 0). So, in this case, normalization should help the linear model capture variation.
+Why grouping? This is intended to account for the fact that attacking players and "peaking" players (usually age 24-30) tend to have higher VAEP/90, so their league-to-league differences have larger variation. The choice to normalize is perhaps more questionable. The mean of differences is \~0 for all groups already, but the dispersion is smaller without normalization (i.e. standard deviations are closer to 0). So, in this case, normalization theoretically helps the linear model capture variation.
 
-```{r }
+
+```r
 # # A tibble: 20 x 5
 #    Position Age Group N    Mean   SD
 #    <chr>    <chr>    <int> <dbl>  <dbl>
@@ -148,9 +135,10 @@ Why grouping? This is intended to account for the fact that attacking players an
 
 [^5]: We're including all positions and ages in this regression, even though these groupings have varying standard deviations for transformation of the response variable. (All have 0 mean, as one might expect with a feature representing the difference between values with the same distribution.)
 
-For those familiar with basketball and hockey, this is similar to the set-up for [an adjusted plus-minus (APM) calculation](https://squared2020.com/2017/09/18/deep-dive-on-regularized-adjusted-plus-minus-i-introductory-example/). Here, each feature column is a league (instead of a player), each row represents a player (instead of a "stint"), and the response is transformed VAEP/90 (instead of net points per possession).
+For those familiar with basketball and hockey, this is similar to [an adjusted plus-minus (APM)](https://squared2020.com/2017/09/18/deep-dive-on-regularized-adjusted-plus-minus-i-introductory-example/) calculation. Here, each feature column is a league (instead of a player), each row represents a player (instead of a "stint"), and the response is a transformed VAEP/90 (instead of net points per possession).
 
-```{r}
+
+```r
 # tibble [2,472 x 16] (S3: tbl_df/tbl/data.frame)
 #  $ VAEP/90 Diff Z-Trans     : num [1:2472] -0.0825 0.3285 -0.0143 0.1137 0.1526 ...
 #  $ Serie A (Italy)          : int [1:2472] -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 ...
@@ -170,11 +158,12 @@ For those familiar with basketball and hockey, this is similar to the set-up for
 #  $ Eredivisie (Netherlands) : int [1:2472] 0 0 0 0 0 0 0 0 0 0 ...
 ```
 
-The result is a set of coefficient estimates corresponding to each league. Notably, these are all positive (even if subtracting the intercept), and the Netherlands coefficient is `NA` due to multi-collinearity in the data. [^6]
+The result is a set of coefficient estimates corresponding to each league. Notably, these are all positive (even if subtracting the intercept). Also, the Netherlands coefficient is `NA` due to multi-collinearity in the data. [^6]
 
 [^6]: This `NA` occurs even when setting the intercept to 0, which is typically the way to get around this kind of issue with `lm` in R. When changing the order of columns in the regression and forcing the Netherlands coefficient to be non-`NA`, it's estimate is lower than that of Bundesliga 2 (and a different league's estimate is `NA`).
 
-```{r}
+
+```r
 # # A tibble: 16 x 2
 #    League                    Estimate
 #    <chr>                        <dbl>
@@ -196,28 +185,33 @@ The result is a set of coefficient estimates corresponding to each league. Notab
 # 16 Eredivisie (Netherlands)   NA     
 ```
 
-For hockey/basketball APM, we would say the coefficient estimate represents how much a player contributes relative to an "average" player. We might be tempted to try to interpret these coefficients directly as well. Yes, we can infer the league "power rankings" from just this singular coefficient list (Premier League as the strongest and Bundesliga 2 as the weakest), but there are some issues
+For APM, we might say the coefficient estimate represents how much a player contributes relative to an "average" player. We might be tempted to try to interpret these coefficients directly as well. However, we can't do that for a few reasons:
 
-- This is not a zero-sum situation. There is no notion of a matchup between one league and another like there is in hockey/basketball with players on the ice/court. Instead, our data is more analogous to a player playing against themselves (not a set of players versus another set of players). Also, we have to adjust for minutes taking the difference in rates before one would do so in APM because the minutes played will differ for the same player moving between two leagues (except by pure coincidence)
+- This is not a zero-sum situation. Our data is fundamentally different. There is no notion of a matchup between one league and another like there is in hockey/basketball with players on the ice/court. Instead, our data is more analogous to a player playing against themselves (not a set of players versus another set of players). Also, we have to adjust for minutes taking the difference in rates before one would do so in APM because the minutes played will differ for the same player moving between two leagues (except by pure coincidence they play the same number of minutes)
+
+In practice, all of this means that the target variable across all records does not sum to 0 (even without the z-normalization) like it would in the data for an APM model.
 
 - Even if this were a zero-sum type of problem and the model returned some negative coefficient estimates, it's unclear what the intercept (or 0) even means. Does it mean "average"? If so, what is an "average" league?
 
-We have to interpret the model coefficients on a relative basis.
+If we want to convert numbers back to a VAEP/90 scale, we always have to interpret the numbers on a relative basis. Sure, we can infer the league "power rankings" from just this singular coefficient list (Premier League as the strongest and Bundesliga 2 as the weakest), but we'd like to translate the coefficients to something more interpretable.
 
-```{r}
-# # A tibble: 256 x 5
-#    `League A`               `League B`               `Estimate A` `Estimate B` Diff.
-#    <fct>                    <fct>                           <dbl>        <dbl> <dbl>
-#  1 Premier League (England) Premier League (England)        0.975        0.975 0    
-#  2 Premier League (England) La Liga (Spain)                 0.975        0.869 0.107
-#  3 Premier League (England) Ligue 1 (France)                0.975        0.786 0.189
-#  4 Premier League (England) Serie A (Italy)                 0.975        0.738 0.238
-#  5 Premier League (England) Serie A (Brazil)                0.975        0.724 0.252
-#  6 Premier League (England) Primeira Liga (Portugal)        0.975        0.675 0.300
-#  7 Premier League (England) Bundesliga 1 (Germany)          0.975        0.649 0.326
-#  8 Premier League (England) Championship (England)          0.975        0.641 0.334
-#  9 Premier League (England) Super Lig (Turkey)              0.975        0.617 0.358
-# 10 Premier League (England) Premier League (Russia)         0.975        0.485 0.491
+With this in mind, we can take the difference between coefficient estimates to get closer to a direct interpretation.
+
+
+```r
+# # A tibble: 256 x 4
+#    `League A`               `League B`               `Estimate A` `Estimate B`
+#    <fct>                    <fct>                           <dbl>        <dbl>
+#  1 Premier League (England) Premier League (England)        0.975        0.975
+#  2 Premier League (England) La Liga (Spain)                 0.975        0.869
+#  3 Premier League (England) Ligue 1 (France)                0.975        0.786
+#  4 Premier League (England) Serie A (Italy)                 0.975        0.738
+#  5 Premier League (England) Serie A (Brazil)                0.975        0.724
+#  6 Premier League (England) Primeira Liga (Portugal)        0.975        0.675
+#  7 Premier League (England) Bundesliga 1 (Germany)          0.975        0.649
+#  8 Premier League (England) Championship (England)          0.975        0.641
+#  9 Premier League (England) Super Lig (Turkey)              0.975        0.617
+# 10 Premier League (England) Premier League (Russia)         0.975        0.485
 # # ... with 246 more rows
 ```
 
@@ -229,7 +223,8 @@ We have to interpret the model coefficients on a relative basis.
 
 Interpretation can be a little tricky. The differences between a specified pair of the final un-transformed coefficients represents the expected change in an "average" player's VAEP/90 (`Estimate Difference (VAEP/90)`) when moving between the specified leagues.
 
-```{r}
+
+```r
 # # A tibble: 256 x 4
 #    `League A`               `League B`               Diff. `Diff. (VAEP/90)`
 #    <fct>                    <fct>                    <dbl>             <dbl>
@@ -248,7 +243,8 @@ Interpretation can be a little tricky. The differences between a specified pair 
 
 To interpret these raw differences as a percentage, use the median VAEP/90 across all leagues as a "baseline" by which the difference in (a) is interpreted as a deviation. For example, for Bundesliga -> Premier League, since the overall median VAEP/90 is 0.305 and the `Estimate Difference (VAEP/90)` between league A and league B's VAEP/90 is 0.0509, the `% Difference` is 0.0509/0.305 = 17%.
 
-```{r}
+
+```r
 # # A tibble: 256 x 5
 #    `League A`               `League B`               Diff. `Diff. (VAEP/90)` `% Diff.`
 #    <fct>                    <fct>                    <dbl>             <dbl> <chr>    
