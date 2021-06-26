@@ -371,42 +371,6 @@ compare_and_rank_vip &lt;-
         vip_wrapper_partial_shap(exact = TRUE)
       }
     
-    z &lt;-
-      vip::vi_shap(
-        # method = &#39;shap&#39;,
-        object = fit_wf$fit,
-        # metric = &#39;rmse&#39;,
-        pred_wrapper = f_predict,
-        # num_features = x_trn_jui %&gt;% ncol(),
-        train = x_trn_jui
-      )
-    z
-
-    # # Removed this part since it&#39;s basically redundant with the `{vip}` SHAP method (which I checked).
-    # fastshap_partial &lt;-
-    #   partial(
-    #     fastshap::explain,
-    #     object = fit_wf$fit,
-    #     X = x_trn_jui,
-    #     ... = 
-    #   )
-    # 
-    # expl_fastshap &lt;-
-    #   if(is_ranger) {
-    #     fastshap_partial(pred_wrapper = f_predict)
-    #   } else {
-    #     fastshap_partial(exact = TRUE)
-    #   }
-    # 
-    # # Need to remove the non-diamonds_modified class in order to use {dplyr} functions.
-    # class(expl_fastshap) &lt;- c(&#39;tbl_df&#39;, &#39;tbl&#39;, &#39;data.frame&#39;)
-    # 
-    # vi_fastshap &lt;-
-    #   expl_fastshap %&gt;%
-    #   summarize_all(~mean(abs(.))) %&gt;% 
-    #   # This is actually already `imp_abs`, but it won&#39;t matter in the end.
-    #   pivot_longer(matches(&#39;.&#39;), names_to = &#39;var&#39;, values_to = &#39;imp&#39;)
-
     # idk why, but I can use `ifelse()` here and return a function that won&#39;t have unexpected output (i.e. a list instead of a dataframe).
     # This is not true for the other `if...else` statements
     f_coerce_dalex &lt;- ifelse(engine == &#39;xgboost&#39;, function(x) { x }, as.data.frame)

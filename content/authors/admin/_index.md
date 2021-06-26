@@ -12,7 +12,6 @@ education:
     year: 2016
 email: ""
 interests:
-- Energy Markets (Electricity)
 - Sports Analytics
 - Data Science and Machine Learning
 name: Tony ElHabr
@@ -27,10 +26,7 @@ social:
 - icon: linkedin-in
   icon_pack: fab
   link: https://linkedin.com/in/anthony-elhabr
-- icon: r-project
-  icon_pack: fab
-  link: https://rpubs.com/aelhabr/
 superuser: true
 ---
 
-Passionate mostly about energy markets and sports analytics.
+Sports analytics, energy markets, machine learning

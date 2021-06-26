@@ -399,42 +399,6 @@ compare_and_rank_vip <-
         vip_wrapper_partial_shap(exact = TRUE)
       }
     
-    z <-
-      vip::vi_shap(
-        # method = 'shap',
-        object = fit_wf$fit,
-        # metric = 'rmse',
-        pred_wrapper = f_predict,
-        # num_features = x_trn_jui %>% ncol(),
-        train = x_trn_jui
-      )
-    z
-
-    # # Removed this part since it's basically redundant with the `{vip}` SHAP method (which I checked).
-    # fastshap_partial <-
-    #   partial(
-    #     fastshap::explain,
-    #     object = fit_wf$fit,
-    #     X = x_trn_jui,
-    #     ... = 
-    #   )
-    # 
-    # expl_fastshap <-
-    #   if(is_ranger) {
-    #     fastshap_partial(pred_wrapper = f_predict)
-    #   } else {
-    #     fastshap_partial(exact = TRUE)
-    #   }
-    # 
-    # # Need to remove the non-diamonds_modified class in order to use {dplyr} functions.
-    # class(expl_fastshap) <- c('tbl_df', 'tbl', 'data.frame')
-    # 
-    # vi_fastshap <-
-    #   expl_fastshap %>%
-    #   summarize_all(~mean(abs(.))) %>% 
-    #   # This is actually already `imp_abs`, but it won't matter in the end.
-    #   pivot_longer(matches('.'), names_to = 'var', values_to = 'imp')
-
     # idk why, but I can use `ifelse()` here and return a function that won't have unexpected output (i.e. a list instead of a dataframe).
     # This is not true for the other `if...else` statements
     f_coerce_dalex <- ifelse(engine == 'xgboost', function(x) { x }, as.data.frame)
