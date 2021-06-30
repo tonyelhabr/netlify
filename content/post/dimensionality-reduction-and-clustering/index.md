@@ -24,7 +24,7 @@ output:
 
 Combining [principal component analysis (PCA)](https://en.wikipedia.org/wiki/Principal_component_analysis) and [kmeans clustering](https://en.wikipedia.org/wiki/K-means_clustering) seems to be a pretty popular 1-2 punch in data science. While there is some debate about whether combining [dimensionality reduction](https://en.wikipedia.org/wiki/Dimensionality_reduction) and [clustering](https://en.wikipedia.org/wiki/Clustering) is something we should ever do[^1], I'm not here to debate that. I'm here to illustrate the potential advantages of upgrading your PCA + kmeans workflow to [Uniform Manifold Approximation and Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/) + [Gaussian Mixture Model (GMM)](https://en.wikipedia.org/wiki/Mixture_model), as noted in [my reply here](https://twitter.com/TonyElHabr/status/1400149998629703681).
 
-[^1]: In some contexts you may want to do feature selection and/or a manual grouping of data.
+[^1]: In some contexts you may want to do feature selection and/or manual grouping of data.
 
 ![](tweet.png)
 
