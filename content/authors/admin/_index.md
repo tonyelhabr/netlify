@@ -29,4 +29,4 @@ social:
 superuser: true
 ---
 
-Sports analytics, energy markets, machine learning
+Sports analytics, machine learning
