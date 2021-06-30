@@ -274,9 +274,11 @@ sims</code></pre>
 <p>Finally, let’s bring clustering back into the conversation. We’re going to focus on how the heralded UMAP + GMM combo can be visualized to provide insight that supports (or debunks) our prior understanding.</p>
 <p>With a 2-component UMAP + 6-cluster GMM, we can see how the 6 position groups can be identified in a 2-D space.</p>
 <p><img src="viz_uncertainty_umap_full.png" /></p>
-<p>If we exclude keepers (G) and defenders (D) to focus on the other 4 positions, we can better see how some individual points —at the edges or outside of covariance ellipsoids—are classified with a higher degree of uncertainty.<a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a></p>
+<p>For those curious, using PCA instead of UMAP also leads to an identifiable set of clusters. However, uncertainties are generally higher across the board (larger point sizes, more overlap between covariance ellipsoids).</p>
+<p><img src="viz_uncertainty_pca_full.png" /></p>
+<p>If we exclude keepers (G) and defenders (D) to focus on the other 4 positions with our UMAP + GMM approach, we can better see how some individual points —at the edges or outside of covariance ellipsoids—are classified with a higher degree of uncertainty.<a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a></p>
 <p><img src="viz_uncertainty_umap_filt.png" /></p>
-<p>Now highlighting incorrect classifications, we can see how the defensive midfielder (DM) position group (upper left) seems to be a blind spot in our approach.</p>
+<p>Now, highlighting incorrect classifications, we can see how the defensive midfielder (DM) position group (upper left) seems to be a blind spot in our approach.</p>
 <p><img src="viz_misclassified_umap.png" /></p>
 <p>A more traditional confusion matrix<a href="#fn9" class="footnote-ref" id="fnref9"><sup>9</sup></a> also illustrates the inaccuracy with classifying DMs. (Note the lack of dark grey fill in the DM column.)</p>
 <p><img src="viz_cm_umap.png" /></p>

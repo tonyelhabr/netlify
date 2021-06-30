@@ -389,13 +389,17 @@ With a 2-component UMAP + 6-cluster GMM, we can see how the 6 position groups ca
 
 ![](viz_uncertainty_umap_full.png)
 
-If we exclude keepers (G) and defenders (D) to focus on the other 4 positions, we can better see how some individual points ---at the edges or outside of covariance ellipsoids---are classified with a higher degree of uncertainty.[^8]
+For those curious, using PCA instead of UMAP also leads to an identifiable set of clusters. However, uncertainties are generally higher across the board (larger point sizes, more overlap between covariance ellipsoids).
+
+![](viz_uncertainty_pca_full.png)
+
+If we exclude keepers (G) and defenders (D) to focus on the other 4 positions with our UMAP + GMM approach, we can better see how some individual points ---at the edges or outside of covariance ellipsoids---are classified with a higher degree of uncertainty.[^8]
 
 [^8]: Sure, one can argue that a player like Diogo Jota should have been classified as an attacking midfielder (AM) to begin with, in which case he might not have been misclassified here.
 
 ![](viz_uncertainty_umap_filt.png)
 
-Now highlighting incorrect classifications, we can see how the defensive midfielder (DM) position group (upper left) seems to be a blind spot in our approach.
+Now, highlighting incorrect classifications, we can see how the defensive midfielder (DM) position group (upper left) seems to be a blind spot in our approach.
 
 ![](viz_misclassified_umap.png)
 
