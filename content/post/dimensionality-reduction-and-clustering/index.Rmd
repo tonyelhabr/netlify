@@ -296,15 +296,15 @@ This `pairs` variable can be used to re-code the `.class` column in our `assignm
 
 ## Case Study: PCA vs. UMAP
 
-Let's step back from the clustering techniques and focus on dimensionality reduction for a moment. One of the ways that dimensionality reduction can be leveraged in sports like soccer is for player similarity metrics.[\^6] Let's take a look at how this can be done, comparing the PCA and UMAP results while we're at it.
-
-[\^6: Methods based on percentiles and regression are more common, but dimensionality reduction can also be used for the same purpose.
-
-Direct comparison of the similarity "scores" we'll compute---based on Euclidean distance between a chosen player's components and other players' components---is not wise given the different ranges of our PCA and UMAP components, so we'll rely on rankings based on these scores.[^6] Additionally, [fbref](https://fbref.com/) provides a "baseline" that we can use to judge our similarity rankings.[^7]
+Let's step back from the clustering techniques and focus on dimensionality reduction for a moment. One of the ways that dimensionality reduction can be leveraged in sports like soccer is for player similarity metrics.[^6] Let's take a look at how this can be done, comparing the PCA and UMAP results while we're at it.
 
 [^6]: Normalization perhaps doesn't help much here given the clustered nature of the reduced data.
 
-[^7]: fbref uses a different methodology, so perhaps it's unwise to compare to them.
+Direct comparison of the similarity "scores" we'll compute---based on Euclidean distance between a chosen player's components and other players' components---is not wise given the different ranges of our PCA and UMAP components, so we'll rely on rankings based on these scores.[^7] Additionally, [fbref](https://fbref.com/) provides a "baseline" that we can use to judge our similarity rankings.[^8]
+
+[^7]: Normalization perhaps doesn't help much here given the clustered nature of the reduced data.
+
+[^8]: fbref uses a different methodology, so perhaps it's unwise to compare to them.
 
 We'll start with [Jadon Sancho](https://fbref.com/en/players/dbf053da/Jadon-Sancho), a highly discussed player at the moment (as a potential transfer).
 
@@ -391,9 +391,9 @@ For those curious, using PCA instead of UMAP also leads to an identifiable set o
 
 ![](viz_uncertainty_pca_full.png)
 
-If we exclude keepers (G) and defenders (D) to focus on the other 4 positions with our UMAP + GMM approach, we can better see how some individual points ---at the edges or outside of covariance ellipsoids---are classified with a higher degree of uncertainty.[^8]
+If we exclude keepers (G) and defenders (D) to focus on the other 4 positions with our UMAP + GMM approach, we can better see how some individual points ---at the edges or outside of covariance ellipsoids---are classified with a higher degree of uncertainty.[^9]
 
-[^8]: Sure, one can argue that a player like Diogo Jota should have been classified as an attacking midfielder (AM) to begin with, in which case he might not have been misclassified here.
+[^9]: Sure, one can argue that a player like Diogo Jota should have been classified as an attacking midfielder (AM) to begin with, in which case he might not have been misclassified here.
 
 ![](viz_uncertainty_umap_filt.png)
 
@@ -401,9 +401,9 @@ Now, highlighting incorrect classifications, we can see how the defensive midfie
 
 ![](viz_misclassified_umap.png)
 
-A more traditional confusion matrix[^9] also illustrates the inaccuracy with classifying DMs. (Note the lack of dark grey fill in the DM column.)
+A more traditional confusion matrix[^10] also illustrates the inaccuracy with classifying DMs. (Note the lack of dark grey fill in the DM column.)
 
-[^9]: By the way, the `autoplot()` function for `yardstick::conf_mat()` results is awesome if you haven't ever used it.
+[^10]: By the way, the `autoplot()` function for `yardstick::conf_mat()` results is awesome if you haven't ever used it.
 
 ![](viz_cm_umap.png)
 
